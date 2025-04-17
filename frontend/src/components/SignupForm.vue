@@ -117,7 +117,7 @@ export default {
           const hash = await hashPasswordWithSalt(this.password, salt);
 
           // Once the hash is ready, you can make the API call
-          let result = await axios.post("https://prosaurus.com/api/auth/signup", {
+          let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, {
             handle: this.handle,
             first_name: this.first_name,
             last_name: this.last_name,

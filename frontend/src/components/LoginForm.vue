@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     async handleSubmit() {
-      let result = await axios.post("https://prosaurus.com/api/auth/login", {
+      let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
         handle:this.handle,
         password:this.password
       })
