@@ -27,6 +27,9 @@
   COPY backend/package*.json ./
   RUN npm install
   
+  # Install nodemon
+  RUN npm install -g nodemon
+  
   # Copy backend source
   COPY backend/ .
   
@@ -39,5 +42,6 @@
   EXPOSE 80
   
   # Start the server
-  CMD ["node", "index.js"]
+  # CMD ["node", "index.js"]  # original setup
+  CMD ["npm", "run", "dev"]
   
