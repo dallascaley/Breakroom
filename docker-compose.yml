@@ -7,7 +7,5 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - /app/node_modules   # Prevent node_modules from being overwritten
     environment:
-      NODE_ENV: development
+      NODE_ENV: production

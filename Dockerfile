@@ -42,6 +42,5 @@
   EXPOSE 80
   
   # Start the server
-  # CMD ["node", "index.js"]  # original setup
-  CMD ["npm", "run", "dev"]
+  CMD ["node", "index.js"]
   
