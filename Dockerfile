@@ -11,7 +11,10 @@
   
   # Copy frontend source and build it
   COPY frontend/ .
-  RUN npm run build
+
+  ARG VITE_API_BASE_URL
+  ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+  RUN echo "VITE_API_BASE_URL=$VITE_API_BASE_URL" && npm run build
   
   # Debug: list contents of dist to confirm build succeeded
   RUN echo "==== Frontend build complete. Contents of /frontend/dist ====" && ls -la /frontend/dist
