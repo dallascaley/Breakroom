@@ -1,13 +1,26 @@
 version: '3.8'
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_API_BASE_URL: http://prosaurus.com
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "80:80"
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev"
     environment:
-      NODE_ENV: production
+      - VITE_API_BASE_URL=http://localhost:8080  # backend URL accessible from frontend
+
+  backend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "8080:80"
+    command: sh -c "npm install && npx nodemon index.js"
+    environment:
+      NODE_ENV: development
