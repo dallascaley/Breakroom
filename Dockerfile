@@ -1,7 +1,7 @@
 # ---------------------------------------
 # Stage 1: Build Vue frontend
 # ---------------------------------------
-  FROM node:20-alpine AS frontend
+  FROM node:24.2.0-alpine AS frontend
 
   WORKDIR /frontend
   
@@ -22,7 +22,7 @@
   # ---------------------------------------
   # Stage 2: Setup backend + serve frontend
   # ---------------------------------------
-  FROM node:20-alpine AS backend
+  FROM node:24.2.0-alpine AS backend
   
   WORKDIR /app
   
