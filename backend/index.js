@@ -15,13 +15,22 @@ app.set('view engine', 'ejs');
 
 const authentication = require('./routes/authentication');
 
+// Middleware to parse incoming JSON data
+app.use(express.json());
+
+// Use routes
+app.use('/api/auth', authentication);
+
+
 // Serve frontend static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Example API route
+/*
 app.get('/api', (req, res) => {
   res.json({ message: 'Hello from API' });
 });
+*/
 
 // Serve index.html for all non-API, non-static requests
 app.use((req, res, next) => {
