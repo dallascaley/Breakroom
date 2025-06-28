@@ -4,10 +4,17 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const app = express();
-const port = 80;
+const https = require('https');
+const port = 443;
 
 // Load your SSL certificate and key
-const options = {};
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('/etc/live/prosaurus.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/live/prosaurus.com/cert.pem')
+};
+
 
 app.use(cors());
 
@@ -41,6 +48,14 @@ app.use((req, res, next) => {
 console.log('Serving static from:', path.join(__dirname, 'public'));
 console.log('Fallback route will catch anything not under /api');
 
-app.listen(port, () => {
-  console.log(`App running on http://localhost:${port}`);
+https.createServer(options, app).listen(port, () => {
+  //const backendUrl = process.env.BACKEND_URL || 'https://www.prosaurus.com';
+  //console.log(`Backend server running on ${backendUrl}`);
+  console.log(`HTTPS Server running on https://localhost:${port}`);
 });
+
+/*
+app.listen(port, () => {
+  console.log(`App running on https://localhost:${port}`);
+});
+*/

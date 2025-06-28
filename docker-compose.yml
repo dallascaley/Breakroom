@@ -1,26 +1,77 @@
-version: '3.8'
-
 services:
   frontend:
-    image: node:20-alpine
+
+    build:
+      # The directory where we look for a Dockerfile
+      context: ./frontend
+
+    # Set the working directory inside the container at _run_ time
     working_dir: /app
+
     volumes:
+      # Sets the frontend folder to be the app folder in the container
       - ./frontend:/app
+      # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
+
     ports:
+      # sets front-end internal port to 5173
       - "5173:5173"
+    
+    networks:
+      # use the app-network
+      - app-network
+
     command: sh -c "npm install && npm run dev"
     environment:
-      - VITE_API_BASE_URL=http://localhost:8080  # backend URL accessible from frontend
+      - VITE_API_BASE_URL=https://localhost:3000  # backend URL accessible from frontend
 
   backend:
-    image: node:20-alpine
+
+    build:
+      # The directory where we look for a Dockerfile
+      context: ./backend
+
+    # Set the working directory inside the container at _run_ time
     working_dir: /app
+
     volumes:
+      # sets the backend folder to be the app folder in the container
       - ./backend:/app
+      # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
+
     ports:
-      - "8080:80"
+      # sets back-end internal port to 3000
+      - "3000:3000"
+
+    networks:
+      # use the app-network
+      - app-network
+
     command: sh -c "npm install && npx nodemon index.js"
     environment:
       NODE_ENV: development
+
+  reverse-proxy:
+    image: nginx:alpine
+    volumes:
+      - /etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf
+      - /etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker
+      - /home/dallas/prosaurus/express/etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "443:443"  # Expose HTTPS port for reverse proxy to handle SSL
+      - "80:80"    # Expose HTTP port (usually used for redirecting to HTTPS)
+    environment:
+      - NGINX_HOST=docker.dcaley.prosaurus.com
+    networks:
+      - app-network
+    depends_on:
+      - frontend
+      - backend
+    entrypoint: nginx -g 'daemon off;'
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge
