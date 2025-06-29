@@ -25,6 +25,8 @@ services:
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}  # backend URL accessible from frontend
 
+    command: sh -c "npm install --omit=dev && npm run start"
+
 
   backend:
 
@@ -51,6 +53,8 @@ services:
 
     environment:
       NODE_ENV: ${NODE_ENV}
+
+    command: sh -c "npm install --omit=dev && npm run start"
 
   reverse-proxy:
     image: nginx:alpine
