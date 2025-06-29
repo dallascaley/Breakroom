@@ -1,6 +1,6 @@
 */node_modules/*
 */.env
-*/.env.production
+backend/.env.production
 */.env/*
 */etc
 */etc/*
