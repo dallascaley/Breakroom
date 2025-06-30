@@ -47,6 +47,8 @@ services:
       - ./backend:/app
       # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
+      # encryption folders, with read only option
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
       # sets back-end internal port to 3000
@@ -70,11 +72,11 @@ services:
 
     volumes:
       # nginx configuration file
-      - .backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf
+      - ./backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf:ro
       # site-enapled folder
-      - .backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker
+      - ./backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker:ro
       # encryption folders, with read only option
-      - .backend/etc/encrypt:/etc/letsencrypt:ro
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
       # Expose HTTPS port for reverse proxy to handle SSL

@@ -5,14 +5,14 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 const https = require('https');
-const port = 443;
+const port = 3000;
 
 // Load your SSL certificate and key
 const fs = require('fs');
 
 const options = {
-  key: fs.readFileSync('/etc/live/prosaurus.com/privkey.pem'),
-  cert: fs.readFileSync('/etc/live/prosaurus.com/cert.pem')
+  key: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/privkey.pem', 'utf8'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/fullchain.pem', 'utf8')
 };
 
 

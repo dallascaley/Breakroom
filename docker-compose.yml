@@ -27,6 +27,7 @@ services:
 
     environment:
       # backend URL accessible from frontend
+      NODE_ENV: ${NODE_ENV}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
 
@@ -44,6 +45,8 @@ services:
       - ./backend:/app
       # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
+      # encryption folders, with read only option
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
       # sets back-end internal port to 3000
@@ -56,6 +59,7 @@ services:
     environment:
       # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
   reverse-proxy:
     # Note: the reverse-proxy service is based on an image therefore no build phase
@@ -63,11 +67,11 @@ services:
 
     volumes:
       # nginx configuration file
-      - .backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf
+      - ./backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf:ro
       # site-enapled folder
-      - .backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker
+      - ./backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker:ro
       # encryption folders, with read only option
-      - .backend/etc/encrypt:/etc/letsencrypt:ro
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
       # Expose HTTPS port for reverse proxy to handle SSL
