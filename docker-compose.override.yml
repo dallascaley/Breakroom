@@ -1,3 +1,6 @@
+# This file (docker-compose.override.yml) is intended for local development only
+# local means on your computer, not on a non-prod but public machine
+
 services:
   frontend:
 
@@ -23,8 +26,10 @@ services:
       - app-network
 
     environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL}  # backend URL accessible from frontend
+      # backend URL accessible from frontend
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
+    # start command for non-prod environment
     command: sh -c "npm install && npm run dev"
 
 
@@ -52,29 +57,49 @@ services:
       - app-network
 
     environment:
+      # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
 
+    # only in non-prod environments, does npm installation and runs nodemon which
+    # looks for changes live (that won't happen in production)
     command: sh -c "npm install && npx nodemon index.js"
 
   reverse-proxy:
+    # Note: the reverse-proxy service is based on an image therefore no build phase
     image: nginx:alpine
+
     volumes:
-      - /etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf
-      - /etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker
-      - /home/dallas/prosaurus/express/etc/letsencrypt:/etc/letsencrypt:ro
+      # nginx configuration file
+      - .backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf
+      # site-enapled folder
+      - .backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker
+      # encryption folders, with read only option
+      - .backend/etc/encrypt:/etc/letsencrypt:ro
+
     ports:
-      - "443:443"  # Expose HTTPS port for reverse proxy to handle SSL
-      - "80:80"    # Expose HTTP port (usually used for redirecting to HTTPS)
-    environment:
-      - NGINX_HOST=docker.dcaley.prosaurus.com
+      # Expose HTTPS port for reverse proxy to handle SSL
+      - "443:443"
+      # Expose HTTP port used for redirecting to HTTPS
+      - "80:80"
+
     networks:
+      # use the app-network
       - app-network
+
     depends_on:
+      # Front end service dependeny
       - frontend
+      # Back end service dependency
       - backend
+
+    # Entry point which turns the daemon off (GPT says it's not needed, we shall see)
     entrypoint: nginx -g 'daemon off;'
 
 networks:
+
+  # The internal network all the containers use
   app-network:
+    # the network's name
     name: app-network
+    # Type of connection it uses
     driver: bridge
