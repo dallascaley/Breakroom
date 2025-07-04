@@ -75,9 +75,9 @@ services:
 
     ports:
       # Expose HTTPS port for reverse proxy to handle SSL
-      - "443:443"
+      - "8443:443"
       # Expose HTTP port used for redirecting to HTTPS
-      - "80:80"
+      - "8080:80"
 
     networks:
       # use the app-network

@@ -29,10 +29,6 @@ services:
       # backend URL accessible from frontend
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
-    # start command for prod environment
-    command: sh -c "npm install --omit=dev && npm run start"
-
-
   backend:
 
     build:
