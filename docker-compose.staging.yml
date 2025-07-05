@@ -1,5 +1,5 @@
-# This file (docker-compose.prod.yml) is for production it has commands that start
-# a production-level service and avoids any dev dependencies
+# This file (docker-compose.override.yml) is intended for local development only
+# local means on your computer, not on a non-prod but public machine
 
 services:
   frontend:
@@ -18,7 +18,7 @@ services:
       - /app/node_modules
 
     ports:
-      # sets front-end internal port to 5173
+      # sets front-end internal/external ports to 5173 (for non-production builds)
       - "5173:5173"
     
     networks:
@@ -28,6 +28,10 @@ services:
     environment:
       # backend URL accessible from frontend
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+
+    # start command for non-prod environment
+    command: sh -c "npm run dev"
+
 
   backend:
 
@@ -47,7 +51,7 @@ services:
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
-      # sets back-end internal port to 3000
+      # sets back-end internal/external ports to 3000
       - "3000:3000"
 
     networks:
@@ -58,9 +62,9 @@ services:
       # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
 
-    # only in production, does npm installation while ommitting development dependencies
-    # then runs traditional start script which is more efficient than nodemon
-    command: sh -c "npm install --omit=dev && npm run start"
+    # only in non-prod environments, runs nodemon which
+    # looks for changes live (that won't happen in production)
+    command: sh -c "npx nodemon index.js"
 
   reverse-proxy:
     # Note: the reverse-proxy service is based on an image therefore no build phase

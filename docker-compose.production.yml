@@ -1,5 +1,5 @@
-# This file (docker-compose.yml) is the base file for both the override and prod files
-# it does not include certain aspects of either prod or override file such as the start command
+# This file (docker-compose.prod.yml) is for production it has commands that start
+# a production-level service and avoids any dev dependencies
 
 services:
   frontend:
@@ -16,6 +16,11 @@ services:
       - ./frontend:/app
       # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
+
+    ports:
+      # sets front-end internal port to 80
+      # sets the front end external port to 8080
+      - "8080:80"
     
     networks:
       # use the app-network
@@ -23,9 +28,10 @@ services:
 
     environment:
       # backend URL accessible from frontend
-      NODE_ENV: ${NODE_ENV}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
+    # start command for produciton environment
+    command: sh -c "npm run build"
 
   backend:
 
@@ -44,6 +50,11 @@ services:
       # encryption folders, with read only option
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
+    ports:
+      # sets back-end internal port to 80
+      # set the back-end external port to 3000
+      - "3000:80"
+
     networks:
       # use the app-network
       - app-network
@@ -51,7 +62,10 @@ services:
     environment:
       # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+
+    # only in production, does npm installation while ommitting development dependencies
+    # then runs traditional start script which is more efficient than nodemon
+    command: sh -c "npm install --omit=dev && npm run start"
 
   reverse-proxy:
     # Note: the reverse-proxy service is based on an image therefore no build phase
@@ -67,9 +81,9 @@ services:
 
     ports:
       # Expose HTTPS port for reverse proxy to handle SSL
-      - "8443:443"
+      - "443:443"
       # Expose HTTP port used for redirecting to HTTPS
-      - "8080:80"
+      - "80:80"
 
     networks:
       # use the app-network

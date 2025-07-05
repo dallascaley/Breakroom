@@ -1,0 +1,81 @@
+What do I want?
+
+1) I want an environment to develop in
+
+   Note: I use a Windows 11 machine, and I would like this to be set up on that machine, not in a VM on that machine if that is 
+         possible and makes sense.  Looking for advice on what is actually the best thing to do here.
+
+   Note 2: I am currently the only developer on this project, but I would like detailed instructions on how to set up future
+           developers with the same or similar local environments.
+
+2) I want another environment to test production in
+
+   This environment should be hosted on AWS probably because that is where production should be.  This environment should be easy
+   to create and also tear down because I don't want to incur costs when I am not working on it (I will probably have it down most
+   of the time)
+
+3) I want a third environment that is production
+
+   This environment will be in AWS (unless you think this is a bad choice, if you think this is a bad choice I need to know why.
+   my goals here are to have a scalable system which uses common cloud-based infrastructure.  Part of the reason I choose AWS is
+   that it will also help my career goals as AWS is a very commonly used service)
+
+4) I want all the environments to have SSL
+
+   Again, only if this makes sense.  I see no reason why I can't use the same SSL cert for non-production environments and a different
+   one for production (for security I think production should be different?)
+
+5) I want three databases, one local, two hosted on AWS (or wherever, some publicly available location)
+
+   Local database is needed and will always be up.
+   staging database may be turned on/off as needed
+   production database will always be up (after we deploy to production the first time)
+
+6) I would like the production environment to be optimized for production 
+  
+   (no npm install build stage nonsense, just flat files, however the fuck you do that)
+
+7) I need email to work (already had it working once)
+
+   Note, I believe it can be done where the same email works for all three environments, but if this is an issue then
+   another option would have to be explored (aka different emails for different environments) whatever makes sense.
+
+8) I would like the front end to be a vanilla (aka hello-world) installation of vue.js.  Just enough to fulfill the basic 
+   requirements as indicated in this document
+
+9) I would like the backend to be similar, but based in express.js
+
+10) I would like the reverse proxy to be nginx
+
+General Notes:
+
+I would like this to all be in Docker, so that deployment can be set up in Terraform.  These two things are requirements.  At some point I would also like to use Kubernetes, but this is not critical at first.  That said... If there are any considerations which could be accommodated right now that would make a Kubernetes set up in the future more easy, I would like to explore those options now.
+
+Docker Desktop is a thing that docker uses, it seems to take over port 80 and 443 for localhost so this has been an issue.  For that reason I think it's unwise to use "localhost" is any of the domains.  I believe I will need to add some entries to the windows hosts file (note, the robot has never suggested this, i just remembered that it was a thing)
+
+For the development environment:
+
+I would like http://local.prosaurus* to be directed at my machine always (this requires the hosts file setting I believe).  I am hoping that by setting the host file, I can make this work on port 80 even though docker desktop seems to take that shit over, however I have not tested this yet.
+
+when someone goes to http://local.prosaurus*
+I would like them to be immediately redirected to: https://local.prosaurus*
+
+When someone requests https://local.prosaurus* I would like that request to first go to the nginx reverse proxy and then direct it either to the frontend or backend containers at their respective ports (5173 for front end, 3000 for back end)
+
+When someone requests a url that results in them being directed to the front end, I would like that front end to use the vite frontend (whatever the fuck you are supposed to use in development for vite and vue to get a working development environment where I can actually fucking make a change without completely rebuilding the whole god damn thing every time)... I don't know what all this involves.
+
+And basically the same concept for the backend, but I don't think express is as convoluted as vue/vite is.
+
+Database.
+
+Since the development environment is going to be in docker on my windows machine (and not in a VM). I have installed postgres on the windows machine.  I need the backend container in the docker doohickey to be able to connect to the postgres database on my windows machine.  Note, the database is NOT in a container.
+
+For other environments:
+
+stage.prosuarus*  (this would be hosted at AWS using terraform so that i can easily create it only when needed)
+
+www.prosuarus* (this would be production and would also be hosted on AWS with terraform and would likely be up all the time)
+
+Note: These are the only requirements. I do not want the quote to include anything not listed here.  I am a capable developer and can do the internal code in vue or express, I just need the basic environment stuff set up correctly.
+
+

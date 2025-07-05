@@ -18,7 +18,7 @@ services:
       - /app/node_modules
 
     ports:
-      # sets front-end internal port to 5173
+      # sets front-end internal/external ports to 5173 (for non-production builds)
       - "5173:5173"
     
     networks:
@@ -30,7 +30,7 @@ services:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
 
     # start command for non-prod environment
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm run dev"
 
 
   backend:
@@ -51,7 +51,7 @@ services:
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
-      # sets back-end internal port to 3000
+      # sets back-end internal/external ports to 3000
       - "3000:3000"
 
     networks:
@@ -62,9 +62,9 @@ services:
       # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
 
-    # only in non-prod environments, does npm installation and runs nodemon which
+    # only in non-prod environments, runs nodemon which
     # looks for changes live (that won't happen in production)
-    command: sh -c "npm install && npx nodemon index.js"
+    command: sh -c "npx nodemon index.js"
 
   reverse-proxy:
     # Note: the reverse-proxy service is based on an image therefore no build phase

@@ -13,7 +13,11 @@ RUN npm install
 # Then copy the application files
 COPY . .
 
-# Expose the port the app runs on
+# The following two commands are only used if the container is run independently.  If it is run via docker-compose
+# then these are both overridden.  I am leaving them in here in case in the future we have a front end and back end
+# team separately working on the project
+
+# Port to expose (this would be in a dev environement)
 EXPOSE 3000
 
 # Start the application

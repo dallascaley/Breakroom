@@ -11,6 +11,10 @@ RUN npm install
 # Copy everything else
 COPY . .
 
+# The following two commands are only used if the container is run independently.  If it is run via docker-compose
+# then these are both overridden.  I am leaving them in here in case in the future we have a front end and back end
+# team separately working on the project
+
 # Expose the dev port
 EXPOSE 5173
 
