@@ -73,9 +73,9 @@ services:
 
     volumes:
       # nginx configuration file
-      - ./backend/etc/nginx/nginx-docker.conf:/etc/nginx/nginx.conf:ro
+      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf:ro
       # site-enapled folder
-      - ./backend/etc/nginx/sites-enabled-docker:/etc/nginx/sites-enabled-docker:ro
+      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled:ro
       # encryption folders, with read only option
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
 

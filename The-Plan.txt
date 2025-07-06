@@ -78,4 +78,44 @@ www.prosuarus* (this would be production and would also be hosted on AWS with te
 
 Note: These are the only requirements. I do not want the quote to include anything not listed here.  I am a capable developer and can do the internal code in vue or express, I just need the basic environment stuff set up correctly.
 
+Step 1:
+
+Set up Docker with three containers, front end, back end and the reverse proxy
+
+docker-compose.yml 		# base compose file common to all
+docker-compose.local.yml	# Overrides for local
+docker-compose.staging.yml	# Overrides for staging
+docker-compose.production.yml		# Overrides for production
+
+.env.local			# Local environment variables
+.env.staging			# Staging environment variables
+.env.production			# Production environment variables
+
+backend/
+  Dockerfile
+
+frontend/
+  Dockerfile
+
+
+backend
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "run", "devStart"]
+
+frontend
+
+# Expose the dev port
+EXPOSE 5173
+
+# Start Vite dev server
+CMD ["npm", "run", "dev"]
+
+
+
+
+
 
