@@ -11,8 +11,8 @@ const port = 3000;
 const fs = require('fs');
 
 const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/privkey.pem', 'utf8'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/fullchain.pem', 'utf8')
+  key: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/local.key', 'utf8'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/prosaurus.com/local.crt', 'utf8')
 };
 
 
