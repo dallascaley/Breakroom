@@ -1,0 +1,106 @@
+General notes: I am trying to set up a secure SSL certificate for my website which is currently
+hosted only locally.  Because ChatGPT is asking me to close the browser often I am writing down
+all my notes here so that I can get ChatGPT back into context quickly.  Here is a log of all my
+notes
+
+Day 1:
+
+I have a website which uses the following:
+
+Docker and Docker Desktop in a Windows 11 environment
+docker-compose with three containers
+  nginx reverse proxy
+  express.js front end
+  vue.js back end
+
+the site is supposed to be at https://local.prosaurus.com
+
+I have set up the hosts file to point local.prosaurus.com to 127.0.0.1
+
+I have created an encryption certificate and placed it into the correct location in the host machine, 
+I have also verified that these certificate files actually exist in the reverse proxy container.
+
+Note, the encryption certificate that i generated was created using openssl not letsencrypt, However
+I have placed them into a folder where I had previously placed letsencrypt certs. (this might be an issue?)
+
+I have verified that the permissions are correct on both the key and cert file 644 and 600 respectively
+
+I have verified that the user who runs nginx (which is the user called 'nginx') has ownership of the cert files
+
+I have used openssl to verify that the certificate and key pair match
+
+I have added the certificate using certmgr to the host machine
+
+I have rebooted the machine (and restarted the browser)
+
+after all of this the site still shows not secure.
+
+Day 2:
+
+Note, In the past, I had this working however this was when my site was setup in a ubuntu VM under windows, it 
+is not set up that way anymore, it is now directly in my windows machine in docker.  When i set it up originally
+I set it up using letsencrypt which required messing around with DNS entries.  I am again thinking this is the 
+better option.  Since that time however I have changed the url to https://local.prosaurus.com and i have added
+a host file entry so that the system will know to look at 127.0.0.1 to find the site.  If i were to go back to
+my original method, would i need to remove that host file?
+
+Day 3:
+
+On day 2, ChatGPT gave me the impression that I was doing something wrong with my self signed certificate.  What 
+I had been doing was that I had added the certificate using the certmgr tool in Windows, however since the website
+was actually being served from Docker (specifically the reverse proxy container of my three container cluster) it 
+seemed necessary to add the cert there as well (or in stead of the windows one).  I tried to do that by adding the
+following to my docker-compose file:
+
+   command: >
+      /bin/sh -c "apk update && apk add --no-cache ca-certificates && cp /etc/letsencrypt/live/prosaurus.com/local.crt /usr/local/share/ca-certificates/ && update-ca-certificates && nginx -g 'daemon off;'"
+
+and also by removing any references to https in the backend container since it was behind the proxy and not https.
+
+in doing this, the entire site broke and it took the rest of the day to get it back up.  I now have it up again however
+I had to remove the command mentioned above in docker-compose.  I suspect that is stil important?  the site still
+does not work with the cert.
+
+Note, I promped Claude.ai with this same message, I am now going based on Claude's recommentations...
+
+Try to create a new key and ensure it has the exact common name:
+
+$ openssl req -x509 -newkey rsa:4096 -keyout local.prosaurus.com.key -out local.prosaurus.com.crt -days 365 -nodes -subj "/CN=local.prosaurus.com"
+
+added this to docker-compose:
+
+command: >
+      /bin/sh -c "
+        apk update && 
+        apk add --no-cache ca-certificates && 
+        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        update-ca-certificates && 
+        nginx -g 'daemon off;'
+      "
+
+note, i changed the file path to actually work
+
+changed default server config like so:
+
+  ssl_certificate /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt;
+  ssl_certificate_key /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.key;
+
+did this:
+
+Add certificate to Windows (correctly)
+
+Double-click the local.prosaurus.com.crt file
+Click "Install Certificate"
+Choose "Local Machine" (not Current User)
+Select "Place all certificates in the following store"
+Click "Browse" and select "Trusted Root Certification Authorities"
+Complete the installation
+
+and this...
+
+Close all browser windows completely
+Clear SSL state in Windows: certmgr.msc → Personal → Certificates → delete any old certificates
+Restart browser
+Try accessing https://local.prosaurus.com
+
+and it worked!

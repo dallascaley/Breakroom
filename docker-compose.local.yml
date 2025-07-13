@@ -47,8 +47,6 @@ services:
       - ./backend:/app
       # Isolates the node_modules folder in the contain from the host
       - /app/node_modules
-      # encryption folders, with read only option
-      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
       # sets back-end internal/external ports to 3000
@@ -72,9 +70,9 @@ services:
 
     volumes:
       # nginx configuration file
-      - ./backend/etc/nginx/nginx-local.conf:/etc/nginx/nginx.conf:ro
+      - ./backend/etc/nginx/nginx-local.conf:/etc/nginx/nginx.conf
       # site-enapled folder
-      - ./backend/etc/nginx/sites-enabled-local:/etc/nginx/sites-enabled:ro
+      - ./backend/etc/nginx/sites-enabled-local:/etc/nginx/sites-enabled
       # encryption folders, with read only option
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
@@ -94,8 +92,15 @@ services:
       # Back end service dependency
       - backend
 
-    # Entry point which turns the daemon off (GPT says it's not needed, we shall see)
-    entrypoint: nginx -g 'daemon off;'
+    # Commands to run after the container starts
+    command: >
+      /bin/sh -c "
+        apk update && 
+        apk add --no-cache ca-certificates && 
+        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        update-ca-certificates && 
+        nginx -g 'daemon off;'
+      "
 
 networks:
 
