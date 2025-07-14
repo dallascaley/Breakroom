@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': 'https://localhost:3000',
       },
+      watch: {
+        usePolling: true,
+      }
     },
     resolve: {
       alias: {

@@ -1,5 +1,5 @@
 <template>
 
-  <div>This is Breakroom</div>
+  <div>This is Breakroom v2</div>
 
 </template>
