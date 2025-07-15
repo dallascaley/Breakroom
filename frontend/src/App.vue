@@ -1,11 +1,22 @@
 <script setup>
+import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { user } from './stores/user.js'
 
 // Fetch user info when the app mounts
 user.fetchUser()
-console.log('duh...')
-console.log(user)
+
+// Controls visibility of dropdown
+const showMenu = ref(false)
+
+function toggleMenu() {
+  showMenu.value = !showMenu.value
+}
+
+function logout() {
+  user.logout() // Make sure this exists in your user store
+  showMenu.value = false
+}
 </script>
 
 <template>
@@ -17,7 +28,13 @@ console.log(user)
         <RouterLink to="/about">About</RouterLink>
 
         <template v-if="user.username">
-          <RouterLink :to="`/profile`">{{ user.username }}</RouterLink>
+          <div class="user-menu" @click="toggleMenu">
+            {{ user.username }}
+            <div v-if="showMenu" class="dropdown">
+              <RouterLink to="/profile">Profile</RouterLink>
+              <a href="#" @click.prevent="logout">Logout</a>
+            </div>
+          </div>
         </template>
         <template v-else>
           <RouterLink to="/login">Login</RouterLink>
@@ -31,6 +48,7 @@ console.log(user)
 </template>
 
 <style>
+/* Main body styles */
 body {
   margin: 0;
   background: #eee;
@@ -64,5 +82,34 @@ nav a {
 
 nav a:first-of-type {
   border: 0;
+}
+
+/* User menu styles */
+.user-menu {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.dropdown a {
+  padding: 0.25rem 0;
+  text-decoration: none;
+  color: #333;
+}
+
+.dropdown a:hover {
+  text-decoration: underline;
 }
 </style>

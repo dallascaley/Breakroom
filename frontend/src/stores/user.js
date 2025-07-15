@@ -1,7 +1,17 @@
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+
+const state = reactive({
+  username: null,
+  // other user fields...
+})
+
+const router = useRouter()
 
 export const user = reactive({
-  username: null,
+  get username() {
+    return state.username
+  },
   async fetchUser() {
     try {
       const res = await fetch('/api/auth/me', {
@@ -11,10 +21,10 @@ export const user = reactive({
       if (!res.ok) throw new Error('Not logged in');
 
       const data = await res.json();
-      user.username = data.username;
+      state.username = data.username;
     } catch (err) {
       console.log(err);
-      user.username = null;
+      state.username = null;
     }
   }
 });
