@@ -7,11 +7,11 @@ WORKDIR /app
 # so that caching can take place and we don't reinstall everything every time
 COPY package*.json ./
 
-# Then do the install
-RUN npm install
-
 # Then copy the application files
 COPY . .
+
+# Then do the install
+RUN npm install
 
 # The following two commands are only used if the container is run independently.  If it is run via docker-compose
 # then these are both overridden.  I am leaving them in here in case in the future we have a front end and back end

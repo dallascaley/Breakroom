@@ -38,6 +38,7 @@ services:
     build:
       # The directory where we look for a Dockerfile
       context: ./backend
+      dockerfile: Dockerfile
 
     # Set the working directory inside the container at _run_ time
     working_dir: /app

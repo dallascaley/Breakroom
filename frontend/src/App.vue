@@ -1,17 +1,28 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import { user } from './stores/user.js'
+
+// Fetch user info when the app mounts
+user.fetchUser()
+console.log('duh...')
+console.log(user)
 </script>
 
 <template>
   <header>
 
     <div class="wrapper">
-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/login">Login</RouterLink>
-        <RouterLink to="/signup">Sign Up</RouterLink>
+
+        <template v-if="user.username">
+          <RouterLink :to="`/profile`">{{ user.username }}</RouterLink>
+        </template>
+        <template v-else>
+          <RouterLink to="/login">Login</RouterLink>
+          <RouterLink to="/signup">Sign Up</RouterLink>
+        </template>
       </nav>
     </div>
   </header>

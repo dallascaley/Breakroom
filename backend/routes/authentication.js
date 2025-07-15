@@ -126,6 +126,21 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/me', (req, res) => {
+  const token = req.cookies.jwtToken;
+
+  if (!token) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const payload = jwt.verify(token, SECRET_KEY);
+    return res.json({ username: payload.username });
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
 //Suff below here all came default, i'm just leaving it for reference...
 
 // ChatGPT examples below
