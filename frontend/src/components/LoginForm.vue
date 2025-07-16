@@ -16,6 +16,9 @@
 
 <script>
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+import { user } from '@/stores/user.js'
+
 export default {
   data() {
     return {
@@ -24,13 +27,27 @@ export default {
       passwordError: ''
     }
   },
+  setup() {
+    const router = useRouter()
+    return { router }
+  },
   methods: {
     async handleSubmit() {
-      let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
-        handle:this.handle,
-        password:this.password
-      })
-      console.log(result.data.token)
+      try {
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+          handle: this.handle,
+          password: this.password
+        })
+
+        await user.fetchUser() // Fetch the username after login
+
+        // If login succeeds, redirect to home
+        this.router.push('/')
+      } catch (err) {
+        // Handle login failure
+        this.passwordError = 'Invalid handle or password'
+        console.error(err)
+      }
     }
   }
 }

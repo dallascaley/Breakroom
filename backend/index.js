@@ -10,7 +10,11 @@ const port = 3000;
 // Load your SSL certificate and key
 const fs = require('fs');
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  credentials: true
+}));
+
 
 app.set('view engine', 'ejs');
 
@@ -38,6 +42,6 @@ console.log('Serving static from:', path.join(__dirname, 'public'));
 console.log('Fallback route will catch anything not under /api');
 
 app.listen(port, () => {
-  console.log(`App running on https://whatever-it-doesnt-fucking-matter:${port}`);
+  console.log(`App running on ${process.env.CORS_ORIGIN}:${port}`);
 });
 

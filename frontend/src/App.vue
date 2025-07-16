@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { user } from './stores/user.js'
+import { useRouter } from 'vue-router'
 
 // Fetch user info when the app mounts
 user.fetchUser()
@@ -9,12 +10,15 @@ user.fetchUser()
 // Controls visibility of dropdown
 const showMenu = ref(false)
 
+const router = useRouter()
+
 function toggleMenu() {
   showMenu.value = !showMenu.value
 }
 
 function logout() {
-  user.logout() // Make sure this exists in your user store
+  user.logout()
+  router.push('/login')
   showMenu.value = false
 }
 </script>
@@ -28,14 +32,21 @@ function logout() {
         <RouterLink to="/about">About</RouterLink>
 
         <template v-if="user.username">
-          <div class="user-menu" @click="toggleMenu">
-            {{ user.username }}
-            <div v-if="showMenu" class="dropdown">
+          <div class="user-menu">
+            <div @click="toggleMenu">
+              {{ user.username }}
+            </div>
+            <div
+              v-if="showMenu"
+              class="dropdown"
+              @click.stop
+            >
               <RouterLink to="/profile">Profile</RouterLink>
               <a href="#" @click.prevent="logout">Logout</a>
             </div>
           </div>
         </template>
+
         <template v-else>
           <RouterLink to="/login">Login</RouterLink>
           <RouterLink to="/signup">Sign Up</RouterLink>
