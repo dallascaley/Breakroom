@@ -141,5 +141,95 @@ AFTER INSERT OR DELETE ON user_permission_groups
 FOR EACH ROW
 EXECUTE FUNCTION log_user_group_change();
 
+-- Insert basic groups/permissions
 
+-- Administrator Group
+INSERT INTO permission_groups (name, description) VALUES
+  ('Administrator', 'Can perform all actions');
+
+-- Administrator Permissions
+INSERT INTO permissions (name, description) VALUES
+  ('create_user', 'Ability to create new users'),
+  ('read_user', 'Ability to read user information'),
+  ('update_user', 'Ability to update users'),
+  ('delete_user', 'Ability to delete user');
+
+-- Group Leader Group
+INSERT INTO permission_groups (name, description) VALUES
+  ('Group Leader', 'Can manage self and other group members');
+
+-- Group Leader Permissions (CRUD for groups)
+INSERT INTO permissions (name, description) VALUES
+  ('create_group', 'Ability to create new groups'),
+  ('read_group', 'Ability to view group information'),
+  ('update_group', 'Ability to modify group details'),
+  ('delete_group', 'Ability to remove groups');
+
+-- Billing Manager Group
+INSERT INTO permission_groups (name, description) VALUES
+  ('Billing Manager', 'Can manage billing');
+
+-- Billing Manager Permissions (CRUD for billing methods)
+INSERT INTO permissions (name, description) VALUES
+  ('create_billing', 'Ability to create billing methods'),
+  ('read_billing', 'Ability to view billing information'),
+  ('update_billing', 'Ability to update billing details'),
+  ('delete_billing', 'Ability to remove billing methods');
+
+-- Standard User Group
+INSERT INTO permission_groups (name, description) VALUES
+  ('Standard', 'Can interact with social network');
+
+-- Standard User Permissions (CRUD for posts)
+INSERT INTO permissions (name, description) VALUES
+  ('create_post', 'Ability to create new posts'),
+  ('read_post', 'Ability to read posts'),
+  ('update_post', 'Ability to edit posts'),
+  ('delete_post', 'Ability to delete posts');
+
+-- Restricted User Group
+INSERT INTO permission_groups (name, description) VALUES
+  ('Restricted', 'Limited interaction with social network');
+
+-- Restricted Permissions (CRUD for approved posts)
+INSERT INTO permissions (name, description) VALUES
+  ('create_approved_post', 'Ability to create approved posts'),
+  ('read_approved_post', 'Ability to view approved posts'),
+  ('update_approved_post', 'Ability to edit approved posts'),
+  ('delete_approved_post', 'Ability to delete approved posts');
+
+-- Administrator: Full access to user management
+INSERT INTO group_permissions (group_id, permission_id) VALUES
+  ((SELECT id FROM permission_groups WHERE name = 'Administrator'), (SELECT id FROM permissions WHERE name = 'create_user')),
+  ((SELECT id FROM permission_groups WHERE name = 'Administrator'), (SELECT id FROM permissions WHERE name = 'read_user')),
+  ((SELECT id FROM permission_groups WHERE name = 'Administrator'), (SELECT id FROM permissions WHERE name = 'update_user')),
+  ((SELECT id FROM permission_groups WHERE name = 'Administrator'), (SELECT id FROM permissions WHERE name = 'delete_user'));
+
+-- Group Leader: Manage groups
+INSERT INTO group_permissions (group_id, permission_id) VALUES
+  ((SELECT id FROM permission_groups WHERE name = 'Group Leader'), (SELECT id FROM permissions WHERE name = 'create_group')),
+  ((SELECT id FROM permission_groups WHERE name = 'Group Leader'), (SELECT id FROM permissions WHERE name = 'read_group')),
+  ((SELECT id FROM permission_groups WHERE name = 'Group Leader'), (SELECT id FROM permissions WHERE name = 'update_group')),
+  ((SELECT id FROM permission_groups WHERE name = 'Group Leader'), (SELECT id FROM permissions WHERE name = 'delete_group'));
+
+-- Billing Manager: Manage billing methods
+INSERT INTO group_permissions (group_id, permission_id) VALUES
+  ((SELECT id FROM permission_groups WHERE name = 'Billing Manager'), (SELECT id FROM permissions WHERE name = 'create_billing')),
+  ((SELECT id FROM permission_groups WHERE name = 'Billing Manager'), (SELECT id FROM permissions WHERE name = 'read_billing')),
+  ((SELECT id FROM permission_groups WHERE name = 'Billing Manager'), (SELECT id FROM permissions WHERE name = 'update_billing')),
+  ((SELECT id FROM permission_groups WHERE name = 'Billing Manager'), (SELECT id FROM permissions WHERE name = 'delete_billing'));
+
+-- Standard: Can interact with the social network
+INSERT INTO group_permissions (group_id, permission_id) VALUES
+  ((SELECT id FROM permission_groups WHERE name = 'Standard'), (SELECT id FROM permissions WHERE name = 'create_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Standard'), (SELECT id FROM permissions WHERE name = 'read_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Standard'), (SELECT id FROM permissions WHERE name = 'update_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Standard'), (SELECT id FROM permissions WHERE name = 'delete_post'));
+
+-- Restricted: Limited to approved posts only
+INSERT INTO group_permissions (group_id, permission_id) VALUES
+  ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'create_approved_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'read_approved_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'update_approved_post')),
+  ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'delete_approved_post'));
 
