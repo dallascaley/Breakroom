@@ -146,35 +146,4 @@ router.post('/logout', (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
-
-//Suff below here all came default, i'm just leaving it for reference...
-
-// ChatGPT examples below
-router.get('/', (req, res) => {
-  res.send('Get all users');
-});
-
-router.get('/:id', (req, res) => {
-  const userId = req.params.id;
-  console.log('get auth id');
-  res.send(`Get user with ID ${userId}`);
-});
-
-router.post('/', (req, res) => {
-  console.log('post auth');
-  res.send('Create a new user');
-});
-
-router.put('/:id', (req, res) => {
-  console.log('update auth');
-  const userId = req.params.id;
-  res.send(`Update user with ID ${userId}`);
-});
-
-router.delete('/:id', (req, res) => {
-  console.log('delete auth');
-  const userId = req.params.id;
-  res.send(`Delete user with ID ${userId}`);
-});
-
 module.exports = router;

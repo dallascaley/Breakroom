@@ -28,10 +28,10 @@ function logout() {
 
     <div class="wrapper">
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
 
         <template v-if="user.username">
+          <RouterLink to="/breakroom">Breakroom</RouterLink>
+          <RouterLink to="/admin">Admin</RouterLink>
           <div class="user-menu">
             <div @click="toggleMenu">
               {{ user.username }}
@@ -48,6 +48,8 @@ function logout() {
         </template>
 
         <template v-else>
+          <RouterLink to="/">Home</RouterLink>
+          <RouterLink to="/about">About</RouterLink>
           <RouterLink to="/login">Login</RouterLink>
           <RouterLink to="/signup">Sign Up</RouterLink>
         </template>
