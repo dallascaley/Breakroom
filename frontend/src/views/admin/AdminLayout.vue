@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<style scoped>
+<style>
 .admin-layout {
   display: flex;
   min-height: 100vh;

@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
-import AdminLayout from '@/views/AdminLayout.vue'
-import AdminUsers from '@/views/AdminUsers.vue'
+
+//Admin views
+import AdminLayout from '@/views/admin/AdminLayout.vue'
+import AdminUsers from '@/views/admin/AdminUsers.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

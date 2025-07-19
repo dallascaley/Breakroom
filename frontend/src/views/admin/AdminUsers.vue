@@ -66,7 +66,7 @@ function cancelEdit() {
 }
 </script>
 
-<style scoped>
+<style>
 form {
   margin-bottom: 20px;
 }
