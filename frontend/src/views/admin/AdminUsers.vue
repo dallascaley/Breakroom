@@ -1,21 +1,26 @@
 <template>
   <section>
     <h1>Manage Users</h1>
-    
+
+    <!-- Add User Form -->
     <form @submit.prevent="createUser">
       <input v-model="newUser.name" placeholder="Name" required />
       <input v-model="newUser.email" placeholder="Email" required />
       <button type="submit">Add User</button>
     </form>
 
-    <ul>
-      <li v-for="user in users" :key="user.id">
-        <strong>{{ user.name }}</strong> ({{ user.email }})
-        <button @click="editUser(user)">Edit</button>
-        <button @click="deleteUser(user.id)">Delete</button>
-      </li>
-    </ul>
+    <!-- DataFetcher renders the user list -->
+    <DataFetcher endpoint="/api/user/all" v-slot="{ data: data }">
+      <ul>
+        <li v-for="user in data.users.rows" :key="user.id">
+          <strong>{{ user.handle }}</strong> ({{ user.email }})
+          <button @click="editUser(user)">Edit</button>
+          <button @click="deleteUser(user.id)">Delete</button>
+        </li>
+      </ul>
+    </DataFetcher>
 
+    <!-- Edit User Form -->
     <div v-if="editingUser">
       <h2>Edit User</h2>
       <form @submit.prevent="updateUser">
@@ -30,23 +35,20 @@
 
 <script setup>
 import { ref } from 'vue'
-
-const users = ref([
-  { id: 1, name: 'Alice', email: 'alice@example.com' },
-  { id: 2, name: 'Bob', email: 'bob@example.com' },
-])
+import DataFetcher from '@/components/DataFetcher.vue'
 
 const newUser = ref({ name: '', email: '' })
 const editingUser = ref(null)
 
+/*
 function createUser() {
-  const id = Date.now()
-  users.value.push({ id, ...newUser.value })
+  // Add API call here if you want to persist it
+  // For now just clear the form
   newUser.value = { name: '', email: '' }
 }
 
 function deleteUser(id) {
-  users.value = users.value.filter(u => u.id !== id)
+  // API call to delete user could go here
 }
 
 function editUser(user) {
@@ -54,25 +56,12 @@ function editUser(user) {
 }
 
 function updateUser() {
-  const index = users.value.findIndex(u => u.id === editingUser.value.id)
-  if (index !== -1) {
-    users.value[index] = editingUser.value
-    editingUser.value = null
-  }
+  // API call to update user could go here
+  editingUser.value = null
 }
+*/
 
 function cancelEdit() {
   editingUser.value = null
 }
 </script>
-
-<style>
-form {
-  margin-bottom: 20px;
-}
-
-input {
-  margin-right: 10px;
-  padding: 5px;
-}
-</style>

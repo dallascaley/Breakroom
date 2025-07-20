@@ -19,6 +19,7 @@ app.use(cors({
 app.set('view engine', 'ejs');
 
 const authentication = require('./routes/authentication');
+const user = require('./routes/user');
 
 // Middleware to parse incoming JSON data
 app.use(express.json());
@@ -26,6 +27,7 @@ app.use(cookieParser());
 
 // Use routes
 app.use('/api/auth', authentication);
+app.use('/api/user', user);
 
 
 // Serve frontend static files
