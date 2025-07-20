@@ -24,8 +24,6 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     const res = await axios.get(props.endpoint)
-    console.log('Response...')
-    console.log(res)
     data.value = res.data
   } catch (e) {
     error.value = e.message || 'Failed to load data'

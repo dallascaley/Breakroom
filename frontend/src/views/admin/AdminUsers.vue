@@ -105,7 +105,11 @@ async function sendInvite() {
   const payload = inviteUserForm.value
 
   // You'd eventually send this to your backend:
-  await fetch('/api/user/invite', { method: 'POST', body: JSON.stringify(payload) })
+  await fetch('/api/user/invite', { 
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload) }
+  )
 
   console.log('Sending invite with payload:', payload)
 

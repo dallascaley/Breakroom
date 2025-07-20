@@ -22,6 +22,9 @@ router.get('/all', async (req, res) => {
 });
 
 router.post('/invite', async (req, res) => {
+  console.log('Request');
+  console.log(req);
+  
   const { handle, email, first_name, last_name } = req.body;
 
   if (!handle || !email || !first_name || !last_name) {

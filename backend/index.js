@@ -23,6 +23,7 @@ const user = require('./routes/user');
 
 // Middleware to parse incoming JSON data
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Use routes
