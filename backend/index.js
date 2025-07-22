@@ -32,16 +32,16 @@ app.use('/api/user', user);
 
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 
 // Serve index.html for all non-API, non-static requests
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next(); // let API routes handle their paths
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-console.log('Serving static from:', path.join(__dirname, 'public'));
+console.log('Serving static from:', path.join(__dirname, 'dist'));
 console.log('Fallback route will catch anything not under /api');
 
 app.listen(port, () => {

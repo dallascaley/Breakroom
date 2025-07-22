@@ -53,7 +53,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   form {
     max-width: 420px;
     margin: 30px auto;

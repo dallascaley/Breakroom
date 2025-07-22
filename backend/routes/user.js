@@ -12,16 +12,24 @@ require('dotenv').config();
 // Define authentication-related routes
 router.get('/all', async (req, res) => {
   const client = await getClient();
+  try {
+    console.log('Fetching all users...');
+    const users = await client.query(
+      'SELECT id, handle, first_name, last_name, email FROM "user_auth";'
+    );
 
-  const users = await client.query('SELECT id, handle, first_name, last_name, email FROM "user_auth";');
-
-  client.release();
-
-  res.status(200).json({
+    res.status(200).json({
       message: 'Users retrieved',
-      users: users
+      users: users.rows,
     });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Failed to retrieve users' });
+  } finally {
+    client.release();
+  }
 });
+
 
 router.post('/invite', async (req, res) => {
   console.log('Request');
@@ -76,7 +84,7 @@ router.post('/invite', async (req, res) => {
   );
 
   client.release();
-  
+
   res.status(201).json({ message: 'Invitation sent to user.' });
 });
 

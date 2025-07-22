@@ -25,7 +25,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in data.users.rows" :key="user.id">
+          <tr v-for="user in data.users" :key="user.id">
             <td>{{ user.id }}</td>
             <td>{{ user.handle }}</td>
             <td>{{ user.first_name }}</td>

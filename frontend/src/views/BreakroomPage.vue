@@ -18,7 +18,7 @@
 // no extra logic needed yet
 </script>
 
-<style>
+<style scoped>
 .breakroom-page {
   max-width: 700px;
   margin: 50px auto;
