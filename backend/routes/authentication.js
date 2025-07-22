@@ -91,32 +91,38 @@ function hashPasswordWithSalt(password, salt) {
 }
 
 router.post('/login', async (req, res) => {
+  console.log('Login route HIT');
   const client = await getClient();
+  console.log('Request body:', req.body);
+  try {
+    const user = await client.query('SELECT * FROM "user_auth" WHERE handle = $1', [req.body.handle]);
 
-  const user = await client.query('SELECT * FROM "user_auth" WHERE handle = $1', [req.body.handle]);
+    if (user.rowCount === 1) {
+      // User has been located
+      const hash = await hashPasswordWithSalt(req.body.password, user.rows[0].salt);
+      if (hash === user.rows[0].hash) {
 
-  if (user.rowCount === 1) {
-    // User has been located
-    const hash = await hashPasswordWithSalt(req.body.password, user.rows[0].salt);
-    if (hash === user.rows[0].hash) {
+        const payload = { username: req.body.handle };
+        const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
 
-      const payload = { username: req.body.handle };
-      const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
-
-      res.cookie('jwtToken', token, {
-        maxAge: 3600000, // 1 hour
-        domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
-      });
-      res.json({ message: 'Logged in successfully' });
+        res.cookie('jwtToken', token, {
+          maxAge: 3600000, // 1 hour
+          domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
+        });
+        res.json({ message: 'Logged in successfully' });
+      } else {
+        res.status(400).json({
+          message: 'Unable to login'
+        });
+      }
     } else {
       res.status(400).json({
         message: 'Unable to login'
       });
     }
-  } else {
-    res.status(400).json({
-      message: 'Unable to login'
-    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).send('Login failed');
   }
 });
 
