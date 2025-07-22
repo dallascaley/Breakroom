@@ -15,6 +15,8 @@ router.get('/all', async (req, res) => {
 
   const users = await client.query('SELECT id, handle, first_name, last_name, email FROM "user_auth";');
 
+  client.release();
+
   res.status(200).json({
       message: 'Users retrieved',
       users: users
@@ -39,6 +41,7 @@ router.post('/invite', async (req, res) => {
   );
 
   if (existingUser.rowCount > 0) {
+    client.release();
     return res.status(409).json({
       message: 'User already exists with the provided handle or email.'
     });
@@ -72,6 +75,8 @@ router.post('/invite', async (req, res) => {
     `
   );
 
+  client.release();
+  
   res.status(201).json({ message: 'Invitation sent to user.' });
 });
 

@@ -44,10 +44,14 @@ router.post('/signup', async (req, res) => {
        </p>`
     );
 
+    client.release();
+
     res.status(201).json({
       message: 'User has been created'
     });
   } else {
+    client.release();
+
     res.status(409).json({
       message: 'User already exists with the provided handle or email.'
     });
@@ -64,10 +68,15 @@ router.post('/verify', async (req, res) => {
     const userId = verifyUser.rows[0].id;
     await client.query('UPDATE "user_auth" SET email_verified = $1 WHERE id = $2', [true, userId]);
 
+    client.release();
+
     res.status(200).json({
       message: 'Email address verified'
     });
   } else {
+
+    client.release();
+
     res.status(400).json({
       message: 'Unsuccessful verification of email address'
     });
@@ -92,9 +101,13 @@ function hashPasswordWithSalt(password, salt) {
 
 router.post('/login', async (req, res) => {
   console.log('Login route HIT');
-  const client = await getClient();
-  console.log('Request body:', req.body);
   try {
+    console.log('Parsing body...');
+    console.log('Request body:', req.body);
+
+    const client = await getClient();
+    console.log('Connected to DB');
+  
     const user = await client.query('SELECT * FROM "user_auth" WHERE handle = $1', [req.body.handle]);
 
     if (user.rowCount === 1) {
@@ -111,16 +124,22 @@ router.post('/login', async (req, res) => {
         });
         res.json({ message: 'Logged in successfully' });
       } else {
+        client.release();
+
         res.status(400).json({
           message: 'Unable to login'
         });
       }
     } else {
+      client.release();
+
       res.status(400).json({
         message: 'Unable to login'
       });
     }
   } catch (err) {
+    client.release();
+    
     console.error('Login error:', err);
     res.status(500).send('Login failed');
   }
@@ -143,10 +162,7 @@ router.get('/me', (req, res) => {
 
 router.post('/logout', (req, res) => {
   res.clearCookie('jwtToken', {
-    domain: '.prosaurus.com',
-    httpOnly: true, // optional, but use this if the cookie was set with httpOnly
-    secure: true,   // optional, if you're using HTTPS
-    sameSite: 'lax' // or whatever matches how you originally set the cookie
+    domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined
   });
 
   res.json({ message: 'Logged out successfully' });
