@@ -38,7 +38,9 @@ router.post('/invite', async (req, res) => {
   const { handle, email, first_name, last_name } = req.body;
 
   if (!handle || !email || !first_name || !last_name) {
-    return res.status(400).json({ message: 'Missing required fields.' });
+    return res.status(400).json({ 
+      message: 'Missing required fields.' 
+    });
   }
 
   const client = await getClient();

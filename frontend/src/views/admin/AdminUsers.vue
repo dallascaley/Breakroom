@@ -13,31 +13,34 @@
 
     <!-- DataFetcher renders the user table -->
     <DataFetcher endpoint="/api/user/all" v-slot="{ data: data }">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Handle</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in data.users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.handle }}</td>
-            <td>{{ user.first_name }}</td>
-            <td>{{ user.last_name }}</td>
-            <td>{{ user.email }}</td>
-            <td>
-              <button @click="editUser(user)">Edit</button>
-              <button @click="deleteUser(user.id)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <template v-if="data && data.users">
+        <div v-show="false">{{ updateUsers(data.users) }}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Handle</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in data.users" :key="user.id">
+              <td>{{ user.id }}</td>
+              <td>{{ user.handle }}</td>
+              <td>{{ user.first_name }}</td>
+              <td>{{ user.last_name }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <button @click="editUser(user)">Edit</button>
+                <button @click="deleteUser(user.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
     </DataFetcher>
 
     <!-- Invite Modal -->
@@ -78,7 +81,17 @@ const inviteUserForm = ref({ handle: '', email: '', first_name: '', last_name: '
 const showInviteModal = ref(false)
 const formError = ref('')
 
+const existingUsers = ref([])
 
+function updateUsers(users) {
+  existingUsers.value = users
+  return '' // Just returns something harmless for the DOM
+}
+
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
 
 const editingUser = ref(null)
 
@@ -90,7 +103,20 @@ function createUser() {
     return
   }
 
-  // Clear error and open modal
+  const duplicate = existingUsers.value.find(
+    user => user.handle === handle || user.email === email
+  )
+
+  if (duplicate) {
+    formError.value = `Login handle "${duplicate.handle}" or email address "${duplicate.email}" already exist.  Please use unique values`
+    return
+  }
+
+  if (!isValidEmail(email)) {
+    formError.value = 'Please enter a valid email address.'
+    return
+  }
+
   formError.value = ''
   inviteUserForm.value = {
     handle,
@@ -104,7 +130,6 @@ function createUser() {
 async function sendInvite() {
   const payload = inviteUserForm.value
 
-  // You'd eventually send this to your backend:
   await fetch('/api/user/invite', { 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -118,7 +143,6 @@ async function sendInvite() {
   inviteUserForm.value = { handle: '', email: '', first_name: '', last_name: '' }
   showInviteModal.value = false
 }
-
 
 /*
 
