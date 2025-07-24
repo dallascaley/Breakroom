@@ -5,7 +5,7 @@
       <nav>
         <ul>
           <li><RouterLink to="/admin/users">Users</RouterLink></li>
-          <!-- Add more links as needed -->
+          <li><RouterLink to="/admin/permissions">Permissions</RouterLink></li>
         </ul>
       </nav>
     </aside>
