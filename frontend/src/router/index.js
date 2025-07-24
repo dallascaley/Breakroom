@@ -5,6 +5,7 @@ import HomePage from '../views/HomePage.vue'
 import AdminLayout from '@/views/admin/AdminLayout.vue'
 import AdminUsers from '@/views/admin/AdminUsers.vue'
 import AdminPermissions from '@/views/admin/AdminPermissions.vue'
+import AdminGroups from '@/views/admin/AdminGroups.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,7 +31,8 @@ const router = createRouter({
       component: AdminLayout,
       children: [
         {path: 'users', component: AdminUsers},
-        {path: 'permissions', component: AdminPermissions}
+        {path: 'permissions', component: AdminPermissions},
+        {path: 'groups', component: AdminGroups}
       ]
     },
     {

@@ -20,7 +20,8 @@ app.set('view engine', 'ejs');
 
 const authentication = require('./routes/authentication');
 const user = require('./routes/user');
-const permissionRoutes = require('./routes/permission')
+const permissionRoutes = require('./routes/permission');
+const groupRoutes = require('./routes/group');
 
 
 
@@ -32,7 +33,8 @@ app.use(cookieParser());
 // Use routes
 app.use('/api/auth', authentication);
 app.use('/api/user', user);
-app.use('/api/permission', permissionRoutes)
+app.use('/api/permission', permissionRoutes);
+app.use('/api/group', groupRoutes);
 
 
 // Serve frontend static files
