@@ -15,7 +15,7 @@ router.get('/all', async (req, res) => {
   try {
     console.log('Fetching all users...');
     const users = await client.query(
-      'SELECT id, handle, first_name, last_name, email FROM "user_auth";'
+      'SELECT id, handle, first_name, last_name, email FROM "users";'
     );
 
     res.status(200).json({
@@ -46,7 +46,7 @@ router.post('/invite', async (req, res) => {
   const client = await getClient();
 
   const existingUser = await client.query(
-    'SELECT id FROM "user_auth" WHERE handle = $1 OR email = $2;',
+    'SELECT id FROM "users" WHERE handle = $1 OR email = $2;',
     [handle, email]
   );
 
@@ -66,7 +66,7 @@ router.post('/invite', async (req, res) => {
   expiresAt.setHours(expiresAt.getHours() + 1);
 
   await client.query(
-    `INSERT INTO "user_auth" 
+    `INSERT INTO "users" 
       (handle, first_name, last_name, email, verification_token, verification_expires_at, hash, salt)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`,
     [handle, first_name, last_name, email, verificationToken, expiresAt, hash, salt]
@@ -102,7 +102,7 @@ router.put('/:id', async (req, res) => {
   try {
     // Check for duplicate handle or email (excluding current user)
     const existing = await client.query(
-      'SELECT id FROM "user_auth" WHERE (handle = $1 OR email = $2) AND id != $3;',
+      'SELECT id FROM "users" WHERE (handle = $1 OR email = $2) AND id != $3;',
       [handle, email, id]
     );
 
@@ -113,7 +113,7 @@ router.put('/:id', async (req, res) => {
     }
 
     const result = await client.query(
-      `UPDATE "user_auth"
+      `UPDATE "users"
        SET handle = $1, first_name = $2, last_name = $3, email = $4
        WHERE id = $5
        RETURNING id, handle, first_name, last_name, email;`,
@@ -139,7 +139,7 @@ router.delete('/:id', async (req, res) => {
 
   try {
     const result = await client.query(
-      'DELETE FROM "user_auth" WHERE id = $1 RETURNING id;',
+      'DELETE FROM "users" WHERE id = $1 RETURNING id;',
       [id]
     );
 

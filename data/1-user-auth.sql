@@ -233,3 +233,30 @@ INSERT INTO group_permissions (group_id, permission_id) VALUES
   ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'update_approved_post')),
   ((SELECT id FROM permission_groups WHERE name = 'Restricted'), (SELECT id FROM permissions WHERE name = 'delete_approved_post'));
 
+-- fuck all this nonsense...
+
+DROP TABLE IF EXISTS user_permissions_audit CASCADE;
+DROP TABLE IF EXISTS group_permissions_audit CASCADE;
+DROP TABLE IF EXISTS user_permission_groups_audit CASCADE;
+
+ALTER TABLE user_auth RENAME TO users;
+
+ALTER TABLE permission_groups RENAME TO groups;
+
+DROP TABLE IF EXISTS user_permissions CASCADE;
+DROP TABLE IF EXISTS group_permissions CASCADE;
+DROP TABLE IF EXISTS user_permission_groups CASCADE;
+
+-- User-permission direct assignments
+CREATE TABLE user_permissions (
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, permission_id)
+);
+
+-- Group-permission assignments
+CREATE TABLE group_permissions (
+  group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE,
+  permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (group_id, permission_id)
+);

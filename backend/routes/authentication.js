@@ -15,7 +15,7 @@ const NODE_ENV = process.env.NODE_ENV;
 router.post('/signup', async (req, res) => {
   const client = await getClient();
 
-  const existingUser = await client.query('SELECT * FROM "user_auth" WHERE handle = $1 OR email = $2;', [req.body.handle, req.body.email]);
+  const existingUser = await client.query('SELECT * FROM "users" WHERE handle = $1 OR email = $2;', [req.body.handle, req.body.email]);
 
   if (existingUser.rowCount === 0) {
     const verificationToken = uuidv4();
@@ -23,7 +23,7 @@ router.post('/signup', async (req, res) => {
     expiresAt.setHours(expiresAt.getHours() + 1);
 
     const result = await client.query(`INSERT INTO 
-      "user_auth" (handle, first_name, last_name, email, verification_token, verification_expires_at, hash, salt) 
+      "users" (handle, first_name, last_name, email, verification_token, verification_expires_at, hash, salt) 
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`, [
         req.body.handle, 
         req.body.first_name,
@@ -62,11 +62,11 @@ router.post('/verify', async (req, res) => {
   const client = await getClient();
   const now = new Date();
 
-  const verifyUser = await client.query('SELECT * FROM "user_auth" WHERE verification_token = $1 AND verification_expires_at > $2', [req.body.token, now]);
+  const verifyUser = await client.query('SELECT * FROM "users" WHERE verification_token = $1 AND verification_expires_at > $2', [req.body.token, now]);
 
   if (verifyUser.rowCount === 1) {
     const userId = verifyUser.rows[0].id;
-    await client.query('UPDATE "user_auth" SET email_verified = $1 WHERE id = $2', [true, userId]);
+    await client.query('UPDATE "users" SET email_verified = $1 WHERE id = $2', [true, userId]);
 
     client.release();
 
@@ -108,7 +108,7 @@ router.post('/login', async (req, res) => {
     const client = await getClient();
     console.log('Connected to DB');
   
-    const user = await client.query('SELECT * FROM "user_auth" WHERE handle = $1', [req.body.handle]);
+    const user = await client.query('SELECT * FROM "users" WHERE handle = $1', [req.body.handle]);
 
     if (user.rowCount === 1) {
       // User has been located
