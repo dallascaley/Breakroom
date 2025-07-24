@@ -12,7 +12,7 @@
 
 
     <!-- DataFetcher renders the user table -->
-    <DataFetcher endpoint="/api/user/all" v-slot="{ data: data }">
+    <DataFetcher :key="fetchKey" endpoint="/api/user/all" v-slot="{ data: data }">
       <template v-if="data && data.users">
         <div v-show="false">{{ updateUsers(data.users) }}</div>
         <table>
@@ -58,17 +58,21 @@
       </div>
     </div>
 
-
-    <!-- Edit User Form -->
-    <div v-if="editingUser">
-      <h2>Edit User</h2>
-      <form @submit.prevent="updateUser">
-        <input v-model="editingUser.name" />
-        <input v-model="editingUser.email" />
-        <button type="submit">Save</button>
-        <button @click="cancelEdit">Cancel</button>
-      </form>
+    <!-- Edit User Modal -->
+    <div v-if="editingUser" class="modal-overlay">
+      <div class="modal">
+        <h2>Edit User</h2>
+        <form @submit.prevent="updateUser">
+          <input v-model="editingUser.handle" placeholder="Handle" required />
+          <input v-model="editingUser.first_name" placeholder="First Name" required />
+          <input v-model="editingUser.last_name" placeholder="Last Name" required />
+          <input v-model="editingUser.email" placeholder="Email" required />
+          <button type="submit">Save</button>
+          <button type="button" @click="cancelEdit">Cancel</button>
+        </form>
+      </div>
     </div>
+
   </section>
 </template>
 
@@ -82,6 +86,9 @@ const showInviteModal = ref(false)
 const formError = ref('')
 
 const existingUsers = ref([])
+
+const fetchKey = ref(0)
+
 
 function updateUsers(users) {
   existingUsers.value = users
@@ -142,19 +149,57 @@ async function sendInvite() {
   newUser.value = { handle: '', email: '' }
   inviteUserForm.value = { handle: '', email: '', first_name: '', last_name: '' }
   showInviteModal.value = false
+  fetchKey.value++  // trigger user list refresh
 }
 
-/*
-
-function deleteUser(id) {
-  // API call to delete user could go here
+function editUser(user) {
+  editingUser.value = { ...user } // avoid mutating original user directly
 }
 
-function updateUser() {
-  // API call to update user could go here
+async function updateUser() {
+  const user = editingUser.value
+  const response = await fetch(`/api/user/${user.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(user),
+  })
+
+  if (!response.ok) {
+    console.error('Failed to update user')
+    return
+  }
+
+  // Refresh users list
+  const updated = await response.json()
+  const index = existingUsers.value.findIndex(u => u.id === updated.id)
+  if (index !== -1) {
+    existingUsers.value[index] = updated
+  }
+
   editingUser.value = null
 }
-*/
+
+async function deleteUser(userId) {
+  if (!confirm('Are you sure you want to delete this user?')) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/user/${userId}`, {
+      method: 'DELETE'
+    });
+
+    if (!res.ok) {
+      console.error('Failed to delete user');
+      return;
+    }
+
+    fetchKey.value++  // trigger user list refresh
+  } catch (err) {
+    console.error('Error deleting user:', err);
+  }
+}
+
 
 function cancelEdit() {
   editingUser.value = null

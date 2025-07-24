@@ -33,7 +33,7 @@ router.get('/all', async (req, res) => {
 
 router.post('/invite', async (req, res) => {
   console.log('Request');
-  console.log(req);
+  //console.log(req);
   
   const { handle, email, first_name, last_name } = req.body;
 
@@ -42,7 +42,7 @@ router.post('/invite', async (req, res) => {
       message: 'Missing required fields.' 
     });
   }
-
+  console.log(`Creating user ${handle} with email ${email}. ${first_name}, ${last_name}`);
   const client = await getClient();
 
   const existingUser = await client.query(
@@ -89,5 +89,72 @@ router.post('/invite', async (req, res) => {
 
   res.status(201).json({ message: 'Invitation sent to user.' });
 });
+
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { handle, first_name, last_name, email } = req.body;
+
+  if (!handle || !first_name || !last_name || !email) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  const client = await getClient();
+  try {
+    // Check for duplicate handle or email (excluding current user)
+    const existing = await client.query(
+      'SELECT id FROM "user_auth" WHERE (handle = $1 OR email = $2) AND id != $3;',
+      [handle, email, id]
+    );
+
+    if (existing.rowCount > 0) {
+      return res.status(409).json({
+        message: 'Another user with this handle or email already exists.',
+      });
+    }
+
+    const result = await client.query(
+      `UPDATE "user_auth"
+       SET handle = $1, first_name = $2, last_name = $3, email = $4
+       WHERE id = $5
+       RETURNING id, handle, first_name, last_name, email;`,
+      [handle, first_name, last_name, email, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ message: 'Failed to update user.' });
+  } finally {
+    client.release();
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      'DELETE FROM "user_auth" WHERE id = $1 RETURNING id;',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({ message: 'User deleted successfully.' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ message: 'Failed to delete user.' });
+  } finally {
+    client.release();
+  }
+});
+
 
 module.exports = router;
