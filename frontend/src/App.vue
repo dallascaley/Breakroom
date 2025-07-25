@@ -1,16 +1,13 @@
 <script setup>
 import { ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { user } from './stores/user.js'
-import { useRouter } from 'vue-router'
-
-// Fetch user info when the app mounts
-user.fetchUser()
-
-// Controls visibility of dropdown
-const showMenu = ref(false)
 
 const router = useRouter()
+const route = useRoute()
+const showMenu = ref(false)
+
+user.fetchUser()
 
 function toggleMenu() {
   showMenu.value = !showMenu.value
@@ -21,6 +18,17 @@ function logout() {
   router.push('/login')
   showMenu.value = false
 }
+
+setInterval(() => {
+  user.fetchUser()
+  const publicRoutes = ['/', '/login', '/signup', '/about']
+
+  // Only redirect if on a protected route and not logged in
+  if (!user.username && !publicRoutes.includes(route.path)) {
+    router.push('/')
+  }
+}, 5 * 60 * 1000) // every 5 minutes
+
 </script>
 
 <template>
