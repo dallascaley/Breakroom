@@ -1,0 +1,37 @@
+User, Group, Permissions in the database
+
+Rule #1: Users have permissions, and this is THE ONLY THING which determines whether or not a user can use a particular resource during normal operation
+
+  Sub note: users are joined to permissions via the user_permissions table
+
+Rule #2: Groups have permissions, and this is only ever used while setting up users in the admin section.  The idea is that if you assign a user to a specific group then they will automatically get all the same permissions that that group has
+
+  Sub note: groups are joined to permissions via the group_permissions table
+
+Historical Note:
+
+The above two rules are all I thought I needed in the system and my intention was to keep it simple, however, I discovered a use case that makes this not possible in the real world.  Before I get into that use case however, let me elaborate a bit on how I assumed the original system would work
+
+Lets say a user has zero permissions. and there is a group which has 20 permissions.  You go into the admin section and select that group for the user and now the user has all 20 permissions.
+
+Later on, you decide, fuck this user, I'm gonna take away permissions 2 and 4 because they are assholes.  So you do it.  Nothing in the system stops you from doing this because at the end of the day, users are only ever associated with permissions, the groups thing was only used during initial configuration.
+
+So, here is the question... is this user part of this group?
+
+The answer is no.  because there is no association between users and groups. 
+
+But...  What if there are hundreds of different permissions, and tens of thousands of users?  Lets say you have 10,000 users who were all originally added to the 'Standard User' group and they all got the 200 original permissions.  
+
+Later on, you decide, hmm.  I need to add a two hundred and first permission for some new shit you made.  And furthermore, I would like all Standard Users to have it.  This is a problem.
+
+Because users are not directly tied to groups, you have no idea which users need to get this new permission.  The only solution would be to manually go through every user, determine if they were part of the original 'Standard User' group and then individually give them the new permission.  This is clearly not practical.
+
+So, one thing that would make this easier, is if you logged what groups the users were associated with originally.  So we add a user_groups relationship.  Note, this relationship is not a functional thing.  There is no need to join to this table when determining whether or not a user has a particular permission, it is simply a log of what groups they were originally associated with.
+
+Note also.  While this user_groups log, may indicate which groups the user was originally associated with, it does nothing to determine whether or not a user is still associated with ALL of the permissions in this group.  It could very well be the case that a user was assigned to a group, got the 200 permissions that the group had at that time, and then later on someone removed 10 of the permissions.  In this case, the user would still be associated with the group even though they only had 190 of the 200 permissions.
+
+So now, what do you do with this new join table in the event that you add a new permission to a group?
+
+Simple.  This operation is a group permissions modification right?  So, before you modify the permissions, you get a list of all the current permissions associated with the group.  you then determine the difference between that group and the new incoming set of permissions and extract only those differences.  So, for example if two permissions were added, and one was removed, you have a list of three permissions (2 add + 1 remove).  you then take that diff and apply it to every user associated with the group.
+
+In this way, you will not mess with any existing user-specific modifications to a group and you can also auto-update a large group of users in one action.

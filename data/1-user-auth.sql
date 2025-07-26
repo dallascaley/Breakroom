@@ -260,3 +260,10 @@ CREATE TABLE group_permissions (
   permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
   PRIMARY KEY (group_id, permission_id)
 );
+
+-- User-group assignments
+CREATE TABLE user_groups (
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, group_id)
+);

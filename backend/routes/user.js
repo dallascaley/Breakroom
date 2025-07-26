@@ -9,7 +9,6 @@ const { getClient } = require('../utilities/db');
 
 require('dotenv').config();
 
-// Define authentication-related routes
 router.get('/all', async (req, res) => {
   const client = await getClient();
   try {
@@ -151,6 +150,47 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting user:', err);
     res.status(500).json({ message: 'Failed to delete user.' });
+  } finally {
+    client.release();
+  }
+});
+
+router.get('/permissionMatrix/:id', async (req, res) => {
+  const client = await getClient();
+  try {
+    console.log('Fetching all user related permission data');
+    const permissions = await client.query(
+      `select 
+        p.id, p.name, p.description, p.is_active,
+        case 
+          when up.user_id is not null then true
+          else false 
+        end as has_permission
+      from permissions p
+      left join user_permissions up
+        on p.id = up.permission_id
+      where up.user_id = 1
+        or up.user_id is null;`
+    );
+
+    console.log('Fetching all group data');
+    const groups = await client.query(
+      `select g.id, g.name, g.description, g.is_active,
+        gp.permission_id
+        from groups g
+      join group_permissions gp
+        on g.id = gp.group_id;`
+    );
+
+    res.status(200).json({
+      message: 'Permission matrix retrieved',
+      permissions: permissions.rows,
+      groups: groups.rows
+    })
+
+  } catch (err) {
+    console.error('Error fetching permission matrix', err);
+    res.status(500).json({ message: 'Failed to retrieve permissin matrix'})
   } finally {
     client.release();
   }
