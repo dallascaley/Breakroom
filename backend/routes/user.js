@@ -170,6 +170,7 @@ router.get('/permissionMatrix/:id', async (req, res) => {
       from permissions p
       left join user_permissions up
         on p.id = up.permission_id
+        and up.user_id = $1
       where up.user_id = $1
         or up.user_id is null;`,
       [id]
@@ -177,11 +178,20 @@ router.get('/permissionMatrix/:id', async (req, res) => {
 
     console.log('Fetching all group data');
     const groups = await client.query(
-      `select g.id, g.name, g.description, g.is_active,
-        gp.permission_id
-        from groups g
-      join group_permissions gp
-        on g.id = gp.group_id;`
+      `select 
+        g.id, g.name, g.description, g.is_active,
+        case
+          when ug.user_id is not null then true
+          else false
+        end as has_group
+      from groups g
+      left join user_groups ug
+        on g.id = ug.group_id
+        and ug.user_id = $1
+      where ug.user_id = $1
+        or ug.user_id is null
+      order by g.id;`,
+      [id]
     );
 
     res.status(200).json({

@@ -67,6 +67,17 @@
           <input v-model="editingUser.first_name" placeholder="First Name" required />
           <input v-model="editingUser.last_name" placeholder="Last Name" required />
           <input v-model="editingUser.email" placeholder="Email" required />
+          <div v-if="matrix">
+            <h3>Groups</h3>
+            <ul>
+              <li v-for="group in matrix.groups" :key="group.id">
+                <label>
+                  <input type="checkbox" v-model="group.has_group"/>
+                  {{ group.name }}
+                </label>
+              </li>
+            </ul>
+          </div>
           <button type="submit">Save</button>
           <button type="button" @click="cancelEdit">Cancel</button>
         </form>
@@ -86,11 +97,9 @@ const showInviteModal = ref(false)
 const formError = ref('')
 
 const existingUsers = ref([])
-const userPermissions = ref(null)
-
+const matrix = ref(null)
 
 const fetchKey = ref(0)
-
 
 function updateUsers(users) {
   existingUsers.value = users
@@ -163,11 +172,11 @@ async function editUser(user) {
       throw new Error('Failed to fetch permission matrix')
     }
     const data = await res.json()
-    userPermissions.value = data
+    matrix.value = data
     console.log('Loaded permissions:', data)
   } catch (err) {
     console.error(err)
-    userPermissions.value = null
+    matrix.value = null
   }
 }
 
