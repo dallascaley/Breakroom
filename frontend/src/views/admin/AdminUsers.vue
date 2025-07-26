@@ -77,6 +77,15 @@
                 </label>
               </li>
             </ul>
+            <h3>Permissions</h3>
+            <ul>
+              <li v-for="perm in matrix.permissions" :key="perm.id">
+                <label>
+                  <input type="checkbox" v-model="perm.has_permission"/>
+                  {{ perm.name }}
+                </label>
+              </li>
+            </ul>
           </div>
           <button type="submit">Save</button>
           <button type="button" @click="cancelEdit">Cancel</button>
