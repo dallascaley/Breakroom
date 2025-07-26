@@ -86,6 +86,8 @@ const showInviteModal = ref(false)
 const formError = ref('')
 
 const existingUsers = ref([])
+const userPermissions = ref(null)
+
 
 const fetchKey = ref(0)
 
@@ -152,8 +154,21 @@ async function sendInvite() {
   fetchKey.value++  // trigger user list refresh
 }
 
-function editUser(user) {
-  editingUser.value = { ...user } // avoid mutating original user directly
+async function editUser(user) {
+  editingUser.value = { ...user }  // Copy user object
+
+  try {
+    const res = await fetch(`/api/user/permissionMatrix/${user.id}`)
+    if (!res.ok) {
+      throw new Error('Failed to fetch permission matrix')
+    }
+    const data = await res.json()
+    userPermissions.value = data
+    console.log('Loaded permissions:', data)
+  } catch (err) {
+    console.error(err)
+    userPermissions.value = null
+  }
 }
 
 async function updateUser() {

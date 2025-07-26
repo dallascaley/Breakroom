@@ -156,6 +156,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 router.get('/permissionMatrix/:id', async (req, res) => {
+  const { id } = req.params;
   const client = await getClient();
   try {
     console.log('Fetching all user related permission data');
@@ -169,8 +170,9 @@ router.get('/permissionMatrix/:id', async (req, res) => {
       from permissions p
       left join user_permissions up
         on p.id = up.permission_id
-      where up.user_id = 1
-        or up.user_id is null;`
+      where up.user_id = $1
+        or up.user_id is null;`,
+      [id]
     );
 
     console.log('Fetching all group data');
