@@ -14,7 +14,10 @@ router.get('/all', async (req, res) => {
   try {
     console.log('Fetching all users...');
     const users = await client.query(
-      'SELECT id, handle, first_name, last_name, email FROM "users";'
+      `SELECT 
+         id, handle, first_name, last_name, email 
+      FROM "users"
+      ORDER BY id;`
     );
 
     res.status(200).json({

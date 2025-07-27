@@ -5,8 +5,8 @@
       <nav>
         <ul>
           <li><RouterLink to="/admin/users">Users</RouterLink></li>
-          <li><RouterLink to="/admin/permissions">Permissions</RouterLink></li>
           <li><RouterLink to="/admin/groups">Groups</RouterLink></li>
+          <li><RouterLink to="/admin/permissions">Permissions</RouterLink></li>
         </ul>
       </nav>
     </aside>

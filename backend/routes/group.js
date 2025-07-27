@@ -12,7 +12,7 @@ router.get('/all', async (req, res) => {
     const result = await client.query(
       `SELECT id, name, description, is_active, created_at, updated_at
        FROM groups
-       ORDER BY name ASC`
+       ORDER BY id`
     )
     res.status(200).json({ groups: result.rows })
   } catch (err) {
@@ -114,5 +114,52 @@ router.delete('/:id', async (req, res) => {
     client.release()
   }
 })
+
+router.get('/groupMatrix', async (req, res) => {
+  const client = await getClient();
+
+  try {
+
+    console.log('Fetching all group data');
+    const groupsResult = await client.query(
+      `select 
+        g.id, g.name, g.description, g.is_active
+      from groups g
+      order by g.id;`
+    );
+
+    const groups = groupsResult.rows;
+
+    console.log('Fetching group_permissions for each group');
+
+    for (const group of groups) {
+      const groupPermissionsResult = await client.query(
+        'SELECT permission_id FROM group_permissions WHERE group_id = $1',
+        [group.id]
+      );
+
+      group.group_permissions = groupPermissionsResult.rows.map(row => row.permission_id);
+    }
+
+    console.log('Fetching all permisisons data');
+    const permissionsResult = await client.query(
+      `SELECT id, name, description, is_active
+      FROM permissions
+      ORDER BY id`
+    )
+
+    res.status(200).json({
+      message: 'Group matrix retrieved',
+      groups: groups,
+      permissions: permissionsResult.rows
+    });
+
+  } catch (err) {
+    console.error('Error fetching group matrix', err);
+    res.status(500).json({ message: 'Failed to retrieve group matrix' });
+  } finally {
+    client.release();
+  }
+});
 
 module.exports = router

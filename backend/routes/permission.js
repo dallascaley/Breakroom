@@ -10,7 +10,7 @@ router.get('/all', async (req, res) => {
   const client = await getClient()
   try {
     const result = await client.query(
-      `SELECT id, name, description, is_active, created_at, updated_at
+      `SELECT id, name, description, is_active
        FROM permissions
        ORDER BY name ASC`
     )
