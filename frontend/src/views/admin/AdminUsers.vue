@@ -99,6 +99,7 @@
 <script setup>
 import { ref } from 'vue'
 import DataFetcher from '@/components/DataFetcher.vue'
+import { watchEffect } from 'vue'
 
 const newUser = ref({ handle: '', email: '' })
 const inviteUserForm = ref({ handle: '', email: '', first_name: '', last_name: '' })
@@ -182,6 +183,31 @@ async function editUser(user) {
     }
     const data = await res.json()
     matrix.value = data
+
+    // Auto-sync group selection with permission checkboxes
+    watchEffect(() => {
+      if (!matrix.value) return
+
+      // Clear all permissions first (optional if multiple groups may share permissions)
+      const manuallyChecked = new Set()
+      matrix.value.permissions.forEach(p => p.has_permission = false)
+
+      // Loop through all groups and enable permissions from checked groups
+      matrix.value.groups.forEach(group => {
+        if (group.has_group) {
+          group.group_permissions.forEach(permId => {
+            manuallyChecked.add(permId)
+          })
+        }
+      })
+
+      matrix.value.permissions.forEach(p => {
+        if (manuallyChecked.has(p.id)) {
+          p.has_permission = true
+        }
+      })
+    })
+
     console.log('Loaded permissions:', data)
   } catch (err) {
     console.error(err)
@@ -198,6 +224,10 @@ async function updateUser() {
     permissions: matrix.value.permissions.map(perm => ({
       permission_id: perm.id,
       has_permission: perm.has_permission
+    })),
+    groups: matrix.value.groups.map(group => ({
+      group_id: group.id,
+      has_group: group.has_group
     }))
   }
 

@@ -91,7 +91,7 @@ router.post('/invite', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { user, permissions } = req.body;
+  const { user, permissions, groups } = req.body;
 
   // make sure the basic fields are available
   if (!user.handle || !user.first_name || !user.last_name || !user.email) {
@@ -148,6 +148,28 @@ router.put('/:id', async (req, res) => {
 
       await client.query(
         `INSERT INTO user_permissions (user_id, permission_id) VALUES ${values}`,
+        params
+      );
+    }
+
+    // Clear current groups
+    await client.query(
+      `DELETE FROM user_groups WHERE user_id = $1`,
+      [id]
+    );
+
+    // Insert new ones
+    const filteredGroups = groups.filter(p => p.has_group);
+    if (filteredGroups.length > 0) {
+      // more bs, one day you should examine this to actually understand it...
+      const values = filteredGroups
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(',');
+
+      const params = [id, ...filteredGroups.map(p => p.group_id)];
+
+      await client.query(
+        `INSERT INTO user_groups (user_id, group_id) VALUES ${values}`,
         params
       );
     }
