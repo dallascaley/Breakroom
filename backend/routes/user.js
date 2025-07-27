@@ -91,9 +91,10 @@ router.post('/invite', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { handle, first_name, last_name, email } = req.body;
+  const { user, permissions } = req.body;
 
-  if (!handle || !first_name || !last_name || !email) {
+  // make sure the basic fields are available
+  if (!user.handle || !user.first_name || !user.last_name || !user.email) {
     return res.status(400).json({ message: 'All fields are required.' });
   }
 
@@ -102,7 +103,7 @@ router.put('/:id', async (req, res) => {
     // Check for duplicate handle or email (excluding current user)
     const existing = await client.query(
       'SELECT id FROM "users" WHERE (handle = $1 OR email = $2) AND id != $3;',
-      [handle, email, id]
+      [user.handle, user.email, id]
     );
 
     if (existing.rowCount > 0) {
@@ -111,22 +112,55 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    const result = await client.query(
-      `UPDATE "users"
-       SET handle = $1, first_name = $2, last_name = $3, email = $4
-       WHERE id = $5
-       RETURNING id, handle, first_name, last_name, email;`,
-      [handle, first_name, last_name, email, id]
+    // Begin the transactional part of the process
+    await client.query('BEGIN');
+
+    const searchResult = await client.query(
+      `UPDATE users SET 
+        handle = $1,
+        first_name = $2,
+        last_name = $3,
+        email = $4
+      WHERE id = $5`,
+      [user.handle, user.first_name, user.last_name, user.email, id]
     );
 
-    if (result.rowCount === 0) {
+    // make sure there is even a user to update
+    if (searchResult.rowCount === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
+    // Clear current permissions
+    await client.query(
+      `DELETE FROM user_permissions WHERE user_id = $1`,
+      [id]
+    );
+
+    // Insert new ones
+    const filteredPermissions = permissions.filter(p => p.has_permission);
+    if (filteredPermissions.length > 0) {
+      // this is some complicated bullshit to prevent sql injection, trust the robot bro, it works...
+      const values = filteredPermissions
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(',');
+
+      const params = [id, ...filteredPermissions.map(p => p.permission_id)];
+
+      await client.query(
+        `INSERT INTO user_permissions (user_id, permission_id) VALUES ${values}`,
+        params
+      );
+    }
+
+    await client.query('COMMIT');
+
+    // Return updated user (optionally with fresh data if needed)
+    const result = await client.query('SELECT * FROM users WHERE id = $1', [id]);
     res.status(200).json(result.rows[0]);
   } catch (err) {
-    console.error('Error updating user:', err);
-    res.status(500).json({ message: 'Failed to update user.' });
+    await client.query('ROLLBACK');
+    console.error('Error updating user', err);
+    res.status(500).json({ message: 'Failed to update user' });
   } finally {
     client.release();
   }
@@ -158,55 +192,70 @@ router.delete('/:id', async (req, res) => {
 router.get('/permissionMatrix/:id', async (req, res) => {
   const { id } = req.params;
   const client = await getClient();
+
   try {
     console.log('Fetching all user related permission data');
-    const permissions = await client.query(
-      `select 
+    const permissionsResult = await client.query(
+      `SELECT 
         p.id, p.name, p.description, p.is_active,
-        case 
-          when up.user_id is not null then true
-          else false 
-        end as has_permission
-      from permissions p
-      left join user_permissions up
-        on p.id = up.permission_id
-        and up.user_id = $1
-      where up.user_id = $1
-        or up.user_id is null;`,
+        CASE 
+          WHEN up.user_id IS NOT NULL THEN true
+          ELSE false 
+        END AS has_permission
+      FROM permissions p
+      LEFT JOIN user_permissions up
+        ON p.id = up.permission_id
+        AND up.user_id = $1
+      WHERE up.user_id = $1
+        OR up.user_id IS NULL;`,
       [id]
     );
 
     console.log('Fetching all group data');
-    const groups = await client.query(
-      `select 
+    const groupsResult = await client.query(
+      `SELECT 
         g.id, g.name, g.description, g.is_active,
-        case
-          when ug.user_id is not null then true
-          else false
-        end as has_group
-      from groups g
-      left join user_groups ug
-        on g.id = ug.group_id
-        and ug.user_id = $1
-      where ug.user_id = $1
-        or ug.user_id is null
-      order by g.id;`,
+        CASE
+          WHEN ug.user_id IS NOT NULL THEN true
+          ELSE false
+        END AS has_group
+      FROM groups g
+      LEFT JOIN user_groups ug
+        ON g.id = ug.group_id
+        AND ug.user_id = $1
+      WHERE ug.user_id = $1
+        OR ug.user_id IS NULL
+      ORDER BY g.id;`,
       [id]
     );
 
+    const groups = groupsResult.rows;
+
+    console.log('Fetching group_permissions for each group');
+
+    for (const group of groups) {
+      const groupPermissionsResult = await client.query(
+        'SELECT permission_id FROM group_permissions WHERE group_id = $1',
+        [group.id]
+      );
+
+      group.group_permissions = groupPermissionsResult.rows.map(row => row.permission_id);
+    }
+
     res.status(200).json({
       message: 'Permission matrix retrieved',
-      permissions: permissions.rows,
-      groups: groups.rows
-    })
+      permissions: permissionsResult.rows,
+      groups: groups
+    });
 
   } catch (err) {
     console.error('Error fetching permission matrix', err);
-    res.status(500).json({ message: 'Failed to retrieve permissin matrix'})
+    res.status(500).json({ message: 'Failed to retrieve permission matrix' });
   } finally {
     client.release();
   }
 });
+
 
 
 module.exports = router;

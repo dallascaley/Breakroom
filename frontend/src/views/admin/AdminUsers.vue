@@ -191,10 +191,20 @@ async function editUser(user) {
 
 async function updateUser() {
   const user = editingUser.value
+
+  // Build the payload to include user and permissions
+  const payload = {
+    user,
+    permissions: matrix.value.permissions.map(perm => ({
+      permission_id: perm.id,
+      has_permission: perm.has_permission
+    }))
+  }
+
   const response = await fetch(`/api/user/${user.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(user),
+    body: JSON.stringify(payload),
   })
 
   if (!response.ok) {
@@ -211,6 +221,7 @@ async function updateUser() {
 
   editingUser.value = null
 }
+
 
 async function deleteUser(userId) {
   if (!confirm('Are you sure you want to delete this user?')) {
