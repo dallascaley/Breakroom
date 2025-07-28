@@ -55,21 +55,38 @@
             <input type="checkbox" v-model="editingGroup.is_active" />
             Active
           </label><br/>
+          <div v-if="matrix">
+            <h3>Permissions</h3>
+            <ul>
+              <li v-for="perm in matrix.permissions" :key="perm.id">
+                <label>
+                  <input type="checkbox" v-model="perm.has_permission"/>
+                  {{ perm.name }}
+                </label>
+              </li>
+            </ul>
+          </div>
           <button type="submit">Save</button>
           <button type="button" @click="cancelEdit">Cancel</button>
         </form>
       </div>
     </div>
+    
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import DataFetcher from '@/components/DataFetcher.vue'
+//import { watchEffect } from 'vue'
 
 const newGroup = ref({ name: '', description: '', is_active: true })
 const editingGroup = ref(null)
 const existingGroups = ref([])
+const matrix = reactive({
+  permissions: [],
+  groups: []
+})
 const formError = ref('')
 const fetchKey = ref(0)
 
@@ -116,8 +133,40 @@ async function sendGroup() {
   }
 }
 
-function editGroup(perm) {
-  editingGroup.value = { ...perm }
+async function editGroup(group) {
+  try {
+    const res = await fetch(`/api/group/groupMatrix`)
+    if (!res.ok) {
+      throw new Error('Failed to fetch group matrix')
+    }
+
+    const data = await res.json()
+
+    const groupPermissionIds = new Set(group.group_permissions || [])
+
+    matrix.permissions = data.permissions.map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      is_active: p.is_active,
+      has_permission: groupPermissionIds.has(p.id)
+    }))
+
+    matrix.groups = data.groups
+
+    editingGroup.value = { ...group }
+
+    console.log("Matrix ready", matrix.value)
+  } catch (err) {
+    console.error(err)
+    matrix.value = null
+  }
+}
+
+function cancelEdit() {
+  editingGroup.value = null
+  matrix.permissions = []
+  matrix.groups = []
 }
 
 async function updateGroup() {
@@ -159,9 +208,6 @@ async function deleteGroup(id) {
   }
 }
 
-function cancelEdit() {
-  editingGroup.value = null
-}
 </script>
 
 <style scoped>

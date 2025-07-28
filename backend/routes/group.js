@@ -8,6 +8,7 @@ const { getClient } = require('../utilities/db')
  */
 router.get('/all', async (req, res) => {
   const client = await getClient()
+  console.log('Fetching all groups...')
   try {
     const result = await client.query(
       `SELECT id, name, description, is_active, created_at, updated_at
@@ -130,11 +131,14 @@ router.get('/groupMatrix', async (req, res) => {
 
     const groups = groupsResult.rows;
 
-    console.log('Fetching group_permissions for each group');
+    console.log('Fetching group_permissions for each group 2');
 
     for (const group of groups) {
+
+      console.log('group id = ' + group.id);
+
       const groupPermissionsResult = await client.query(
-        'SELECT permission_id FROM group_permissions WHERE group_id = $1',
+        'SELECT permission_id FROM group_permissions WHERE group_id = $1;',
         [group.id]
       );
 
@@ -143,9 +147,9 @@ router.get('/groupMatrix', async (req, res) => {
 
     console.log('Fetching all permisisons data');
     const permissionsResult = await client.query(
-      `SELECT id, name, description, is_active
+      `SELECT id, name, description, is_active, false as has_permission
       FROM permissions
-      ORDER BY id`
+      ORDER BY id;`
     )
 
     res.status(200).json({
