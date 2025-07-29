@@ -116,45 +116,46 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
-router.get('/groupMatrix', async (req, res) => {
+router.get('/groupMatrix/:id', async (req, res) => {
+  const { id } = req.params;
   const client = await getClient();
 
   try {
 
-    console.log('Fetching all group data');
+    console.log('Fetching group data');
     const groupsResult = await client.query(
       `select 
         g.id, g.name, g.description, g.is_active
       from groups g
-      order by g.id;`
+      where g.id = $1;`,
+      [id]
     );
 
-    const groups = groupsResult.rows;
-
-    console.log('Fetching group_permissions for each group 2');
-
-    for (const group of groups) {
-
-      console.log('group id = ' + group.id);
-
-      const groupPermissionsResult = await client.query(
-        'SELECT permission_id FROM group_permissions WHERE group_id = $1;',
-        [group.id]
-      );
-
-      group.group_permissions = groupPermissionsResult.rows.map(row => row.permission_id);
+    if (groupsResult.rows.length === 0) {
+      // No group found with that ID
+      throw new Error('Group not found');
     }
+
+    const group = groupsResult.rows[0];
 
     console.log('Fetching all permisisons data');
     const permissionsResult = await client.query(
-      `SELECT id, name, description, is_active, false as has_permission
-      FROM permissions
-      ORDER BY id;`
+      `SELECT p.id, p.name, p.description, p.is_active,
+        CASE
+          WHEN gp.group_id IS NOT NULL THEN true
+        ELSE false
+        END AS has_permission
+      FROM permissions p
+      LEFT JOIN group_permissions gp
+        ON p.id = gp.permission_id
+        AND gp.group_id = $1
+      ORDER BY p.id;`,
+      [id]
     )
 
     res.status(200).json({
       message: 'Group matrix retrieved',
-      groups: groups,
+      group: group,
       permissions: permissionsResult.rows
     });
 

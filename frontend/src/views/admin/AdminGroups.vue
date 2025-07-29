@@ -135,7 +135,7 @@ async function sendGroup() {
 
 async function editGroup(group) {
   try {
-    const res = await fetch(`/api/group/groupMatrix`)
+    const res = await fetch(`/api/group/groupMatrix/${group.id}`)
     if (!res.ok) {
       throw new Error('Failed to fetch group matrix')
     }
