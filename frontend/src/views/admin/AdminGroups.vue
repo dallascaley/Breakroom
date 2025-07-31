@@ -145,6 +145,10 @@ async function editGroup(group) {
       if (!matrix.value) return
 
       // Clear all permissions first
+
+      // General note, something is not right here but it seems to be working so fuck it...
+      // what is this manuallChecked even for?
+
       const manuallyChecked = new Set()
       //matrix.value.permissions.forEach(p => p.has_permission = false)
 
@@ -167,13 +171,22 @@ function cancelEdit() {
 }
 
 async function updateGroup() {
-  const perm = editingGroup.value
+  const group = editingGroup.value
+
+  // Build a payload to include the group and permissions
+  const payload = {
+    group,
+    permissions: matrix.value.permissions.map(perm => ({
+      permission_id: perm.id,
+      has_permission: perm.has_permission
+    }))
+  }
 
   try {
-    const res = await fetch(`/api/group/${perm.id}`, {
+    const res = await fetch(`/api/group/${group.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(perm),
+      body: JSON.stringify(payload),
     })
 
     if (!res.ok) {

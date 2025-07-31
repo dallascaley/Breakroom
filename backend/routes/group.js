@@ -59,26 +59,53 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   const { id } = req.params
-  const { name, description, is_active } = req.body
+  const { group, permissions } = req.body
 
-  if (!name || !description) {
+  if (!group.name || !group.description) {
     return res.status(400).json({ message: 'Name and description are required.' })
   }
 
   const client = await getClient()
   try {
     const now = new Date()
+
+    // Begin the transactional part of the process
+    await client.query('BEGIN');
+
     const result = await client.query(
       `UPDATE groups
        SET name = $1, description = $2, is_active = $3, updated_at = $4
        WHERE id = $5
        RETURNING id, name, description, is_active, created_at, updated_at`,
-      [name, description, is_active ?? true, now, id]
+      [group.name, group.description, group.is_active ?? true, now, id]
     )
 
     if (result.rowCount === 0) {
       return res.status(404).json({ message: 'group not found' })
     }
+
+    //Clear current permissions
+    await client.query(
+      `DELETE FROM group_permissions WHERE group_id = $1`,
+      [id]
+    );
+
+    const filteredPermissions = permissions.filter(p => p.has_permission);
+
+    if (filteredPermissions.length > 0) {
+      const values = filteredPermissions
+        .map((_, i) => `($1, $${i + 2})`)
+        .join(',');
+
+      const params = [id, ...filteredPermissions.map(p => p.permission_id)];
+
+      await client.query(
+        `INSERT INTO group_permissions (group_id, permission_id) VALUES ${values}`,
+        params
+      );
+    }
+
+    await client.query('COMMIT');
 
     res.status(200).json(result.rows[0])
   } catch (err) {
