@@ -76,17 +76,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import DataFetcher from '@/components/DataFetcher.vue'
-//import { watchEffect } from 'vue'
+import { watchEffect } from 'vue'
 
 const newGroup = ref({ name: '', description: '', is_active: true })
 const editingGroup = ref(null)
 const existingGroups = ref([])
-const matrix = reactive({
-  permissions: [],
-  groups: []
-})
+const matrix = ref(null)
 const formError = ref('')
 const fetchKey = ref(0)
 
@@ -134,29 +131,31 @@ async function sendGroup() {
 }
 
 async function editGroup(group) {
+  editingGroup.value = { ...group } // Copy group object
+
   try {
     const res = await fetch(`/api/group/groupMatrix/${group.id}`)
     if (!res.ok) {
       throw new Error('Failed to fetch group matrix')
     }
-
     const data = await res.json()
+    matrix.value = data
 
-    const groupPermissionIds = new Set(group.group_permissions || [])
+    watchEffect(() => {
+      if (!matrix.value) return
 
-    matrix.permissions = data.permissions.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      is_active: p.is_active,
-      has_permission: groupPermissionIds.has(p.id)
-    }))
+      // Clear all permissions first
+      const manuallyChecked = new Set()
+      //matrix.value.permissions.forEach(p => p.has_permission = false)
 
-    matrix.groups = data.groups
+      matrix.value.permissions.forEach(p => {
+        if (manuallyChecked.has(p.id)) {
+          p.has_permission = true
+        }
+      })
+    })
 
-    editingGroup.value = { ...group }
-
-    console.log("Matrix ready", matrix.value)
+    console.log("Loaded group permissions", data)
   } catch (err) {
     console.error(err)
     matrix.value = null
@@ -165,8 +164,6 @@ async function editGroup(group) {
 
 function cancelEdit() {
   editingGroup.value = null
-  matrix.permissions = []
-  matrix.groups = []
 }
 
 async function updateGroup() {

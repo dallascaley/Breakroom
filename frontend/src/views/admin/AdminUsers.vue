@@ -188,7 +188,7 @@ async function editUser(user) {
     watchEffect(() => {
       if (!matrix.value) return
 
-      // Clear all permissions first (optional if multiple groups may share permissions)
+      // Clear all permissions first
       const manuallyChecked = new Set()
       matrix.value.permissions.forEach(p => p.has_permission = false)
 
@@ -208,7 +208,7 @@ async function editUser(user) {
       })
     })
 
-    console.log('Loaded permissions:', data)
+    console.log('Loaded all permissions:', data)
   } catch (err) {
     console.error(err)
     matrix.value = null
