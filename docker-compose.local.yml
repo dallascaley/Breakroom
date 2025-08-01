@@ -72,7 +72,7 @@ services:
     volumes:
       # nginx configuration file
       - ./backend/etc/nginx/nginx-local.conf:/etc/nginx/nginx.conf
-      # site-enapled folder
+      # sites-enabled folder
       - ./backend/etc/nginx/sites-enabled-local:/etc/nginx/sites-enabled
       # encryption folders, with read only option
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
