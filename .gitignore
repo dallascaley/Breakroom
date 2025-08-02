@@ -9,3 +9,4 @@ backend/.env.production
 *csr.pem
 *key.pem
 /backend/.env.production
+_secrets.txt
