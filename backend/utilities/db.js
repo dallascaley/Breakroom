@@ -1,5 +1,7 @@
 const { Pool } = require('pg');
 
+console.log('Connecting to DB host:', process.env.DB_HOST);
+
 // Set up your database connection details (you can also use environment variables)
 const pool = new Pool({
   user: process.env.DB_USER,

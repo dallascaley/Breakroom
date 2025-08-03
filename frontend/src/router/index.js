@@ -6,6 +6,7 @@ import AdminLayout from '@/views/admin/AdminLayout.vue'
 import AdminUsers from '@/views/admin/AdminUsers.vue'
 import AdminPermissions from '@/views/admin/AdminPermissions.vue'
 import AdminGroups from '@/views/admin/AdminGroups.vue'
+import AdminBilling from '@/views/admin/AdminBilling.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,7 +33,8 @@ const router = createRouter({
       children: [
         {path: 'users', component: AdminUsers},
         {path: 'permissions', component: AdminPermissions},
-        {path: 'groups', component: AdminGroups}
+        {path: 'groups', component: AdminGroups},
+        {path: 'billing', component: AdminBilling}
       ]
     },
     {
