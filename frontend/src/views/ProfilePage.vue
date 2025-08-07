@@ -1,16 +1,5 @@
 <template>
   <section class="profile-page">
-    <div class="profile-header">
-      <img
-        :src="profileImage"
-        alt="Profile Image"
-        class="profile-image"
-      />
-      <div class="user-details">
-        <h1>{{ formData.name }}</h1>
-        <p class="user-email">{{ formData.email }}</p>
-      </div>
-    </div>
 
     <nav class="profile-nav">
       <button class="tab active">Profile</button>
@@ -19,7 +8,7 @@
     </nav>
 
     <div class="tab-content">
-      <h2>Profile Overview</h2>
+      <h2>Profile Overview TEsting!!</h2>
 
       <template v-if="!isEditing">
         <p>Welcome to your profile! Here you can update your information, check your subscription, and manage settings.</p>
