@@ -8,6 +8,9 @@ services:
       # The directory where we look for a Dockerfile
       context: ./frontend
 
+    # Front end image to push to Docker Hub
+    image: dallascaley/breakroom-frontend
+
     # Set the working directory inside the container at _run_ time
     working_dir: /app
 
@@ -39,6 +42,9 @@ services:
       # The directory where we look for a Dockerfile
       context: ./backend
       dockerfile: Dockerfile
+
+    # Backend image to push to Docker Hub
+    image: dallascaley/breakroom-backend
 
     # Set the working directory inside the container at _run_ time
     working_dir: /app

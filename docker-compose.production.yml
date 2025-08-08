@@ -4,9 +4,8 @@
 services:
   frontend:
 
-    build:
-      # The directory where we look for a Dockerfile
-      context: ./frontend
+    # Front end image to pull from Docker Hub (no build stage needed)
+    image: dallascaley/breakroom-frontend
 
     # Set the working directory inside the container at _run_ time
     working_dir: /app
@@ -35,10 +34,8 @@ services:
 
   backend:
 
-    build:
-      # The directory where we look for a Dockerfile
-      context: ./backend
-      dockerfile: Dockerfile
+    # Back end image to pull from Docker Hub (no build stage needed)
+    image: dallascaley/breakroom-backend
 
     # Set the working directory inside the container at _run_ time
     working_dir: /app
