@@ -479,6 +479,7 @@ To push your Docker Compose cluster (with front-end, back-end, and reverse proxy
     b. Build the Images
 
         docker-compose build
+        (actual command used: docker-compose -f docker-compose.local.yml build)
 
       This builds the images and tags them as per your Compose file.
 
@@ -596,3 +597,157 @@ Development / Build	  ✅	      ✅	       Build locally, tag, and push
 Deployment / Usage	  ❌	      ✅	       Pull and run prebuilt images
 
 Would you like me to generate both versions of the docker-compose.yml for you based on your setup?
+
+
+8/8/2025 (night time)
+
+I have run it again.  it seems stuck.  here is the output currently:
+
+$ ./build.sh production up
+✅ Using environment: production
+📄 Loading env from: .env.production
+📦 Using compose file: docker-compose.production.yml
+ Container breakroom-backend-1  Running
+ Container breakroom-frontend-1  Created
+Attaching to backend-1, frontend-1, reverse-proxy-1
+frontend-1       |
+frontend-1       | > front@0.0.0 build
+frontend-1       | > vite build
+frontend-1       |
+reverse-proxy-1  | fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz
+frontend-1       | vite v6.2.6 building for production...
+frontend-1       | transforming...
+reverse-proxy-1  | fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/community/x86_64/APKINDEX.tar.gz
+reverse-proxy-1  | v3.22.1-176-g9a0d606dfb2 [https://dl-cdn.alpinelinux.org/alpine/v3.22/main]
+reverse-proxy-1  | v3.22.1-175-g1c8991835a3 [https://dl-cdn.alpinelinux.org/alpine/v3.22/community]
+reverse-proxy-1  | OK: 26331 distinct packages available
+reverse-proxy-1  | fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz
+reverse-proxy-1  | fetch https://dl-cdn.alpinelinux.org/alpine/v3.22/community/x86_64/APKINDEX.tar.gz
+reverse-proxy-1  | OK: 49 MiB in 70 packages
+frontend-1       | ✓ 119 modules transformed.
+frontend-1       | rendering chunks...
+frontend-1       | computing gzip size...
+frontend-1       | dist/index.html                           0.44 kB │ gzip:  0.29 kB
+frontend-1       | dist/assets/SignupPage-D80mqoA0.css       0.43 kB │ gzip:  0.28 kB
+frontend-1       | dist/assets/BreakroomPage-DhemXj19.css    0.45 kB │ gzip:  0.25 kB
+frontend-1       | dist/assets/LoginPage-DwkUsOZc.css        0.52 kB │ gzip:  0.30 kB
+frontend-1       | dist/assets/AboutPage-uXDs1SyG.css        0.64 kB │ gzip:  0.34 kB
+frontend-1       | dist/assets/index-nA_O8lpX.css            5.52 kB │ gzip:  1.54 kB
+frontend-1       | dist/assets/BreakroomPage-Dind2CTX.js     0.43 kB │ gzip:  0.32 kB
+frontend-1       | dist/assets/VerifyPage-BYP4Qeg4.js        0.84 kB │ gzip:  0.52 kB
+frontend-1       | dist/assets/LoginPage-BwtT96RX.js         1.30 kB │ gzip:  0.71 kB
+frontend-1       | dist/assets/AboutPage-CJJX-gzF.js         1.45 kB │ gzip:  0.85 kB
+frontend-1       | dist/assets/SignupPage-BQRrXcYL.js        3.54 kB │ gzip:  1.42 kB
+frontend-1       | dist/assets/index-VUIJxYAY.js           149.29 kB │ gzip: 55.52 kB
+frontend-1       | ✓ built in 1.85s
+frontend-1 exited with code 0
+
+ChatGPT said:
+
+You're seeing expected behavior — your setup is almost correct, and it's not truly “stuck,” but there's a small mistake in how your production frontend container is configured.
+
+🔍 What’s Happening:
+
+From the logs:
+
+frontend-1 ran:
+
+   npm run build
+
+Vite built the frontend assets successfully:
+
+  ✓ built in 1.85s
+
+Then the container exited with code 0:
+
+  frontend-1 exited with code 0
+
+This is normal behavior for a container that was told to just "build and exit" — but that’s not what you want in production.
+
+❌ The Problem:
+
+Your frontend service in docker-compose.production.yml has this line:
+
+  command: sh -c "npm run build"
+
+That only builds the frontend, then the container exits. In production, you want the container to:
+
+serve the built frontend (e.g., using a static file server or nginx), not just build it.
+
+✅ The Fix: Change Frontend to Serve, Not Just Build
+
+There are two main ways to fix this depending on how your frontend Docker image is set up.
+
+Option 1: Let the reverse proxy (nginx) serve the frontend
+
+  If you’re copying the built frontend (/app/dist) into a shared volume, then let nginx serve those static files.
+
+  In this case:
+
+    1) Remove the frontend service entirely from docker-compose.production.yml
+
+    2) Let nginx serve files from /app/dist directly (you’ll need to update your nginx config)
+
+Option 2: Have the frontend container serve itself (simpler if your nginx isn't set up for static files)
+
+  This is probably what you want right now since you're still using frontend as a live service.
+
+  Update your Dockerfile for the frontend to:
+
+    # In your frontend/Dockerfile
+
+    FROM node:24.2.0-alpine
+
+    WORKDIR /app
+
+    COPY . .
+
+    RUN npm install
+    RUN npm run build
+    RUN npm install -g serve
+
+    CMD ["serve", "-s", "dist", "-l", "80"]
+
+      - serve -s dist is a simple static file server for Vite builds.
+
+  Then update docker-compose.production.yml frontend service:
+
+    frontend:
+      image: dallascaley/breakroom-frontend
+      ports:
+        - "8080:80"
+      networks:
+        - app-network
+      environment:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      # Remove this line entirely:
+      # command: sh -c "npm run build"
+
+  This way:
+
+    * The image builds the frontend during docker build
+
+    * When the container starts, it serves the built files with serve
+
+  ✅ Now test it:
+
+  Rebuild your image and run:
+
+    ./build.sh production up
+
+  Then open:
+
+    * http://localhost:8080 → frontend
+
+    * http://localhost:3000 → backend
+
+    * http://localhost → nginx (if configured properly)
+
+✅ Summary
+
+Current Behavior	    Desired Behavior	        Fix
+
+frontend builds       frontend builds and       Remove command, update
+once and exits        serves static files       Dockerfile to use serve
+
+Let me know if you want help modifying your frontend Dockerfile or if your nginx is supposed to serve static assets instead.
