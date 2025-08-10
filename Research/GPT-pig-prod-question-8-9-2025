@@ -1,0 +1,402 @@
+1) I have a web application which uses docker-compose to build a three container system, the backend is in express, the front end is vue.js and there is a reverse proxy.  Additionally, I have a script which builds the system depending on which environment variable i pass (originally with local, staging and production, but right now i am just focusing on local and production)
+
+2) All environmental versions of the app depend on some external database.  For local, it is a locally hosted postgres database, for production it is supabase.
+
+3) the latest issue was that the front end was building but not serving in production. You gave me two options to solve this, which were A) let the reverse proxy serve it (which you advised against) and B) let the front end serve itself (which you said was simpler if my nginx doesn't serve static files).   The thing is, it does, or rather it will need too, so I want to go with option A (which coincidentally you said was also more performant.
+
+4) Note also that I am using Docker Hub, so my goal is to build the app, then push the image to Docker Hub and then pull it down for the production deployment, so there should be no need to build during the production deployment phase (i think?)
+
+I am going to now provide all of the files so you can be fully informed.  The goal here is to tell me how to adjust these for my needs
+
+docker-compose.local:
+
+services:
+  frontend:
+
+    build:
+      context: ./frontend
+
+    image: dallascaley/breakroom-frontend
+
+    working_dir: /app
+
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+    ports:
+      - "5173:5173"
+    
+    networks:
+      - app-network
+
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+
+    command: sh -c "npm run dev"
+
+
+  backend:
+
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    image: dallascaley/breakroom-backend
+
+    working_dir: /app
+
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - app-network
+
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+    command: sh -c "npm run dev"
+
+  reverse-proxy:
+    image: nginx:alpine
+
+    volumes:
+      - ./backend/etc/nginx/nginx-local.conf:/etc/nginx/nginx.conf
+      - ./backend/etc/nginx/sites-enabled-local:/etc/nginx/sites-enabled
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
+
+    ports:
+      - "443:443"
+      - "80:80"
+
+    networks:
+      - app-network
+
+    depends_on:
+      - frontend
+      - backend
+
+    command: >
+      /bin/sh -c "
+        apk update && 
+        apk add --no-cache ca-certificates && 
+        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        update-ca-certificates && 
+        nginx -g 'daemon off;'
+      "
+
+networks:
+
+  app-network:
+    name: app-network
+    driver: bridge
+
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
+
+docker-compose.production.yml
+
+services:
+  frontend:
+
+    image: dallascaley/breakroom-frontend
+
+    working_dir: /app
+
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+    ports:
+      - "8080:80"
+    
+    networks:
+      - app-network
+
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+
+    command: sh -c "npm run build"
+
+  backend:
+
+    image: dallascaley/breakroom-backend
+
+    working_dir: /app
+
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+
+    ports:
+      - "3000:80"
+
+    networks:
+      - app-network
+
+    environment:
+      NODE_ENV: ${NODE_ENV}
+
+    command: sh -c "npm run start"
+
+  reverse-proxy:
+    image: nginx:alpine
+
+    volumes:
+      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf
+      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
+
+    ports:
+      - "443:443"
+      - "80:80"
+
+    networks:
+      - app-network
+
+    depends_on:
+      - frontend
+      - backend
+
+    command: >
+      /bin/sh -c "
+        apk update && 
+        apk add --no-cache ca-certificates && 
+        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        update-ca-certificates && 
+        nginx -g 'daemon off;'
+      "
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge
+
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
+
+front end Dockerfile:
+
+FROM node:24.2.0-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 5173
+CMD ["npm", "run", "dev"]
+
+back end Dockerfile:
+
+FROM node:24.2.0-alpine
+WORKDIR /app
+COPY package*.json ./
+COPY . .
+RUN npm install
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
+
+nginx config file:
+
+server {
+  listen 80;
+  server_name local.prosaurus.com;
+
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  server_name local.prosaurus.com;
+
+  ssl_certificate /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt;
+  ssl_certificate_key /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.key;
+
+  # Proxy to Vite dev server
+  location / {
+    proxy_pass http://frontend:5173; 
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+  }
+
+  location /api/ {
+    proxy_pass http://backend:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /wss/ {
+    proxy_pass http://backend:3000; 
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+  }
+}
+
+
+Response:
+
+Thanks for the detailed breakdown. Since you’ve chosen Option A—letting NGINX serve the frontend static build in production—let’s walk through what you need to adjust to make this work smoothly with your current setup.
+
+✅ Your Goals:
+
+  * Use Docker Compose to build locally and push to Docker Hub.
+  * In production, pull prebuilt images from Docker Hub (no building during deploy).
+  * Let NGINX serve frontend static files in production.
+  * Proxy API routes to Express backend.
+
+✅ What You Need to Change
+
+1. 🛠️ Frontend Dockerfile (Production-Ready)
+
+You're currently using the dev-oriented image (Vite dev server). But to serve static files via NGINX, you need to:
+
+  * Build the static files during Docker build.
+  * Serve the static files from NGINX.
+
+So let’s split responsibilities:
+
+  * Frontend image: just builds the static files (npm run build).
+  * NGINX: serves the static files.
+
+➤ Updated Frontend Dockerfile (for production builds only)
+
+    # Stage 1: Build
+    FROM node:24.2.0-alpine AS builder
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm install
+    COPY . .
+    RUN npm run build
+
+    # Stage 2: Serve from NGINX
+    FROM nginx:alpine
+    COPY --from=builder /app/dist /usr/share/nginx/html
+
+  🔸This will result in a lightweight image that has only the built frontend.
+
+2. 🛠️ docker-compose.production.yml – Adjust the Frontend
+
+  Since NGINX is now serving static files, you don't need a separate frontend container at all in production. You’ll bake the frontend into the reverse proxy container, or serve it from a volume mounted into the proxy container.
+
+You have two options here:
+
+  ✅ Option 1: Bake frontend into the NGINX container
+
+  Build a custom image for your reverse proxy that includes the built frontend files.
+
+  This is simpler and better for Docker Hub distribution.
+
+a. Create Dockerfile.nginx:
+
+  FROM nginx:alpine
+
+  # Copy SSL certs if needed (or do it at runtime)
+  # COPY ./certs /etc/letsencrypt/
+
+  # Copy built frontend
+  COPY ./frontend/dist /usr/share/nginx/html
+
+  # Copy nginx config
+  COPY ./backend/etc/nginx/nginx-production.conf /etc/nginx/nginx.conf
+
+b. Update your production docker-compose.yml:
+
+  reverse-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+
+    image: dallascaley/breakroom-reverse-proxy
+
+    ports:
+      - "443:443"
+      - "80:80"
+    
+    networks:
+      - app-network
+
+    depends_on:
+      - backend
+
+🔁 Remove the frontend container entirely for production.
+
+✅ Option 2: Mount the built frontend into NGINX
+
+  If you want to keep the frontend container separate, have it build the files, and then mount the build directory into NGINX. This is useful for local production simulation but not great for Docker Hub deployment, since the production frontend should be built ahead of time and pushed as a final image.
+
+3. 🛠️ NGINX Production Config Update
+
+  Your current NGINX config assumes it's proxying to a frontend container. Since it will now serve static files itself, change this block:
+
+  location / {
+    root /usr/share/nginx/html;
+    index index.html;
+    try_files $uri $uri/ /index.html;
+  }
+
+  This serves your Vue app with proper SPA fallback.
+
+4. ✅ Backend Dockerfile: Slight Improvement (Optional)
+
+Your backend image is okay as is, but for production consider:
+
+  FROM node:24.2.0-alpine
+  WORKDIR /app
+  COPY package*.json ./
+  RUN npm install --production
+  COPY . .
+  EXPOSE 3000
+  CMD ["npm", "run", "start"]
+  Use --production to avoid installing dev dependencies.
+
+5. ✅ Production Deployment Workflow Summary
+
+Build locally:
+
+  # Frontend (build static)
+  docker build -t dallascaley/breakroom-frontend -f frontend/Dockerfile .
+
+  # Backend
+  docker build -t dallascaley/breakroom-backend -f backend/Dockerfile .
+
+  # Reverse Proxy (includes static files + nginx config)
+  docker build -t dallascaley/breakroom-reverse-proxy -f Dockerfile.nginx .
+
+Push to Docker Hub:
+
+  docker push dallascaley/breakroom-frontend
+  docker push dallascaley/breakroom-backend
+  docker push dallascaley/breakroom-reverse-proxy
+
+On production server:
+
+  docker pull dallascaley/breakroom-backend
+  docker pull dallascaley/breakroom-reverse-proxy
+  docker-compose -f docker-compose.production.yml up -d
+
+✅ TL;DR Final Changes Checklist
+
+File	                            Change
+frontend/Dockerfile	              Convert to multi-stage build that outputs /dist
+docker-compose.production.yml	    Remove frontend service; NGINX serves built files
+nginx-production.conf	            Update / route to serve static files directly
+Add Dockerfile.nginx	            Custom image that serves built frontend + has correct config
+Backend	                          Ensure npm run start is used in production
+
+Let me know if you want a complete working repo structure or the modified files written out!
+
