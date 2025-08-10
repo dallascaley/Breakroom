@@ -400,3 +400,186 @@ Backend	                          Ensure npm run start is used in production
 
 Let me know if you want a complete working repo structure or the modified files written out!
 
+
+*********************************************************************************************
+---------------------------------------------------------------------------------------------
+*********************************************************************************************
+
+
+8/10/2025  The following day, I simply took everything above this line and posted it again to ChatGPT without even asking a specific question.  Here is the response:
+
+Great, thanks for posting the full context again. You're making solid architectural decisions, and we’re very close to having a production-grade setup that:
+
+  * Builds locally
+  * Pushes to Docker Hub
+  * Pulls prebuilt containers into production
+  * Lets NGINX serve the built frontend
+  * Proxies API and WebSocket traffic to your Express backend
+
+✅ Let's Recap the Exact Final Adjustments You Need
+
+🔁 1. Remove Frontend Service from docker-compose.production.yml
+
+  Your production setup shouldn't run the Vite dev server or build the frontend at runtime. So remove the entire frontend: block from docker-compose.production.yml.
+
+  # REMOVE this section completely in docker-compose.production.yml
+
+  # frontend:
+  #   image: dallascaley/breakroom-frontend
+  #   ...
+
+🛠️ 2. Create a Custom Dockerfile.nginx (New File)
+
+  This will:
+
+  * Copy your Vue dist build
+  * Copy your nginx-production.conf
+  * Create the final image that will serve the frontend and proxy backend routes
+
+  # Dockerfile.nginx
+
+    FROM nginx:alpine
+
+    # Copy static frontend files into nginx
+    COPY ./frontend/dist /usr/share/nginx/html
+
+    # Copy nginx config
+    COPY ./backend/etc/nginx/nginx-production.conf /etc/nginx/nginx.conf
+
+    # (Optional) If you use certs
+    # COPY ./backend/etc/encrypt /etc/letsencrypt
+
+  Put this in your project root, or somewhere clearly accessible.
+
+🔧 3. Update nginx-production.conf to Serve Static Files
+
+  Replace your / block with a static file serving block. Here’s the adjusted config:
+
+  server {
+    listen 80;
+    server_name local.prosaurus.com;
+    return 301 https://$host$request_uri;
+  }
+
+  server {
+    listen 443 ssl;
+    server_name local.prosaurus.com;
+
+    ssl_certificate /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt;
+    ssl_certificate_key /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.key;
+
+    # Serve frontend static files
+    location / {
+      root /usr/share/nginx/html;
+      index index.html;
+      try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API routes to backend
+    location /api/ {
+      proxy_pass http://backend:3000;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy WebSockets
+    location /wss/ {
+      proxy_pass http://backend:3000;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+    }
+  }
+
+🧱 4. Build & Push Production Images
+
+  Build and push each image locally, before deploying to production:
+
+  Frontend (just to get dist/ output):
+
+    # Build dist
+    cd frontend
+    npm install
+    npm run build
+
+  Backend:
+
+    docker build -t dallascaley/breakroom-backend -f backend/Dockerfile .
+    docker push dallascaley/breakroom-backend
+
+  NGINX (serves frontend):
+
+    docker build -t dallascaley/breakroom-reverse-proxy -f Dockerfile.nginx .
+    docker push dallascaley/breakroom-reverse-proxy
+
+📦 5. Update docker-compose.production.yml
+
+  Replace the frontend: block with this updated reverse-proxy: service:
+
+    reverse-proxy:
+      image: dallascaley/breakroom-reverse-proxy
+      ports:
+        - "443:443"
+        - "80:80"
+      networks:
+        - app-network
+      depends_on:
+        - backend
+
+  ✅ No volume mounts, no command override—you baked everything into the image.
+
+🔁 6. Deploy in Production
+
+  On your production machine:
+
+    docker pull dallascaley/breakroom-backend
+    docker pull dallascaley/breakroom-reverse-proxy
+
+    docker-compose -f docker-compose.production.yml up -d
+
+🧪 7. Test
+
+  * https://your-domain.com should load the Vue frontend.
+  * Vue should hit /api/* and /wss/* as needed.
+  * NGINX will proxy those to the backend container.
+
+✅ Optional Backend Dockerfile Enhancement
+
+  To skip dev dependencies in production:
+
+  Dockerfile:
+
+    FROM node:24.2.0-alpine
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm install --production
+    COPY . .
+    EXPOSE 3000
+    CMD ["npm", "run", "start"]
+
+  Final Folder Overview
+
+    project-root/
+    │
+    ├── frontend/
+    │   ├── dist/                <-- generated with `npm run build`
+    │   └── Dockerfile           <-- (for local dev only)
+    │
+    ├── backend/
+    │   ├── Dockerfile
+    │   └── etc/nginx/
+    │       ├── nginx-production.conf
+    │       └── ... (certs etc)
+    │
+    ├── docker-compose.local.yml
+    ├── docker-compose.production.yml
+    └── Dockerfile.nginx         <-- custom image serving frontend + nginx config
+
+Let me know if you'd like:
+  * The exact folder + file tree
+  * A CI script or Makefile to automate all this
+  * Help setting up a local .env and .env.production distinction
+  * Or anything else. You're on a good path!
