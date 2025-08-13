@@ -7,6 +7,7 @@ services:
     build:
       # The directory where we look for a Dockerfile
       context: ./frontend
+      dockerfile: Dockerfile.development
 
     # Front end image to push to Docker Hub
     image: dallascaley/breakroom-frontend
