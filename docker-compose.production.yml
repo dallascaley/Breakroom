@@ -2,35 +2,46 @@
 # a production-level service and avoids any dev dependencies
 
 services:
-  frontend:
 
-    # Front end image to pull from Docker Hub (no build stage needed)
-    image: dallascaley/breakroom-frontend
-
-    # Set the working directory inside the container at _run_ time
-    working_dir: /app
+  nginx:
+    # Reverse proxy to serve front end and flat files
+    image: dallascaley/custom-nginx:latest
 
     volumes:
-      # Sets the frontend folder to be the app folder in the container
-      - ./frontend:/app
-      # Isolates the node_modules folder in the contain from the host
-      - frontend_node_modules:/app/node_modules
+      # nginx configuration file
+      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf
+      # sites-enabled folder
+      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled
+      # encryption folders, with read only option
+      - ./backend/etc/encrypt:/etc/letsencrypt:ro
 
     ports:
-      # sets front-end internal port to 80
-      # sets the front end external port to 8080
-      - "8080:80"
-    
+      # Expose HTTPS port for reverse proxy to handle SSL
+      - "443:443"
+      # Expose HTTP port used for redirecting to HTTPS
+      - "80:80"
+
     networks:
       # use the app-network
       - app-network
 
+    depends_on:
+      # Back end service dependency
+      - backend
+    
     environment:
-      # backend URL accessible from frontend
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      # Defines the variable for _run_ time use
+      NODE_ENV: ${NODE_ENV}
 
-    # start command for produciton environment
-    command: sh -c "npm run build"
+    # Commands to run after the container starts
+    command: >
+      /bin/sh -c "
+        apk update && 
+        apk add --no-cache ca-certificates && 
+        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        update-ca-certificates && 
+        nginx -g 'daemon off;'
+      "
 
   backend:
 
@@ -63,44 +74,6 @@ services:
     # then runs traditional start script which is more efficient than nodemon
     command: sh -c "npm run start"
 
-  reverse-proxy:
-    # Note: the reverse-proxy service is based on an image therefore no build phase
-    image: nginx:alpine
-
-    volumes:
-      # nginx configuration file
-      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf
-      # sites-enabled folder
-      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled
-      # encryption folders, with read only option
-      - ./backend/etc/encrypt:/etc/letsencrypt:ro
-
-    ports:
-      # Expose HTTPS port for reverse proxy to handle SSL
-      - "443:443"
-      # Expose HTTP port used for redirecting to HTTPS
-      - "80:80"
-
-    networks:
-      # use the app-network
-      - app-network
-
-    depends_on:
-      # Front end service dependeny
-      - frontend
-      # Back end service dependency
-      - backend
-
-    # Commands to run after the container starts
-    command: >
-      /bin/sh -c "
-        apk update && 
-        apk add --no-cache ca-certificates && 
-        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
-        update-ca-certificates && 
-        nginx -g 'daemon off;'
-      "
-
 networks:
 
   # The internal network all the containers use
@@ -111,5 +84,4 @@ networks:
     driver: bridge
 
 volumes:
-  frontend_node_modules:
   backend_node_modules:

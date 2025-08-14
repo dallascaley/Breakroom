@@ -757,3 +757,206 @@ If you'd like, I can give you boilerplate for:
   A cleaned-up docker-compose.production.yml
 
 Let me know.
+
+
+8-13-2024 latest pile of shit...
+
+Great, you're moving in a solid direction. You're asking where the npm run build step for the frontend should happen — especially in the context of your Dockerfile, build.sh, and environment-driven build process.
+
+Let’s break this down and help you adapt your setup to support a clean, production-ready build of the frontend, which can later be embedded in a custom nginx image.
+
+✅ Key Goal
+
+  In production:
+    * You need to build the Vue app (via npm run build)
+    * And use the output (dist/) to create a custom nginx image
+    * This means you need a separate Dockerfile for building the frontend and producing dist/
+
+🔁 Current Situation
+
+  Your frontend Dockerfile is dev-oriented:
+
+    FROM node:24.2.0-alpine
+
+    WORKDIR /app
+
+    COPY package*.json ./
+    RUN npm install
+
+    COPY . .
+
+    EXPOSE 5173
+
+    CMD ["npm", "run", "dev"]
+
+  This is perfect for local dev (npm run dev starts the hot-reload server)
+
+  But not suitable for building a static production frontend (doesn’t run npm run build or expose dist/)
+
+✅ What You Need: Two Dockerfiles
+
+  1. Dockerfile.dev (you already have this)
+
+    For local development
+
+    Runs the dev server
+
+    Included in docker-compose.local.yml
+
+  2. Dockerfile.frontend-build (new — for production CI/CD)
+
+    Runs npm run build
+
+    Outputs only the dist/ folder
+
+    Can be used to COPY dist/ into your custom nginx image
+
+    Here's how Dockerfile.frontend-build could look:
+
+      # Dockerfile.frontend-build
+      FROM node:24.2.0-alpine AS builder
+
+      WORKDIR /app
+
+      COPY package*.json ./
+      RUN npm install
+
+      COPY . .
+      RUN npm run build
+
+      # Optional: If you want to inspect the output, uncomment:
+      # RUN ls -la /app/dist
+
+    This image is never deployed — it’s just used as a build step to get the Vue output.
+
+✅ Custom nginx Image (to serve the frontend)
+
+  Create another file: Dockerfile.nginx:
+
+    # Dockerfile.nginx
+    FROM nginx:1.25-alpine
+
+    # Remove default config
+    RUN rm /etc/nginx/conf.d/default.conf
+
+    # Copy custom nginx config
+    COPY nginx.conf /etc/nginx/nginx.conf
+
+    # Copy Vue build output into nginx public dir
+    COPY --from=builder /app/dist /usr/share/nginx/html
+
+    # Optional: Copy static files if you have them
+    # COPY static /usr/share/nginx/html/static
+
+  This is the image you'll use in production. It will:
+
+    * Serve static frontend (from /)
+    * Reverse proxy /api to your backend
+    * Serve /static flat files, if needed
+
+🔨 Updating build.sh
+
+  You'll now need to enhance your build.sh script to support a multi-stage frontend build process for production.
+
+    Here’s how you might adjust it:
+
+      #!/bin/bash
+
+      # Usage: ./build.sh [local|staging|production] [up]
+      ENV="$1"
+
+      if [ -z "$ENV" ]; then
+        echo "Usage: $0 [local|staging|production] [up]"
+        exit 1
+      fi
+
+      ENV_FILE=".env.$ENV"
+      COMPOSE_FILE="docker-compose.$ENV.yml"
+
+      if [ ! -f "$ENV_FILE" ]; then
+        echo "❌ Environment file '$ENV_FILE' not found"
+        exit 1
+      fi
+
+      if [ ! -f "$COMPOSE_FILE" ]; then
+        echo "❌ Compose file '$COMPOSE_FILE' not found"
+        exit 1
+      fi
+
+      echo "✅ Using environment: $ENV"
+      echo "📄 Loading env from: $ENV_FILE"
+      echo "📦 Using compose file: $COMPOSE_FILE"
+
+      set -a
+      source "$ENV_FILE"
+      set +a
+
+      # 👇 Production: Build Vue and copy to nginx
+      if [ "$ENV" == "production" ]; then
+        echo "🚧 Building frontend (Vue) for production..."
+
+        docker build -f Dockerfile.frontend-build -t frontend-builder .
+        docker create --name extract-temp frontend-builder
+        docker cp extract-temp:/app/dist ./frontend-dist
+        docker rm extract-temp
+
+        echo "🚧 Building custom nginx image with frontend..."
+        docker build -f Dockerfile.nginx -t your-dockerhub-user/custom-nginx:latest .
+      fi
+
+      # Build rest of the system
+      docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache
+
+      if [ "$2" == "up" ]; then
+        docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up
+      fi
+
+    ✅ This way:
+
+      * You build Vue in a container
+      * Copy out the dist/ folder to the host
+      * Use it to build the production nginx image
+
+🧩 docker-compose.production.yml
+
+  Make sure this compose file does not include the frontend container (used in dev).
+
+  Instead:
+
+    version: '3.8'
+
+    services:
+      nginx:
+        image: your-dockerhub-user/custom-nginx:latest
+        ports:
+          - "80:80"
+        depends_on:
+          - backend
+        environment:
+          - NODE_ENV=production
+
+      backend:
+        image: your-dockerhub-user/backend:latest
+        environment:
+          - NODE_ENV=production
+          - DATABASE_URL=${DATABASE_URL}
+
+🔁 Final Summary
+
+  Component	Local	Production
+    * Frontend build	Built via dev container	Built separately, copied to nginx
+    * Frontend serve	Dev server in separate container	Static files served by nginx
+
+  Frontend image pushed	❌ Optional	❌ Not used
+  nginx	Prebuilt nginx image	Custom nginx w/ frontend + proxy
+  Backend	Built locally	Pushed to Docker Hub
+  docker-compose	.local.yml	.production.yml
+
+✅ Next Steps
+
+  Let me know if you'd like:
+    * A sample nginx.conf for this nginx setup
+    * CI/CD guidance for pushing built images to Docker Hub
+    * Auto-versioning/tagging based on Git commits or tags
+
+  Just say the word!
