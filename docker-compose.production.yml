@@ -38,7 +38,7 @@ services:
       /bin/sh -c "
         apk update && 
         apk add --no-cache ca-certificates && 
-        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
+        cp /etc/letsencrypt/live/prosaurus.com/prosaurus.com.crt /usr/local/share/ca-certificates/ && 
         update-ca-certificates && 
         nginx -g 'daemon off;'
       "
