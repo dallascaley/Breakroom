@@ -34,8 +34,8 @@ set +a
 if [ "$ENV" == "production" ]; then
   echo "🚧 Building frontend (Vue) for production..."
 
-  # Build teh frontend (from ./frontend) using your Dockerfile.production
-  docker build -f Dockerfile.produciton -t frontend-builder ./frontend
+  # Build the frontend (from ./frontend) using your Dockerfile.production
+  docker build -f frontend/Dockerfile.production -t frontend-builder ./frontend
 
   # Extract the build dist/ folder from the image
   docker create --name extract-temp frontend-builder
