@@ -1,8 +1,7 @@
 .env
 */node_modules/*
 */.env*
-*/etc
-*/etc/*
+*/etc/encrypt
 *cert.pem
 *csr.pem
 *key.pem
