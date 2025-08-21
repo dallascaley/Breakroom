@@ -31,7 +31,7 @@ services:
     
     environment:
       # Defines the variable for _run_ time use
-      NODE_ENV: ${NODE_ENV}
+      NODE_ENV: production
 
     # Commands to run after the container starts
     command: >
@@ -66,7 +66,7 @@ services:
 
     environment:
       # Defines the variable for _run_ time use
-      NODE_ENV: ${NODE_ENV}
+      NODE_ENV: production
 
     # only in production, does npm installation while ommitting development dependencies
     # then runs traditional start script which is more efficient than nodemon
