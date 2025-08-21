@@ -8,3 +8,4 @@
 /backend/.env.production
 _secrets.txt
 frontend-dist*
+*encrypt.tar.gz
