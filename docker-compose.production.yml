@@ -51,9 +51,9 @@ services:
     # Set the working directory inside the container at _run_ time
     working_dir: /app
 
-    volumes:
+    # volumes:
       # sets the backend folder to be the app folder in the container
-      - ./backend:/app
+      # - ./backend:/app
 
     ports:
       # sets back-end internal port to 80
