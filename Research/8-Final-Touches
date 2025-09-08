@@ -53,336 +53,325 @@ I'll group the checks by layers — from infrastructure to Docker, Nginx, and ap
 
         curl -I http://your-domain.com
 
--------------------------------------------------
+          -------------------------------------------------
 
-The following commands where executing in a wsl/Ubuntu terminal in Windows 11:
+          The following commands where executing in a wsl/Ubuntu terminal in Windows 11:
 
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://prosaurus.com
-curl: (28) Failed to connect to prosaurus.com port 80 after 122099 ms: Couldn't connect to server
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://44.225.148.34
-curl: (7) Failed to connect to 44.225.148.34 port 80 after 45 ms: Couldn't connect to server
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://prosaurus.com
-curl: (28) Failed to connect to prosaurus.com port 443 after 123973 ms: Couldn't connect to server
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://44.225.148.34
-curl: (7) Failed to connect to 44.225.148.34 port 443 after 42 ms: Couldn't connect to server
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://www.prosaurus.com
-curl: (28) Failed to connect to www.prosaurus.com port 80 after 123848 ms: Couldn't connect to server
-dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://www.prosaurus.com
-curl: (28) Failed to connect to www.prosaurus.com port 443 after 120321 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://prosaurus.com
+          curl: (28) Failed to connect to prosaurus.com port 80 after 122099 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://44.225.148.34
+          curl: (7) Failed to connect to 44.225.148.34 port 80 after 45 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://prosaurus.com
+          curl: (28) Failed to connect to prosaurus.com port 443 after 123973 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://44.225.148.34
+          curl: (7) Failed to connect to 44.225.148.34 port 443 after 42 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I http://www.prosaurus.com
+          curl: (28) Failed to connect to www.prosaurus.com port 80 after 123848 ms: Couldn't connect to server
+          dallas@Dellbert:/mnt/c/Users/dalla/Repo/Confra$ curl -I https://www.prosaurus.com
+          curl: (28) Failed to connect to www.prosaurus.com port 443 after 120321 ms: Couldn't connect to server
 
-What do they tell you?
+          What do they tell you?
 
-  🔒 Your EC2 Instance is not accessible on ports 80 and 443
+          🔒 Your EC2 Instance is not accessible on ports 80 and 443
 
-  Which means one or more of the following are likely true:
+          Which means one or more of the following are likely true:
 
-    1. Your EC2 security group is not allowing inbound traffic on ports 80 and 443.
+            1. Your EC2 security group is not allowing inbound traffic on ports 80 and 443.
 
-       🛡️ Go to:
+              🛡️ Go to:
 
-           EC2 Dashboard > Instances > [Your Instance] > Security > Security Groups > Inbound Rules
+                  EC2 Dashboard > Instances > [Your Instance] > Security > Security Groups > Inbound Rules
 
-       ✅ Ensure you see rules like:
-           Type    Protocol    Port Range	Source
-           HTTP    TCP         80               0.0.0.0/0
-           HTTPS   TCP         443              0.0.0.0/0
-           SSH     TCP         22               YOUR_IP/32
+              ✅ Ensure you see rules like:
+                  Type    Protocol    Port Range	Source
+                  HTTP    TCP         80               0.0.0.0/0
+                  HTTPS   TCP         443              0.0.0.0/0
+                  SSH     TCP         22               YOUR_IP/32
 
---------------------------------------------------------------
-I have a question regarding the security group and whether or not it is allowing traffic on ports 80 and 443
+                  --------------------------------------------------------------
+                  I have a question regarding the security group and whether or not it is allowing traffic on ports 80 and 443
 
-In your description, you say 'Your IP'.  Mine looks exactly like your example except the YOUR_IP part is 96.41.68.133/32.  The static ip address returned from my Terraform job is 44.225.148.34.  Additionally I do not see either of those listed in my DNS on GoDaddy.  here is what GoDaddy's DNS has
+                  In your description, you say 'Your IP'.  Mine looks exactly like your example except the YOUR_IP part is 96.41.68.133/32.  The static ip address returned from my Terraform job is 44.225.148.34.  Additionally I do not see either of those listed in my DNS on GoDaddy.  here is what GoDaddy's DNS has
 
-Records
+                  Records
 
-Type	Name		Data
-A 	@ 		44.25.148.34
-A 	dcaley 		96.41.85.126
-NS	@		ns65.domaincontrol.com.
-NS	@ 		ns66.domaincontrol.com.
-CNAME	*.dcaley	dcaley.prosaurus.com.
-CNAME	19249685	sendgrid.net.
-CNAME	em7492		u19249585.wl086.sendgrid.net.
-CNAME	pay		paylinks.commerce.godaddy.com.
-CNAME	s1._domainkey	s1.domainkey.u19249585.wl086.sendgrid.net.
-CNAME	s2._domainkey	s2.domainkey.u19249585.wl086.sendgrid.net.
-CNAME	url4297		sendgrid.net.
-CNAME	www		prosaurus.com.
-CNAME	_domainconnect	_domainconnect.gd.domaincontrol.com.
-SOA	@		Primary nameserver: ns65.domaincontrol.com.
-txt	_acme-challenge	44bdb8mlwt3e8CkGVZXFX0UvBixygJo1Cx1Ptnxyc9c
-txt	_dmarc		v=DMARC1; p=none;
+                  Type	Name		Data
+                  A 	@ 		44.25.148.34
+                  A 	dcaley 		96.41.85.126
+                  NS	@		ns65.domaincontrol.com.
+                  NS	@ 		ns66.domaincontrol.com.
+                  CNAME	*.dcaley	dcaley.prosaurus.com.
+                  CNAME	19249685	sendgrid.net.
+                  CNAME	em7492		u19249585.wl086.sendgrid.net.
+                  CNAME	pay		paylinks.commerce.godaddy.com.
+                  CNAME	s1._domainkey	s1.domainkey.u19249585.wl086.sendgrid.net.
+                  CNAME	s2._domainkey	s2.domainkey.u19249585.wl086.sendgrid.net.
+                  CNAME	url4297		sendgrid.net.
+                  CNAME	www		prosaurus.com.
+                  CNAME	_domainconnect	_domainconnect.gd.domaincontrol.com.
+                  SOA	@		Primary nameserver: ns65.domaincontrol.com.
+                  txt	_acme-challenge	44bdb8mlwt3e8CkGVZXFX0UvBixygJo1Cx1Ptnxyc9c
+                  txt	_dmarc		v=DMARC1; p=none;
 
-Note, I do also have an Elastic IP Address which is 44.225.148.34 and that is listed above as my A record so perhaps this is all configured correctly?
+                  Note, I do also have an Elastic IP Address which is 44.225.148.34 and that is listed above as my A record so perhaps this is all configured correctly?
 
-<answer here>
+                  <answer here>
 
---------------------------------------------------------------
+                  --------------------------------------------------------------
 
-    2. Nginx (or any service) is not running on those ports.
+            2. Nginx (or any service) is not running on those ports.
 
-       SSH into your EC2 instance:
+              SSH into your EC2 instance:
 
-         ssh ec2-user@44.225.148.34
+                ssh ec2-user@44.225.148.34
 
-       Then run:
+              Then run:
 
-         sudo docker ps
+                sudo docker ps
 
-       Look for your reverse proxy / nginx container.
+              Look for your reverse proxy / nginx container.
 
-       Then check inside the container:
+              Then check inside the container:
 
-         docker exec -it <nginx_container_name> nginx -t
+                docker exec -it <nginx_container_name> nginx -t
 
-       Also try:
+              Also try:
 
-         docker exec -it <nginx_container_name> curl -I http://localhost
+                docker exec -it <nginx_container_name> curl -I http://localhost
 
---------------------------------------------------------------
-results here...
---------------------------------------------------------------
+              --------------------------------------------------------------
+              results here...
+              --------------------------------------------------------------
 
-    3. Your EC2 instance's firewall (e.g., ufw or iptables) is blocking those ports.
+            3. Your EC2 instance's firewall (e.g., ufw or iptables) is blocking those ports.
 
-       If you're using ufw:
+              If you're using ufw:
 
-         sudo ufw status
+                sudo ufw status
 
-       If it's active and ports 80/443 are not allowed:
+              If it's active and ports 80/443 are not allowed:
 
-         sudo ufw allow 80
-         sudo ufw allow 443
-         sudo ufw reload
+                sudo ufw allow 80
+                sudo ufw allow 443
+                sudo ufw reload
 
---------------------------------------------------------------
-results here...
---------------------------------------------------------------
-    4. Your domain (prosaurus.com) is not pointing to the correct IP address.
+              --------------------------------------------------------------
+              results here...
+              --------------------------------------------------------------
+            4. Your domain (prosaurus.com) is not pointing to the correct IP address.
 
-       Check that prosaurus.com resolves to your EC2 IP:
+              Check that prosaurus.com resolves to your EC2 IP:
 
-         dig prosaurus.com +short
+                dig prosaurus.com +short
 
-       You should get: 44.225.148.34
+              You should get: 44.225.148.34
 
-       If not, update your DNS A record at your domain registrar (e.g., Namecheap, GoDaddy, etc.) to point to that IP.
+              If not, update your DNS A record at your domain registrar (e.g., Namecheap, GoDaddy, etc.) to point to that IP.
 
---------------------------------------------------------------
-results here...
---------------------------------------------------------------
-    5. Nginx may be misconfigured or crashed, so even if the port is open, there's no service to respond.
+              --------------------------------------------------------------
+              results here...
+              --------------------------------------------------------------
+            5. Nginx may be misconfigured or crashed, so even if the port is open, there's no service to respond.
 
-       strange, it missed this part?
+              strange, it missed this part?
 
---------------------------------------------------------------
-results here...
---------------------------------------------------------------
+              --------------------------------------------------------------
+              results here...
+              --------------------------------------------------------------
 
-✅ Your Immediate Action:
+    ✅ Your Immediate Action:
 
-  Log into AWS Console → EC2 → Security Group → Inbound Rules → Allow ports 80 and 443 from 0.0.0.0/0.
+      Log into AWS Console → EC2 → Security Group → Inbound Rules → Allow ports 80 and 443 from 0.0.0.0/0.
 
-  Then rerun this from your local machine:
+      Then rerun this from your local machine:
 
-    curl -I http://44.225.148.34
+        curl -I http://44.225.148.34
 
-  Let me know what you find in the security group settings, and we’ll proceed from there.
+      Let me know what you find in the security group settings, and we’ll proceed from there.
 
--------------------------------------------------
+    -------------------------------------------------
 
 
+    ✅ DNS Resolution:
 
+    Does the domain point to your server?
 
-✅ DNS Resolution:
+    Run:
 
-Does the domain point to your server?
+    dig your-domain.com
+    ping your-domain.com
 
-Run:
 
-dig your-domain.com
-ping your-domain.com
+    ✅ SSL Certificates:
 
+    If you're using HTTPS, are the SSL certificates valid and configured correctly in Nginx?
 
-✅ SSL Certificates:
+    Use:
 
-If you're using HTTPS, are the SSL certificates valid and configured correctly in Nginx?
+    curl -v https://your-domain.com
 
-Use:
+  🐳 2. Docker / Container Issues
 
-curl -v https://your-domain.com
+    ✅ Containers Running?
 
-🐳 2. Docker / Container Issues
+      Run:
 
-✅ Containers Running?
+        docker ps
 
-Run:
+      Are all expected containers (frontend, backend, reverse proxy) running?
 
-docker ps
+    ✅ Logs:
 
+      Check logs for each container:
 
-Are all expected containers (frontend, backend, reverse proxy) running?
+      docker logs <container_name>
 
-✅ Logs:
+      Especially check Nginx (reverse proxy), backend, and frontend.
 
-Check logs for each container:
+    ✅ Health Checks (if defined)?
 
-docker logs <container_name>
+      Are containers restarting? (docker ps may show this)
 
+    ✅ Networking Between Containers:
 
-Especially check Nginx (reverse proxy), backend, and frontend.
+      Is the reverse proxy able to reach the frontend and backend containers?
 
-✅ Health Checks (if defined)?
+      Check Docker network aliases and docker-compose.production.yml service names.
 
-Are containers restarting? (docker ps may show this)
+      Use curl from inside the reverse proxy container to test:
 
-✅ Networking Between Containers:
+      docker exec -it <reverse_proxy_container> sh
+      curl http://backend:8000
+      curl http://frontend:3000
 
-Is the reverse proxy able to reach the frontend and backend containers?
+  🧭 3. Nginx-Specific Checks
 
-Check Docker network aliases and docker-compose.production.yml service names.
+    ✅ Nginx Process Running:
 
-Use curl from inside the reverse proxy container to test:
+      Inside the reverse proxy container:
 
-docker exec -it <reverse_proxy_container> sh
-curl http://backend:8000
-curl http://frontend:3000
+        ps aux | grep nginx
 
-🧭 3. Nginx-Specific Checks
+    ✅ Valid Config Loaded:
 
-✅ Nginx Process Running:
+      Test config inside the container:
 
-Inside the reverse proxy container:
+        nginx -t
 
-ps aux | grep nginx
+    ✅ Correct nginx.conf?
 
+      Is the mounted nginx-production.conf file what you expect?
 
-✅ Valid Config Loaded:
+      Does it include the proper sites-enabled directory?
 
-Test config inside the container:
+      Does the file actually exist inside the container?
 
-nginx -t
+        docker exec -it <reverse_proxy_container> cat /etc/nginx/nginx.conf
 
 
-✅ Correct nginx.conf?
+    ✅ Serving Something:
 
-Is the mounted nginx-production.conf file what you expect?
+      From your browser, what’s the HTTP status code?
 
-Does it include the proper sites-enabled directory?
+      Use:
 
-Does the file actually exist inside the container?
+        curl -I http://your-domain.com
 
-docker exec -it <reverse_proxy_container> cat /etc/nginx/nginx.conf
+      Or test from your local dev machine if needed.
 
+  🧩 4. Frontend-Specific Issues
 
-✅ Serving Something:
+    ✅ Built App Present in Container?
 
-From your browser, what’s the HTTP status code?
+      Did you build your frontend before pushing the image? (e.g., React/Vue static files)
 
-Use:
+    ✅ Serving from Correct Directory?
 
-curl -I http://your-domain.com
+      Is Nginx pointed to the right root or index.html?
 
+    ✅ Nginx Permissions or File Missing?
 
-Or test from your local dev machine if needed.
+      Inside container:
 
-🧩 4. Frontend-Specific Issues
+        ls -l /usr/share/nginx/html
 
-✅ Built App Present in Container?
+  🔌 5. Backend-Specific Issues
 
-Did you build your frontend before pushing the image? (e.g., React/Vue static files)
+    ✅ Accessible from Nginx?
 
-✅ Serving from Correct Directory?
+      Nginx reverse proxy should point to the backend container name (from Compose).
 
-Is Nginx pointed to the right root or index.html?
+      proxy_pass http://backend:8000;
 
-✅ Nginx Permissions or File Missing?
 
-Inside container:
+    ✅ Backend Service Listening:
 
-ls -l /usr/share/nginx/html
+      Is the backend container listening on the correct port?
 
-🔌 5. Backend-Specific Issues
+        netstat -tuln
 
-✅ Accessible from Nginx?
+    ✅ API Responding Properly:
 
-Nginx reverse proxy should point to the backend container name (from Compose).
+      Curl the backend inside the container:
 
-proxy_pass http://backend:8000;
+        docker exec -it <reverse_proxy_container> curl http://backend:8000/health
 
+  🌐 6. Ansible / Deployment Automation Issues
 
-✅ Backend Service Listening:
+    ✅ Correct Files on Host:
 
-Is the backend container listening on the correct port?
+      Is Ansible copying or pulling the latest version of all relevant files?
 
-netstat -tuln
+      Is nginx.conf updated on the server?
 
+      Is docker-compose.production.yml the latest version?
 
-✅ API Responding Properly:
+    ✅ Cache or Stale Containers:
 
-Curl the backend inside the container:
+      Consider forcing recreation of containers:
 
-docker exec -it <reverse_proxy_container> curl http://backend:8000/health
+        docker-compose -f docker-compose.production.yml up -d --force-recreate
 
-🌐 6. Ansible / Deployment Automation Issues
+  📦 7. Image Issues
 
-✅ Correct Files on Host:
+    ✅ Images Updated?
 
-Is Ansible copying or pulling the latest version of all relevant files?
+      If your Docker images contain compiled/built frontend or backend code, did you rebuild and push them after making code changes?
 
-Is nginx.conf updated on the server?
+        docker build -t your-image-name .
+        docker push your-image-name
 
-Is docker-compose.production.yml the latest version?
+    ✅ Docker Compose Using Latest Tag/Image?
 
-✅ Cache or Stale Containers:
+      Does docker-compose.production.yml use a latest tag or pinned version?
 
-Consider forcing recreation of containers:
+      Run:
 
-docker-compose -f docker-compose.production.yml up -d --force-recreate
+        docker-compose pull
 
-📦 7. Image Issues
+  🎯 Next Steps
 
-✅ Images Updated?
+  To narrow this down:
 
-If your Docker images contain compiled/built frontend or backend code, did you rebuild and push them after making code changes?
+  Run docker ps and check which containers are running.
 
-docker build -t your-image-name .
-docker push your-image-name
+  Inspect the logs:
 
+    docker logs <reverse_proxy_container>
+    docker logs <frontend_container>
+    docker logs <backend_container>
 
-✅ Docker Compose Using Latest Tag/Image?
+  Try hitting your site from the command line:
 
-Does docker-compose.production.yml use a latest tag or pinned version?
+    curl -I http://your-domain.com
+    curl http://localhost   # From inside reverse proxy container
 
-Run:
+  If you want, you can paste in:
 
-docker-compose pull
+  Your docker-compose.production.yml
 
-🎯 Next Steps
+  A sample Nginx site config (server { ... })
 
-To narrow this down:
+  Logs from the reverse proxy container
 
-Run docker ps and check which containers are running.
-
-Inspect the logs:
-
-docker logs <reverse_proxy_container>
-docker logs <frontend_container>
-docker logs <backend_container>
-
-
-Try hitting your site from the command line:
-
-curl -I http://your-domain.com
-curl http://localhost   # From inside reverse proxy container
-
-
-If you want, you can paste in:
-
-Your docker-compose.production.yml
-
-A sample Nginx site config (server { ... })
-
-Logs from the reverse proxy container
-
-… and I’ll help debug directly.
+  … and I’ll help debug directly.
