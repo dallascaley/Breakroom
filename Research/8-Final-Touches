@@ -129,6 +129,28 @@ I'll group the checks by layers — from infrastructure to Docker, Nginx, and ap
 
                 sudo docker ps
 
+                  CONTAINER ID   IMAGE                             COMMAND                  CREATED          STATUS          PORTS                                                                      NAMES
+                  83d49b6d6f37   dallascaley/custom-nginx:latest   "/docker-entrypoint.…"   14 minutes ago   Up 14 minutes   0.0.0.0:80->80/tcp, :::80->80/tcp, 0.0.0.0:443->443/tcp, :::443->443/tcp   ec2-user-nginx-1
+                  1e00ca18c8b8   dallascaley/breakroom-backend     "docker-entrypoint.s…"   14 minutes ago   Up 14 minutes   3000/tcp, 0.0.0.0:3000->80/tcp, :::3000->80/tcp                            ec2-user-backend-1
+
+                  Translated:
+
+                    CONTAINER ID: 83d49b6d6f37
+                    IMAGE: dallascaley/custom-nginx:latest
+                    COMMAND: "/docker-entrypoint.…"
+                    CREATED: 14 minutes ago
+                    STATUS: Up 14 minutes
+                    PORTS: 0.0.0.0:80->80/tcp, :::80->80/tcp, 0.0.0.0:443->443/tcp, :::443->443/tcp
+                    NAMES: ec2-user-nginx-1
+
+                    CONTAINER ID: 1e00ca18c8b8
+                    IMAGE: dallascaley/breakroom-backend
+                    COMMAND: "docker-entrypoint.s…"
+                    CREATED: 14 minutes ago
+                    STATUS: Up 14 minutes
+                    PORTS: 3000/tcp, 0.0.0.0:3000->80/tcp, :::3000->80/tcp
+                    NAMES: ec2-user-backend-1
+
               Look for your reverse proxy / nginx container.
 
               Then check inside the container:

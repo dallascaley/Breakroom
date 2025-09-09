@@ -8,14 +8,14 @@ services:
     image: dallascaley/custom-nginx:latest
 
     volumes:
-      # nginx configuration file
-      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf
-      # sites-enabled folder
-      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled
-      # encryption folders, with read only option
+      # Main nginx configuration
+      - ./backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf:ro
+
+      # Sites-enabled directory (if used by nginx.conf)
+      - ./backend/etc/nginx/sites-enabled-production:/etc/nginx/sites-enabled-production:ro
+
+      # SSL certs / Let's Encrypt
       - ./backend/etc/encrypt:/etc/letsencrypt:ro
-      # Mount the ngix configs
-      - /home/ec2-user/backend/etc/nginx/nginx-production.conf:/etc/nginx/nginx.conf:ro
 
     ports:
       # Expose HTTPS port for reverse proxy to handle SSL
