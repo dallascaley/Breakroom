@@ -1,0 +1,94 @@
+The following log is created because Supabase is being a little bitch and complaining about every stupid fucking thing even though I don't give a shit...
+
+Note to self: get rid of Supabase the moment this thing becomes important.
+
+Hello dallascaley,
+
+You currently have 1 project(s) that trigger warnings in our security advisor. This is a weekly reminder to review these issues.
+
+Report created [08 Sep 2025].
+
+What Supabases bitch-ass AI bot says about it...
+
+Summarize the issue and suggest fixes for the following lint item: Title: RLS Disabled in Public Entity: public.permissions Schema: public Issue Details: Table public.permissions is public, but RLS has not been enabled. Description: Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST
+
+(rename_chat) -> "RLS: public.permissions"
+
+Checklist — what I'll do
+
+ - Summarize the lint finding and its risk.
+
+ - Provide clear remediation options based on common access models.
+
+ - Give ready-to-run SQL templates (ALTER + CREATE POLICY) following Supabase RLS best practices.
+
+ - Recommend tests and next steps.
+
+Summary of the issue
+
+Issue: Table public.permissions is exposed via the public schema (accessible by PostgREST) but Row Level Security (RLS) is not enabled.
+Risk: Without RLS, PostgREST (and therefore public/anonymous API roles) may be able to read or modify rows they should not have access to. This is a common vector for data leakage or unauthorized modification in Supabase projects because the public API schema is intended to be API-accessible.
+
+Recommended fixes (pick the model that fits your app)
+
+Choose the option that matches your intended access model. After selecting, run the provided SQL. Always test with both an authenticated and anon user.
+
+1) Minimal safe default — allow only service and authenticated users, no public access
+
+   - Use when records are user-owned or private.
+
+   - SQL template:
+
+      * Enable RLS
+
+      * Create policies that require ownership via auth.uid() (adjust user_id column name if different)
+  
+  SQL:
+
+    Enable RLS: ALTER TABLE public.permissions ENABLE ROW LEVEL SECURITY;
+
+      Policies (owner-based): CREATE POLICY "Allow select to owner" ON public.permissions FOR SELECT TO authenticated USING ((SELECT auth.uid()) = user_id); CREATE POLICY "Allow insert by owner" ON public.permissions FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id); CREATE POLICY "Allow update by owner" ON public.permissions FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK ((SELECT auth.uid()) = user_id); CREATE POLICY "Allow delete by owner" ON public.permissions FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id);
+
+      Recommendation: create an index on user_id: CREATE INDEX idx_permissions_user_id ON public.permissions(user_id);
+
+      1) Public read, authenticated write — when rows are generally public but only logged-in users can create/modify
+
+        SQL: ALTER TABLE public.permissions ENABLE ROW LEVEL SECURITY; CREATE POLICY "Public read" ON public.permissions FOR SELECT TO anon, authenticated USING (true); CREATE POLICY "Authenticated insert" ON public.permissions FOR INSERT TO authenticated WITH CHECK ((SELECT auth.uid()) = user_id); CREATE POLICY "Authenticated update" ON public.permissions FOR UPDATE TO authenticated USING ((SELECT auth.uid()) = user_id) WITH CHECK ((SELECT auth.uid()) = user_id); CREATE POLICY "Authenticated delete" ON public.permissions FOR DELETE TO authenticated USING ((SELECT auth.uid()) = user_id);
+
+      1) Multi-tenant or org-scoped access — when access is by tenant_id or organization membership
+
+        - Use a claim from the JWT or a helper function (recommended pattern).
+
+          Example using JWT claim tenant_id (replace types/cast as needed): ALTER TABLE public.permissions ENABLE ROW LEVEL SECURITY; CREATE POLICY "Tenant read" ON public.permissions FOR SELECT TO authenticated USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid); CREATE POLICY "Tenant insert" ON public.permissions FOR INSERT TO authenticated WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid); CREATE POLICY "Tenant update" ON public.permissions FOR UPDATE TO authenticated USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid) WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid); CREATE POLICY "Tenant delete" ON public.permissions FOR DELETE TO authenticated USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+          Recommendation: index tenant_id.
+
+Important notes & best practices
+
+  Always wrap auth.uid() in a SELECT as shown — this improves caching and matches Supabase guidance.
+
+  Specify roles explicitly in the TO clause (e.g., TO authenticated, TO anon) — do not omit.
+
+  Do not use FOR ALL — create separate policies per operation.
+
+  Name policies with concise descriptive names in double quotes.
+
+  Add indexes on columns used in policies (user_id, tenant_id, organization_id) to keep queries performant.
+
+  After enabling RLS, verify behavior using:
+
+    anon request (no JWT) to ensure anon access is what you expect.
+
+    authenticated requests with different users/tenants to confirm isolation.
+
+  If you need complex join-based checks, create a SECURITY DEFINER helper function in a private schema and REVOKE execute from anon/authenticated — test carefully.
+
+Next steps I can take for you
+
+  If you want, tell me:
+
+    the intended access model for public.permissions (owner-based, public-read, tenant-based, role-based), and the column names used for ownership/tenant (e.g., user_id, tenant_id).
+
+    whether you want me to generate the exact SQL tailored to your schema.
+
+  I can then produce the final SQL and deploy it to your project (I will run the SQL if you confirm).
