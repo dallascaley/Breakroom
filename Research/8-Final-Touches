@@ -190,120 +190,126 @@ I'll group the checks by layers — from infrastructure to Docker, Nginx, and ap
 
                       ./backend/etc/nginx/sites-enabled-production/
 
-...or it contains nothing relevant to HTTP.
+                      ...or it contains nothing relevant to HTTP.
 
-✅ Fix It Now
+                  ✅ Fix It Now
 
-Here’s a step-by-step way to verify and resolve it.
+                    Here’s a step-by-step way to verify and resolve it.
 
-✅ Step 1: Confirm config files exist on the EC2 host
+                    ✅ Step 1: Confirm config files exist on the EC2 host
 
-SSH into the EC2 box and run:
+                      SSH into the EC2 box and run:
 
-ls -l /home/ec2-user/backend/etc/nginx/nginx-production.conf
-ls -l /home/ec2-user/backend/etc/nginx/sites-enabled-production/
-cat /home/ec2-user/backend/etc/nginx/sites-enabled-production/*.conf
+                      ls -l /home/ec2-user/backend/etc/nginx/nginx-production.conf
+                      ls -l /home/ec2-user/backend/etc/nginx/sites-enabled-production/
+                      cat /home/ec2-user/backend/etc/nginx/sites-enabled-production/*.conf
 
+                      You're looking for:
 
-You're looking for:
+                      ✅ Files existing
 
-✅ Files existing
+                        ✅ They define at least one server block like this:
 
-✅ They define at least one server block like this:
+                          server {
+                              listen 80;
+                              server_name yourdomain.com;
 
-server {
-    listen 80;
-    server_name yourdomain.com;
+                              location / {
+                                  proxy_pass http://backend:3000;
+                              }
+                          }
 
-    location / {
-        proxy_pass http://backend:3000;
-    }
-}
+                        If these files are missing, then:
 
+                        👉 Ansible didn’t download them before running docker-compose.
 
-If these files are missing, then:
+                    ✅ Step 2: Confirm they're mounted into the container
 
-👉 Ansible didn’t download them before running docker-compose.
+                      Inside the container:
 
-✅ Step 2: Confirm they're mounted into the container
+                      docker exec -it ec2-user-nginx-1 ls /etc/nginx/sites-enabled-production/
 
-Inside the container:
+                      If this returns nothing: 🚨 The volume mount failed or the host files were missing at container startup.
 
-docker exec -it ec2-user-nginx-1 ls /etc/nginx/sites-enabled-production/
+                    ✅ Step 3: (Optional) Hotfix by copying a config into the container
 
+                      Just to get nginx serving something:
 
-If this returns nothing: 🚨 The volume mount failed or the host files were missing at container startup.
+                        docker exec -it ec2-user-nginx-1 sh -c "echo '
 
-✅ Step 3: (Optional) Hotfix by copying a config into the container
+                        server {
+                            listen 80;
+                            server_name localhost;
 
-Just to get nginx serving something:
+                            location / {
+                                return 200 \"It works!\";
+                                add_header Content-Type text/plain;
+                            }
+                        }
+                        ' > /etc/nginx/conf.d/default.conf"
 
-docker exec -it ec2-user-nginx-1 sh -c "echo '
-server {
-    listen 80;
-    server_name localhost;
+                        Then reload:
 
-    location / {
-        return 200 \"It works!\";
-        add_header Content-Type text/plain;
-    }
-}
-' > /etc/nginx/conf.d/default.conf"
-
-
-Then reload:
-
-docker exec -it ec2-user-nginx-1 nginx -s reload
+                        docker exec -it ec2-user-nginx-1 nginx -s reload
 
 
-Test:
+                        Test:
 
-curl -I http://localhost
+                        curl -I http://localhost
 
+                        If this works: ✅ The nginx container is healthy, the issue is missing or unmounted config.
 
-If this works: ✅ The nginx container is healthy, the issue is missing or unmounted config.
+                    🎯 Permanent Fix (In Ansible or Setup)
+                    ✅ Make sure your Ansible playbook does these before docker-compose up:
 
-🎯 Permanent Fix (In Ansible or Setup)
-✅ Make sure your Ansible playbook does these before docker-compose up:
+                    ✅ Download or create:
 
-✅ Download or create:
+                      /home/ec2-user/backend/etc/nginx/nginx-production.conf
+                      /home/ec2-user/backend/etc/nginx/sites-enabled-production/*.conf
 
-/home/ec2-user/backend/etc/nginx/nginx-production.conf
-/home/ec2-user/backend/etc/nginx/sites-enabled-production/*.conf
+                    ✅ Then confirm:
 
+                    - name: Ensure nginx config directory exists
+                      file:
+                        path: /home/ec2-user/backend/etc/nginx/sites-enabled-production
+                        state: directory
+                        recurse: yes
 
-✅ Then confirm:
+                    ✅ Then do:
 
-- name: Ensure nginx config directory exists
-  file:
-    path: /home/ec2-user/backend/etc/nginx/sites-enabled-production
-    state: directory
-    recurse: yes
+                    - name: Download site config
+                      get_url:
+                        url: https://your-nginx-config-url
+                        dest: /home/ec2-user/backend/etc/nginx/sites-enabled-production/default.conf
+\
+                    ✅ Then start Docker Compose.
 
+                    ✅ Summary
+                    Thing	Status
+                    Nginx container	✅ Running
+                    Config syntax	✅ Valid
+                    Config has server {}	❌ Missing
+                    Port 80/443 open	✅ Exposed by Docker
+                    Volume mount	❓ May have failed due to missing host file
+                    Quick fix	✅ Add config directly into container
 
-✅ Then do:
-
-- name: Download site config
-  get_url:
-    url: https://your-nginx-config-url
-    dest: /home/ec2-user/backend/etc/nginx/sites-enabled-production/default.conf
-
-
-✅ Then start Docker Compose.
-
-✅ Summary
-Thing	Status
-Nginx container	✅ Running
-Config syntax	✅ Valid
-Config has server {}	❌ Missing
-Port 80/443 open	✅ Exposed by Docker
-Volume mount	❓ May have failed due to missing host file
-Quick fix	✅ Add config directly into container
-
-Would you like a working example of a full nginx-production.conf + default.conf setup for reverse proxy to your backend?
+                    Would you like a working example of a full nginx-production.conf + default.conf setup for reverse proxy to your backend?
 
 
+              Sept 13, 2025 Status:
 
+              The above steps have not been done yet.  here are  my thoughts.
+
+              Essentially, what I would like is for my Dockerfiles to never change.  They should be static and work in any environment
+
+              The changes needed per enviornment should be encapsulated in the docker-compose files.
+
+              At this point, it has been a very long time since I have even run the setup for local development, so before I go through
+              the process of making sure my local and production exactly match each other, I would like to verify that my local even
+              works still.  Again, there have been many changes that I applied in order to attempt to get production set up, so because
+              of that, I am concerned that I may have fucked up local.
+
+              
 
               --------------------------------------------------------------
 
