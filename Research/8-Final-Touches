@@ -309,8 +309,35 @@ I'll group the checks by layers — from infrastructure to Docker, Nginx, and ap
               works still.  Again, there have been many changes that I applied in order to attempt to get production set up, so because
               of that, I am concerned that I may have fucked up local.
 
-              
+              ...and it's broken
 
+              Ran this command
+
+              ./build.sh local up
+
+              solution, remove the orphans!  literally pull them out of hiding and shove them down a well or something!!
+
+              docker-compose -f docker-compose.local.yml --env-file .env.local down -v --remove-orphans
+
+              then do this again:
+
+              ./build.sh local up
+
+              bingo bango, it works!
+
+              ok, back to the main problem
+
+              1) First, I am pretty sure that this Dockerfile.nginx in the main repo isn't even being used... but, I am paranoid, so 
+                 rather than delete it, I will rename it and see if things get worse...
+
+                 Note: docker-compose.staging.yml is also not needed at the moment, but I am going to leave it alone for now because
+                       it will at some point have a purpose.
+
+              2) Second point of confusion... Do I actually need the plain-old docker-compose.yml file?  I have individual files for
+                 the various environments, so my instict says to get rid of it.  Just for the sake of clearing confusion, I will also
+                 rename it.
+
+                 
               --------------------------------------------------------------
 
             3. Your EC2 instance's firewall (e.g., ufw or iptables) is blocking those ports.
