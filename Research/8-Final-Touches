@@ -337,7 +337,67 @@ I'll group the checks by layers — from infrastructure to Docker, Nginx, and ap
                  the various environments, so my instict says to get rid of it.  Just for the sake of clearing confusion, I will also
                  rename it.
 
-                 
+              General note: the changes I've made so far, will not fix the problem. Nothing has been changed (that should matter).  
+              I need to review the overall environment of the various Docker images.
+
+              In local:
+
+                1) The reverse-proxy container has a configuration which places
+
+                  a) this nginx config:
+
+                     ./backend/etc/nginx/nginx-local.conf
+
+                     here:
+
+                     /etc/nginx/nginx.conf
+
+                  b) also, this folder
+                    
+                    ./backend/etc/nginx/sites-enabled-local
+                    
+                    here:
+
+                    /etc/nginx/sites-enabled
+
+                  This is how the container gets it's configuration.
+
+              In production:
+
+                1) the nginx container has a configuration which places
+
+                  a) this nginx config:
+
+                    ./backend/etc/nginx/nginx-production.conf
+
+                    here:
+
+                    /etc/nginx/nginx.conf:ro
+
+                  b) also, this folder:
+
+                    ./backend/etc/nginx/sites-enabled-production
+                    
+                    here:
+                    
+                    /etc/nginx/sites-enabled-production:ro
+
+                Does this make sense?
+
+                  First question: in both of these cases, we are taking a file from the host system and putting it into
+                                  the container, my question is are the files actually in the host systems at that location?
+
+                    Answer for local: clearly they are, because it works
+                    
+                    Answer from prod: in order for them to be there, something would have had to explicitly put them there
+                                      that something, would be Ansible.
+
+
+
+
+
+
+
               --------------------------------------------------------------
 
             3. Your EC2 instance's firewall (e.g., ufw or iptables) is blocking those ports.
