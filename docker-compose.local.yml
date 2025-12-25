@@ -75,6 +75,9 @@ services:
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
       CORS_ORIGIN: ${CORS_ORIGIN}
+      # Auth and email
+      SECRET_KEY: ${SECRET_KEY}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
 
     # only in non-prod environments, runs nodemon which
     # looks for changes live (that won't happen in production)

@@ -101,13 +101,14 @@ function hashPasswordWithSalt(password, salt) {
 
 router.post('/login', async (req, res) => {
   console.log('Login route HIT');
+  let client;
   try {
     console.log('Parsing body...');
     console.log('Request body:', req.body);
 
-    const client = await getClient();
+    client = await getClient();
     console.log('Connected to DB');
-  
+
     const user = await client.query('SELECT * FROM "users" WHERE handle = $1', [req.body.handle]);
 
     if (user.rowCount === 1) {
@@ -117,6 +118,8 @@ router.post('/login', async (req, res) => {
 
         const payload = { username: req.body.handle };
         const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+
+        client.release();
 
         res.cookie('jwtToken', token, {
           maxAge: 3600000, // 1 hour
@@ -138,8 +141,8 @@ router.post('/login', async (req, res) => {
       });
     }
   } catch (err) {
-    client.release();
-    
+    if (client) client.release();
+
     console.error('Login error:', err);
     res.status(500).send('Login failed');
   }
