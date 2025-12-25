@@ -25,7 +25,10 @@ const getClient = async () => {
       // Execute a query - converts $1, $2 style to ? style automatically
       async query(sql, params = []) {
         // Convert PostgreSQL-style $1, $2 placeholders to MySQL ? placeholders
-        const convertedSql = sql.replace(/\$(\d+)/g, '?');
+        // Also convert PostgreSQL double-quoted identifiers to MySQL backticks
+        const convertedSql = sql
+          .replace(/\$(\d+)/g, '?')
+          .replace(/"(\w+)"/g, '`$1`');
 
         const [rows, fields] = await connection.execute(convertedSql, params);
 
