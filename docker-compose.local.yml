@@ -32,6 +32,7 @@ services:
     environment:
       # backend URL accessible from frontend
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      VITE_ALLOWED_HOST: ${VITE_ALLOWED_HOST}
 
     # start command for non-prod environment
     command: sh -c "npm run dev"
@@ -67,48 +68,19 @@ services:
     environment:
       # Defines the variable for _run_ time use
       NODE_ENV: ${NODE_ENV}
+      # Database configuration
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      CORS_ORIGIN: ${CORS_ORIGIN}
 
     # only in non-prod environments, runs nodemon which
     # looks for changes live (that won't happen in production)
     command: sh -c "npm run dev"
 
-  reverse-proxy:
-    # Note: the reverse-proxy service is based on an image therefore no build phase
-    image: nginx:alpine
-
-    volumes:
-      # nginx configuration file
-      - ./backend/etc/nginx/nginx-local.conf:/etc/nginx/nginx.conf
-      # sites-enabled folder
-      - ./backend/etc/nginx/sites-enabled-local:/etc/nginx/sites-enabled
-      # encryption folders, with read only option
-      - ./backend/etc/encrypt:/etc/letsencrypt:ro
-
-    ports:
-      # Expose HTTPS port for reverse proxy to handle SSL
-      - "443:443"
-      # Expose HTTP port used for redirecting to HTTPS
-      - "80:80"
-
-    networks:
-      # use the app-network
-      - app-network
-
-    depends_on:
-      # Front end service dependeny
-      - frontend
-      # Back end service dependency
-      - backend
-
-    # Commands to run after the container starts
-    command: >
-      /bin/sh -c "
-        apk update && 
-        apk add --no-cache ca-certificates && 
-        cp /etc/letsencrypt/live/local.prosaurus.com/local.prosaurus.com.crt /usr/local/share/ca-certificates/ && 
-        update-ca-certificates && 
-        nginx -g 'daemon off;'
-      "
+  # reverse-proxy removed - using host nginx instead
 
 networks:
 

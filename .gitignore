@@ -1,4 +1,7 @@
 .env
+.env.local
+.env.staging
+.env.production
 */node_modules/*
 */.env*
 */etc/encrypt

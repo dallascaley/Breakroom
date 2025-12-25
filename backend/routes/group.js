@@ -38,11 +38,14 @@ router.post('/', async (req, res) => {
   const client = await getClient()
   try {
     const now = new Date()
-    const result = await client.query(
-      `INSERT INTO groups (name, description, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, description, is_active, created_at, updated_at`,
+    const insertResult = await client.query(
+      'INSERT INTO `groups` (name, description, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
       [name, description, is_active ?? true, now, now]
+    )
+    // Fetch the newly created group
+    const result = await client.query(
+      'SELECT id, name, description, is_active, created_at, updated_at FROM `groups` WHERE id = ?',
+      [insertResult.insertId]
     )
     res.status(201).json(result.rows[0])
   } catch (err) {
@@ -72,17 +75,20 @@ router.put('/:id', async (req, res) => {
     // Begin the transactional part of the process
     await client.query('BEGIN');
 
-    const result = await client.query(
-      `UPDATE groups
-       SET name = $1, description = $2, is_active = $3, updated_at = $4
-       WHERE id = $5
-       RETURNING id, name, description, is_active, created_at, updated_at`,
+    const updateResult = await client.query(
+      'UPDATE `groups` SET name = ?, description = ?, is_active = ?, updated_at = ? WHERE id = ?',
       [group.name, group.description, group.is_active ?? true, now, id]
     )
 
-    if (result.rowCount === 0) {
+    if (updateResult.affectedRows === 0) {
       return res.status(404).json({ message: 'group not found' })
     }
+
+    // Fetch the updated group
+    const result = await client.query(
+      'SELECT id, name, description, is_active, created_at, updated_at FROM `groups` WHERE id = ?',
+      [id]
+    )
 
     //Clear current permissions
     await client.query(
@@ -126,11 +132,11 @@ router.delete('/:id', async (req, res) => {
   const client = await getClient()
   try {
     const result = await client.query(
-      'DELETE FROM groups WHERE id = $1 RETURNING id',
+      'DELETE FROM `groups` WHERE id = ?',
       [id]
     )
 
-    if (result.rowCount === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'group not found' })
     }
 

@@ -47,9 +47,9 @@ if [ "$ENV" == "production" ]; then
 fi
 
 # Build the Docker images
-docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build --no-cache
 
 if [ "$2" == "up" ]; then
-  docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up
 fi
 

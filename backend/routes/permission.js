@@ -37,11 +37,14 @@ router.post('/', async (req, res) => {
   const client = await getClient()
   try {
     const now = new Date()
-    const result = await client.query(
-      `INSERT INTO permissions (name, description, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, description, is_active, created_at, updated_at`,
+    const insertResult = await client.query(
+      'INSERT INTO permissions (name, description, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
       [name, description, is_active ?? true, now, now]
+    )
+    // Fetch the newly created permission
+    const result = await client.query(
+      'SELECT id, name, description, is_active, created_at, updated_at FROM permissions WHERE id = ?',
+      [insertResult.insertId]
     )
     res.status(201).json(result.rows[0])
   } catch (err) {
@@ -67,18 +70,20 @@ router.put('/:id', async (req, res) => {
   const client = await getClient()
   try {
     const now = new Date()
-    const result = await client.query(
-      `UPDATE permissions
-       SET name = $1, description = $2, is_active = $3, updated_at = $4
-       WHERE id = $5
-       RETURNING id, name, description, is_active, created_at, updated_at`,
+    const updateResult = await client.query(
+      'UPDATE permissions SET name = ?, description = ?, is_active = ?, updated_at = ? WHERE id = ?',
       [name, description, is_active ?? true, now, id]
     )
 
-    if (result.rowCount === 0) {
+    if (updateResult.affectedRows === 0) {
       return res.status(404).json({ message: 'Permission not found' })
     }
 
+    // Fetch the updated permission
+    const result = await client.query(
+      'SELECT id, name, description, is_active, created_at, updated_at FROM permissions WHERE id = ?',
+      [id]
+    )
     res.status(200).json(result.rows[0])
   } catch (err) {
     console.error('Error updating permission:', err)
@@ -98,11 +103,11 @@ router.delete('/:id', async (req, res) => {
   const client = await getClient()
   try {
     const result = await client.query(
-      'DELETE FROM permissions WHERE id = $1 RETURNING id',
+      'DELETE FROM permissions WHERE id = ?',
       [id]
     )
 
-    if (result.rowCount === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Permission not found' })
     }
 

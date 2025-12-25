@@ -197,11 +197,11 @@ router.delete('/:id', async (req, res) => {
 
   try {
     const result = await client.query(
-      'DELETE FROM "users" WHERE id = $1 RETURNING id;',
+      'DELETE FROM users WHERE id = ?',
       [id]
     );
 
-    if (result.rowCount === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
