@@ -75,6 +75,116 @@ docker compose -f docker-compose.local.yml down
 - **URL**: https://local.prosaurus.com
 - Browser will trust the self-signed cert (added to system CA store)
 
+## EC2 Production Deployment
+
+### Step 1: Install Docker & Docker Compose
+
+```bash
+# Install Docker
+sudo apt update
+sudo apt install -y docker.io
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker $USER
+
+# Install Docker Compose v2
+sudo apt install -y docker-compose-plugin
+
+# Log out and back in for group changes to take effect
+```
+
+### Step 2: Configure Environment Variables
+
+Edit `.env.production` in project root with production values:
+```
+VITE_API_BASE_URL=https://www.prosaurus.com
+VITE_ALLOWED_HOST=www.prosaurus.com
+NODE_ENV=production
+
+DB_HOST=44.225.148.34
+DB_PORT=3306
+DB_USER=DCAdminUser
+DB_PASS=<password>
+DB_NAME=breakroom
+
+CORS_ORIGIN=https://www.prosaurus.com
+SECRET_KEY=<strong-jwt-secret>
+SENDGRID_API_KEY=<sendgrid-key>
+```
+
+### Step 3: Set Up SSL Certificates
+
+Option A - Let's Encrypt (recommended for production):
+```bash
+sudo apt install -y certbot
+sudo certbot certonly --standalone -d www.prosaurus.com
+# Certs will be at /etc/letsencrypt/live/www.prosaurus.com/
+```
+
+Option B - Self-signed (testing only):
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /path/to/domain.key \
+  -out /path/to/domain.crt
+```
+
+Update `backend/etc/nginx.production.conf` with certificate paths.
+
+### Step 4: Configure DNS
+
+Point your domain to EC2 public IP:
+- `www.prosaurus.com` → `<EC2-Public-IP>`
+- Or use Route 53 / your DNS provider
+
+### Step 5: Build & Deploy
+
+```bash
+cd /home/hakr49/breakroom
+
+# Build for production (builds frontend, creates nginx image)
+./build.sh production
+
+# Start containers in detached mode
+docker compose -f docker-compose.production.yml up -d
+```
+
+### Step 6: Verify Deployment
+
+```bash
+# Check running containers
+docker ps
+
+# View logs
+docker compose -f docker-compose.production.yml logs -f
+
+# Test the endpoint
+curl -k https://www.prosaurus.com
+```
+
+### Step 7: EC2 Security Group Configuration
+
+In AWS Console, ensure security group allows:
+| Type  | Port | Source    | Description           |
+|-------|------|-----------|----------------------|
+| HTTP  | 80   | 0.0.0.0/0 | Redirect to HTTPS    |
+| HTTPS | 443  | 0.0.0.0/0 | Main application     |
+| MySQL | 3306 | Outbound  | Database connection  |
+
+### Useful Commands
+
+```bash
+# Stop production containers
+docker compose -f docker-compose.production.yml down
+
+# Rebuild and restart
+./build.sh production
+docker compose -f docker-compose.production.yml up -d --force-recreate
+
+# View specific container logs
+docker logs breakroom-backend -f
+docker logs breakroom-nginx -f
+```
+
 ## File Structure Notes
 - `backend/utilities/db.js` - Database connection wrapper (MySQL2 with pg-compatible interface)
 - `backend/routes/` - API routes (authentication, user, group, permission)
