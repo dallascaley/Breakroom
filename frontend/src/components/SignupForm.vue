@@ -37,6 +37,7 @@
 <script>
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { user } from '@/stores/user.js';
 
 // Function to generate a random salt using the Web Crypto API
 function generateSalt(length = 16) {
@@ -130,6 +131,9 @@ export default {
             hash: hash,
             salt: salt
           });
+
+          // Fetch user to update nav with logged-in state
+          await user.fetchUser();
 
           // Redirect to welcome page on success
           this.router.push('/welcome');

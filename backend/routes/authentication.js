@@ -42,6 +42,14 @@ router.post('/signup', async (req, res) => {
       await client.query('INSERT INTO user_groups (user_id, group_id) VALUES ($1, $2)', [newUserId, standardGroup.rows[0].id]);
     }
 
+    // Auto-login: set JWT cookie
+    const payload = { username: req.body.handle };
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+    res.cookie('jwtToken', token, {
+      maxAge: 3600000, // 1 hour
+      domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
+    });
+
     sendMail(req.body.email, 'admin@prosaurus.com',
       'Please verify your email for prosaurus.com',
       `<h3>Thank you for registering a new account with prosuarus.com</h3>

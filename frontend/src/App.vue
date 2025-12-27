@@ -21,7 +21,7 @@ function logout() {
 
 setInterval(() => {
   user.fetchUser()
-  const publicRoutes = ['/', '/login', '/signup', '/about']
+  const publicRoutes = ['/', '/login', '/signup', '/about', '/welcome', '/chat']
 
   // Only redirect if on a protected route and not logged in
   if (!user.username && !publicRoutes.includes(route.path)) {
@@ -39,6 +39,7 @@ setInterval(() => {
 
         <template v-if="user.username">
           <RouterLink to="/breakroom">Breakroom</RouterLink>
+          <RouterLink to="/chat">Chat</RouterLink>
           <RouterLink to="/admin">Admin</RouterLink>
           <div class="user-menu">
             <div @click="toggleMenu">
