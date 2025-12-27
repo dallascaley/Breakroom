@@ -3,12 +3,25 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
 const cookieParser = require('cookie-parser');
+
+const app = express();
+const server = http.createServer(app);
 const port = 3000;
 
-// Load your SSL certificate and key
-const fs = require('fs');
+// Set up Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
+  }
+});
+
+// Initialize socket handlers
+const { initializeSocket } = require('./utilities/socket');
+initializeSocket(io);
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
@@ -22,6 +35,7 @@ const authentication = require('./routes/authentication');
 const user = require('./routes/user');
 const permissionRoutes = require('./routes/permission');
 const groupRoutes = require('./routes/group');
+const chatRoutes = require('./routes/chat');
 
 
 
@@ -35,6 +49,7 @@ app.use('/api/auth', authentication);
 app.use('/api/user', user);
 app.use('/api/permission', permissionRoutes);
 app.use('/api/group', groupRoutes);
+app.use('/api/chat', chatRoutes);
 
 
 // Serve frontend static files
@@ -50,7 +65,8 @@ app.use((req, res, next) => {
 console.log('Serving static from:', path.join(__dirname, 'dist'));
 console.log('Fallback route will catch anything not under /api');
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`App running on ${process.env.CORS_ORIGIN}:${port}`);
+  console.log('Socket.IO server is ready');
 });
 
