@@ -39,7 +39,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 5px;
-  margin-bottom: 20px;
 }
 
 .nav-tab {
@@ -71,7 +70,9 @@
 .main-content {
   background: white;
   border-radius: 10px;
+  border-top-right-radius: 0;
   padding: 30px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #ddd;
 }
 </style>
