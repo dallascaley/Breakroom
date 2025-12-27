@@ -46,12 +46,12 @@ function getSocket() {
 
     // Chat events
     state.socket.on('new_message', (data) => {
-      console.log('Received new_message:', data, 'currentRoom:', state.currentRoom)
       if (data.roomId === state.currentRoom) {
-        console.log('Adding message to state')
-        state.messages.push(data.message)
-      } else {
-        console.log('Room mismatch, not adding message')
+        // Prevent duplicates by checking if message ID already exists
+        const exists = state.messages.some(m => m.id === data.message.id)
+        if (!exists) {
+          state.messages.push(data.message)
+        }
       }
     })
 
