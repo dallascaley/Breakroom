@@ -28,7 +28,7 @@ export default {
   methods: {
     async verifyEmail(token) {
       try {
-        let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`, {
+        let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/verify`, {
           token: token
         });
         this.message = result.data.message;

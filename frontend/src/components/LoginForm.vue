@@ -34,7 +34,7 @@ export default {
   methods: {
     async handleSubmit() {
       try {
-        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/login`, {
           handle: this.handle,
           password: this.password
         })

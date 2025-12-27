@@ -119,7 +119,7 @@ export default {
           console.log('what the H? what is the deal with console log?');
 
           // Once the hash is ready, you can make the API call
-          let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, {
+          let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/signup`, {
             handle: this.handle,
             first_name: this.first_name,
             last_name: this.last_name,
