@@ -17,9 +17,9 @@
       
       <nav>
         <ul>
-          <li><RouterLink to="/profile/home">Profile</RouterLink></li>
-          <li><RouterLink to="/profile/settings">Billing</RouterLink></li>
-          <li><RouterLink to="/profile/billing">Settings</RouterLink></li>
+          <li><RouterLink to="/profile">Profile</RouterLink></li>
+          <li><RouterLink to="/profile/billing">Billing</RouterLink></li>
+          <li><RouterLink to="/profile/settings">Settings</RouterLink></li>
         </ul>
       </nav>
     </aside>

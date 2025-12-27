@@ -48,9 +48,9 @@ const router = createRouter({
       name: 'profile',
       component: ProfileLayout,
       children: [
-        { path: '/home', component: ProfilePage },
-        { path: '/billing', component: BillingPage },
-        { path: '/settings', component: SettingsPage }
+        { path: '', component: ProfilePage },
+        { path: 'billing', component: BillingPage },
+        { path: 'settings', component: SettingsPage }
       ]
     },
     {
