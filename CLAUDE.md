@@ -77,91 +77,151 @@ docker compose -f docker-compose.local.yml down
 
 ## EC2 Production Deployment
 
-### Step 1: Install Docker & Docker Compose
+**Server**: Amazon Linux (RHEL/Fedora-based) at 44.225.148.34
+**Architecture**: Host nginx serves static frontend + proxies to Docker backend container
+
+### Step 1: Install Docker (Amazon Linux)
 
 ```bash
 # Install Docker
-sudo apt update
-sudo apt install -y docker.io
+sudo dnf install -y docker
 sudo systemctl enable docker
 sudo systemctl start docker
-sudo usermod -aG docker $USER
-
-# Install Docker Compose v2
-sudo apt install -y docker-compose-plugin
+sudo usermod -aG docker ec2-user
 
 # Log out and back in for group changes to take effect
 ```
 
-### Step 2: Configure Environment Variables
-
-Edit `.env.production` in project root with production values:
-```
-VITE_API_BASE_URL=https://www.prosaurus.com
-VITE_ALLOWED_HOST=www.prosaurus.com
-NODE_ENV=production
-
-DB_HOST=44.225.148.34
-DB_PORT=3306
-DB_USER=DCAdminUser
-DB_PASS=<password>
-DB_NAME=breakroom
-
-CORS_ORIGIN=https://www.prosaurus.com
-SECRET_KEY=<strong-jwt-secret>
-SENDGRID_API_KEY=<sendgrid-key>
-```
-
-### Step 3: Set Up SSL Certificates
-
-Option A - Let's Encrypt (recommended for production):
-```bash
-sudo apt install -y certbot
-sudo certbot certonly --standalone -d www.prosaurus.com
-# Certs will be at /etc/letsencrypt/live/www.prosaurus.com/
-```
-
-Option B - Self-signed (testing only):
-```bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /path/to/domain.key \
-  -out /path/to/domain.crt
-```
-
-Update `backend/etc/nginx.production.conf` with certificate paths.
-
-### Step 4: Configure DNS
+### Step 2: Configure DNS
 
 Point your domain to EC2 public IP:
-- `www.prosaurus.com` → `<EC2-Public-IP>`
-- Or use Route 53 / your DNS provider
+- `www.prosaurus.com` → `44.225.148.34`
+- `prosaurus.com` → `44.225.148.34`
 
-### Step 5: Build & Deploy
+### Step 3: Set Up Nginx for the Site (Amazon Linux)
+
+Create nginx config at `/etc/nginx/conf.d/prosaurus.com.conf`:
+
+```nginx
+server {
+    listen 80;
+    server_name www.prosaurus.com prosaurus.com;
+
+    root /var/www/prosaurus.com;
+    index index.html;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/prosaurus.com;
+    }
+
+    location / {
+        return 200 'ready for certbot';
+        add_header Content-Type text/plain;
+    }
+}
+```
+
+```bash
+sudo mkdir -p /var/www/prosaurus.com
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Step 4: Get SSL Certificate
+
+```bash
+sudo dnf install -y certbot
+sudo certbot certonly --webroot -w /var/www/prosaurus.com -d www.prosaurus.com -d prosaurus.com
+```
+
+### Step 5: Update Nginx for SSL + Reverse Proxy
+
+Replace `/etc/nginx/conf.d/prosaurus.com.conf` with:
+
+```nginx
+server {
+    listen 80;
+    server_name www.prosaurus.com prosaurus.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name www.prosaurus.com prosaurus.com;
+
+    ssl_certificate /etc/letsencrypt/live/www.prosaurus.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/www.prosaurus.com/privkey.pem;
+
+    # Serve static frontend files
+    root /var/www/prosaurus.com;
+    index index.html;
+
+    # Frontend routes - serve index.html for SPA
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API proxy to backend container
+    location /api {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Step 6: Build & Deploy from Dev Machine
+
+**On dev machine (local VM):**
 
 ```bash
 cd /home/hakr49/breakroom
 
-# Build for production (builds frontend, creates nginx image)
-./build.sh production
+# Build frontend using Docker (if npm not installed locally)
+docker run --rm -v $(pwd)/frontend:/app -w /app node:24.2.0-alpine sh -c "npm install && npm run build"
 
-# Start containers in detached mode
-docker compose -f docker-compose.production.yml up -d
+# Push backend image to Docker Hub
+docker login
+docker push dallascaley/breakroom-backend:latest
+
+# Copy frontend dist files to EC2
+scp -i ~/.ssh/Hostgator-Key-1.pem -r frontend/dist/* ec2-user@44.225.148.34:/var/www/prosaurus.com/
+
+# Copy docker-compose and env files to EC2
+scp -i ~/.ssh/Hostgator-Key-1.pem docker-compose.ec2.yml ec2-user@44.225.148.34:~/
+scp -i ~/.ssh/Hostgator-Key-1.pem .env.production ec2-user@44.225.148.34:~/.env
 ```
 
-### Step 6: Verify Deployment
+### Step 7: Start Backend Container on EC2
+
+**On EC2 server:**
 
 ```bash
-# Check running containers
-docker ps
-
-# View logs
-docker compose -f docker-compose.production.yml logs -f
-
-# Test the endpoint
-curl -k https://www.prosaurus.com
+docker login
+docker compose -f docker-compose.ec2.yml --env-file .env up -d
 ```
 
-### Step 7: EC2 Security Group Configuration
+### Step 8: Verify Deployment
+
+```bash
+# Check container is running
+docker ps
+
+# Test backend locally
+curl http://127.0.0.1:3000/api/auth/me
+# Expected: {"message":"Not authenticated"}
+
+# Test in browser
+# https://www.prosaurus.com
+```
+
+### EC2 Security Group Configuration
 
 In AWS Console, ensure security group allows:
 | Type  | Port | Source    | Description           |
@@ -170,19 +230,35 @@ In AWS Console, ensure security group allows:
 | HTTPS | 443  | 0.0.0.0/0 | Main application     |
 | MySQL | 3306 | Outbound  | Database connection  |
 
-### Useful Commands
+### Useful Commands (on EC2)
 
 ```bash
-# Stop production containers
-docker compose -f docker-compose.production.yml down
+# View backend logs
+docker logs ec2-user-backend-1 -f
 
-# Rebuild and restart
-./build.sh production
-docker compose -f docker-compose.production.yml up -d --force-recreate
+# Restart backend
+docker compose -f docker-compose.ec2.yml --env-file .env restart
 
-# View specific container logs
-docker logs breakroom-backend -f
-docker logs breakroom-nginx -f
+# Stop backend
+docker compose -f docker-compose.ec2.yml --env-file .env down
+
+# Reload nginx after config changes
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Redeploying Updates
+
+**From dev machine:**
+```bash
+# Rebuild frontend
+docker run --rm -v $(pwd)/frontend:/app -w /app node:24.2.0-alpine sh -c "npm install && npm run build"
+
+# Copy to EC2
+scp -i ~/.ssh/Hostgator-Key-1.pem -r frontend/dist/* ec2-user@44.225.148.34:/var/www/prosaurus.com/
+
+# For backend changes: rebuild image, push, then on EC2:
+# docker compose -f docker-compose.ec2.yml --env-file .env pull
+# docker compose -f docker-compose.ec2.yml --env-file .env up -d --force-recreate
 ```
 
 ## File Structure Notes

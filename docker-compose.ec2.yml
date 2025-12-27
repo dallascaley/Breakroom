@@ -1,0 +1,22 @@
+# Docker Compose for EC2 production with host nginx
+# Only runs the backend - nginx is managed by the host
+
+services:
+  backend:
+    image: dallascaley/breakroom-backend
+    working_dir: /app
+    ports:
+      # Expose to localhost only (host nginx proxies to this)
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      SECRET_KEY: ${SECRET_KEY}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+    restart: unless-stopped
+    command: sh -c "npm run start"
