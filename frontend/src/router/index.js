@@ -67,6 +67,16 @@ const router = createRouter({
       path: '/verify',
       name: 'verify',
       component: () => import('../views/VerifyPage.vue'),
+    },
+    {
+      path: '/welcome',
+      name: 'welcome',
+      component: () => import('../views/WelcomePage.vue'),
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('../views/ChatPage.vue'),
     }
   ],
 })

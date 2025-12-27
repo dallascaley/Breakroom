@@ -36,6 +36,7 @@
 
 <script>
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 // Function to generate a random salt using the Web Crypto API
 function generateSalt(length = 16) {
@@ -84,6 +85,10 @@ export default {
       errorMessage: ''
     }
   },
+  setup() {
+    const router = useRouter();
+    return { router };
+  },
   methods: {
     async handleSubmit() {
       let errorsExists = false;
@@ -116,8 +121,6 @@ export default {
           // Await the hash generation
           const hash = await hashPasswordWithSalt(this.password, salt);
 
-          console.log('what the H? what is the deal with console log?');
-
           // Once the hash is ready, you can make the API call
           let result = await axios.post(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/signup`, {
             handle: this.handle,
@@ -127,9 +130,10 @@ export default {
             hash: hash,
             salt: salt
           });
-          
-          console.log(result);
-          
+
+          // Redirect to welcome page on success
+          this.router.push('/welcome');
+
         } catch (error) {
           // Check if the error response is a 409 Conflict
           if (error.response && error.response.status === 409) {
