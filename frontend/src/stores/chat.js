@@ -25,6 +25,12 @@ function getSocket() {
       console.log('Socket connected')
       state.connected = true
       state.error = null
+
+      // Auto-join current room if one is set
+      if (state.currentRoom) {
+        console.log('Auto-joining room:', state.currentRoom)
+        state.socket.emit('join_room', state.currentRoom)
+      }
     })
 
     state.socket.on('disconnect', () => {
@@ -40,8 +46,12 @@ function getSocket() {
 
     // Chat events
     state.socket.on('new_message', (data) => {
+      console.log('Received new_message:', data, 'currentRoom:', state.currentRoom)
       if (data.roomId === state.currentRoom) {
+        console.log('Adding message to state')
         state.messages.push(data.message)
+      } else {
+        console.log('Room mismatch, not adding message')
       }
     })
 
@@ -174,13 +184,16 @@ export const chat = reactive({
     if (!state.currentRoom || !message.trim()) return
 
     const socket = getSocket()
+    console.log('sendMessage - socket.connected:', socket.connected, 'currentRoom:', state.currentRoom)
     if (socket.connected) {
+      console.log('Sending via socket')
       socket.emit('send_message', {
         roomId: state.currentRoom,
         message: message.trim()
       })
     } else {
       // Fallback to REST API
+      console.log('Sending via REST (socket not connected)')
       this.sendMessageREST(message)
     }
   },
