@@ -1,108 +1,77 @@
 <template>
   <div class="profile-layout">
-    <aside class="sidebar">
-      <h2>Profile</h2>
-
-      <div class="profile-header">
-        <img
-          :src="profileImage"
-          alt="Profile Image"
-          class="profile-image"
-        />
-        <div class="user-details">
-          <h1>{{ formData.name }}</h1>
-          <p class="user-email">{{ formData.email }}</p>
-        </div>
-      </div>
-      
-      <nav>
-        <ul>
-          <li><RouterLink to="/profile">Profile</RouterLink></li>
-          <li><RouterLink to="/profile/billing">Billing</RouterLink></li>
-          <li><RouterLink to="/profile/settings">Settings</RouterLink></li>
-        </ul>
+    <div class="profile-container">
+      <nav class="profile-nav">
+        <RouterLink to="/profile" class="nav-tab" :class="{ active: $route.path === '/profile' }">
+          Profile
+        </RouterLink>
+        <RouterLink to="/profile/billing" class="nav-tab" :class="{ active: $route.path === '/profile/billing' }">
+          Billing
+        </RouterLink>
+        <RouterLink to="/profile/settings" class="nav-tab" :class="{ active: $route.path === '/profile/settings' }">
+          Settings
+        </RouterLink>
       </nav>
-    </aside>
 
-    <main class="main-content">
-      <RouterView />
-    </main>
+      <main class="main-content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-//const isEditing = ref(false)
-
-const formData = ref({
-  name: 'Jane Doe',
-  email: 'jane.doe@example.com',
-  username: 'janedoe',
-  memberSince: 'January 2024',
-  plan: 'Pro Monthly',
-})
-
-const profileImage = ref('https://i.pravatar.cc/120?u=your-user-id')
-
-/*
-function cancelEdit() {
-  isEditing.value = false
-}
-
-function saveProfile() {
-  isEditing.value = false
-}
-
-function onImageSelected(event) {
-  const file = event.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      profileImage.value = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
-}
-*/
 </script>
 
-<style>
+<style scoped>
 .profile-layout {
+  min-height: calc(100vh - 60px);
+  background-color: #f5f5f5;
+  padding: 30px 20px;
+}
+
+.profile-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.profile-nav {
   display: flex;
-  min-height: 100vh;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-bottom: 20px;
 }
 
-.sidebar {
-  width: 220px;
-  background-color: #2e86de;
-  color: white;
-  padding: 20px;
-}
-
-.sidebar h2 {
-  color: #fff;
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar li {
-  margin: 10px 0;
-}
-
-.sidebar a {
-  color: white;
+.nav-tab {
+  padding: 10px 20px;
   text-decoration: none;
+  color: #666;
+  background: white;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.nav-tab:hover {
+  color: #42b983;
+  background: #f9f9f9;
+}
+
+.nav-tab.active {
+  color: #42b983;
+  background: white;
+  font-weight: 600;
+  border-color: #42b983;
+  border-bottom: 2px solid white;
+  margin-bottom: -1px;
 }
 
 .main-content {
-  flex-grow: 1;
+  background: white;
+  border-radius: 10px;
   padding: 30px;
-  background-color: #f9f9f9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 </style>
