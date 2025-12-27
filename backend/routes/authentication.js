@@ -22,10 +22,10 @@ router.post('/signup', async (req, res) => {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1);
 
-    const result = await client.query(`INSERT INTO 
-      "users" (handle, first_name, last_name, email, verification_token, verification_expires_at, hash, salt) 
+    const result = await client.query(`INSERT INTO
+      "users" (handle, first_name, last_name, email, verification_token, verification_expires_at, hash, salt)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`, [
-        req.body.handle, 
+        req.body.handle,
         req.body.first_name,
         req.body.last_name,
         req.body.email,
@@ -35,11 +35,18 @@ router.post('/signup', async (req, res) => {
         req.body.salt
       ]);
 
-    sendMail(req.body.email, 'admin@prosaurus.com', 
-      'Please verify your email for prosaurus.com', 
+    // Assign new user to Standard group
+    const newUserId = result.insertId;
+    const standardGroup = await client.query('SELECT id FROM "groups" WHERE name = $1', ['Standard']);
+    if (standardGroup.rowCount > 0) {
+      await client.query('INSERT INTO user_groups (user_id, group_id) VALUES ($1, $2)', [newUserId, standardGroup.rows[0].id]);
+    }
+
+    sendMail(req.body.email, 'admin@prosaurus.com',
+      'Please verify your email for prosaurus.com',
       `<h3>Thank you for registering a new account with prosuarus.com</h3>
        <p>In order to complete your registration we will need to verify
-          your email address.  You can do that by clicking 
+          your email address.  You can do that by clicking
           <a href='https://prosaurus.com/verify?token=${verificationToken}'>here</a>.
        </p>`
     );
