@@ -87,6 +87,7 @@ const initializeSocket = (io) => {
 
     // Send a message
     socket.on('send_message', async (data) => {
+      console.log('Received send_message from', socket.user.handle, ':', data);
       const { roomId, message } = data;
 
       if (!message || message.trim().length === 0) {
@@ -128,7 +129,15 @@ const initializeSocket = (io) => {
         const messageData = newMessage.rows[0];
 
         // Broadcast message to everyone in the room (including sender)
+        const socketsInRoom = io.sockets.adapter.rooms.get(`room_${roomId}`);
+        console.log('Broadcasting new_message to room_' + roomId, 'sockets in room:', socketsInRoom ? [...socketsInRoom] : 'none', messageData);
         io.to(`room_${roomId}`).emit('new_message', {
+          roomId: roomId,
+          message: messageData
+        });
+
+        // Also emit directly to sender as backup
+        socket.emit('new_message', {
           roomId: roomId,
           message: messageData
         });

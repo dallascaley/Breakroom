@@ -11,10 +11,16 @@ const app = express();
 const server = http.createServer(app);
 const port = 3000;
 
-// Set up Socket.IO
+// Set up Socket.IO - allow multiple origins
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  'https://prosaurus.com',
+  'https://www.prosaurus.com'
+];
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN,
+    origin: allowedOrigins,
     credentials: true
   }
 });
@@ -24,7 +30,7 @@ const { initializeSocket } = require('./utilities/socket');
 initializeSocket(io);
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN,
+  origin: allowedOrigins,
   credentials: true
 }));
 
