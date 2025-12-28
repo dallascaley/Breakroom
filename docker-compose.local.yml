@@ -75,9 +75,12 @@ services:
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
       CORS_ORIGIN: ${CORS_ORIGIN}
-      # Auth and email
+      # Auth
       SECRET_KEY: ${SECRET_KEY}
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      # AWS SES for email
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       # Redis configuration
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}

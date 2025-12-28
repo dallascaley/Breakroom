@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { getClient } = require('../utilities/db');
-const { sendMail } = require('../utilities/sendgrid-email');
+const { sendMail } = require('../utilities/aws-ses-email');
 
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
@@ -50,7 +50,7 @@ router.post('/signup', async (req, res) => {
       domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
     });
 
-    sendMail(req.body.email, 'admin@prosaurus.com',
+    sendMail(req.body.email, 'dallascaley@gmail.com',
       'Please verify your email for prosaurus.com',
       `<h3>Thank you for registering a new account with prosuarus.com</h3>
        <p>In order to complete your registration we will need to verify
