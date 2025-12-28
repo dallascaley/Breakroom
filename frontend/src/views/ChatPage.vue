@@ -8,10 +8,17 @@ const messageInput = ref('')
 const messagesContainer = ref(null)
 const typingTimeout = ref(null)
 
-// Get current room name
+// Get current room info
+const currentRoom = computed(() => {
+  return chat.rooms.find(r => r.id === chat.currentRoom)
+})
+
 const currentRoomName = computed(() => {
-  const room = chat.rooms.find(r => r.id === chat.currentRoom)
-  return room ? room.name : 'Chat'
+  return currentRoom.value ? currentRoom.value.name : 'Chat'
+})
+
+const currentRoomDescription = computed(() => {
+  return currentRoom.value ? currentRoom.value.description : null
 })
 
 // Auto-scroll to bottom when new messages arrive
@@ -93,7 +100,10 @@ onUnmounted(() => {
       <ChatSidebar />
       <div class="chat-container">
         <div class="chat-header">
-          <h2># {{ currentRoomName }}</h2>
+          <div class="room-info">
+            <h2># {{ currentRoomName }}</h2>
+            <p v-if="currentRoomDescription" class="room-description">{{ currentRoomDescription }}</p>
+          </div>
           <span class="connection-status" :class="{ connected: chat.connected }">
             {{ chat.connected ? 'Connected' : 'Disconnected' }}
           </span>
@@ -181,6 +191,12 @@ onUnmounted(() => {
 .chat-header h2 {
   margin: 0;
   color: #333;
+}
+
+.room-description {
+  margin: 4px 0 0 0;
+  font-size: 0.85em;
+  color: #666;
 }
 
 .connection-status {
