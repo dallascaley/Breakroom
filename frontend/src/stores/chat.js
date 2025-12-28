@@ -250,13 +250,16 @@ export const chat = reactive({
 
   // Check if user can create rooms
   async checkCreatePermission() {
+    console.log('Checking create permission...')
     try {
       const res = await fetch('/api/auth/can/create_room', {
         credentials: 'include'
       })
       const data = await res.json()
+      console.log('Create permission response:', data)
       state.canCreateRoom = data.has_permission
     } catch (err) {
+      console.error('Create permission error:', err)
       state.canCreateRoom = false
     }
   },

@@ -23,10 +23,10 @@ const checkPermission = (permissionName) => {
           OR EXISTS (
             SELECT 1 FROM group_permissions gp
             JOIN user_groups ug ON ug.group_id = gp.group_id
-            WHERE gp.permission_id = p.id AND ug.user_id = $2
+            WHERE gp.permission_id = p.id AND ug.user_id = $3
           )
         )
-      `, [permissionName, req.user.id]);
+      `, [permissionName, req.user.id, req.user.id]);
 
       if (result.rowCount === 0) {
         return res.status(403).json({ message: 'Permission denied' });

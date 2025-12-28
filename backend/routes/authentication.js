@@ -196,6 +196,7 @@ router.get('/me', async (req, res) => {
 
 // Check if user has a specific permission
 router.get('/can/:permission', async (req, res) => {
+  console.log('Permission check for:', req.params.permission);
   const token = req.cookies.jwtToken;
   const { permission } = req.params;
 
@@ -227,14 +228,16 @@ router.get('/can/:permission', async (req, res) => {
         OR EXISTS (
           SELECT 1 FROM group_permissions gp
           JOIN user_groups ug ON ug.group_id = gp.group_id
-          WHERE gp.permission_id = p.id AND ug.user_id = $2
+          WHERE gp.permission_id = p.id AND ug.user_id = $3
         )
       )
-    `, [permission, userId]);
+    `, [permission, userId, userId]);
 
     client.release();
+    console.log('Permission result for', permission, ':', result.rowCount > 0);
     res.json({ has_permission: result.rowCount > 0 });
   } catch (err) {
+    console.error('Permission check error:', err);
     res.json({ has_permission: false });
   }
 });
