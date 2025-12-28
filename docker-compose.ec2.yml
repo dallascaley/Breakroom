@@ -18,5 +18,9 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       SECRET_KEY: ${SECRET_KEY}
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      # Redis configuration
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     restart: unless-stopped
     command: sh -c "npm run start"

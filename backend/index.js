@@ -6,6 +6,8 @@ const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 const cookieParser = require('cookie-parser');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { createRedisClients } = require('./utilities/redis');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,9 +27,19 @@ const io = new Server(server, {
   }
 });
 
-// Initialize socket handlers
-const { initializeSocket } = require('./utilities/socket');
-initializeSocket(io);
+// Initialize Socket.IO with Redis adapter
+(async () => {
+  try {
+    const { pubClient, subClient } = await createRedisClients();
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('Socket.IO Redis adapter initialized');
+  } catch (err) {
+    console.error('Redis adapter failed, using in-memory:', err.message);
+  }
+
+  const { initializeSocket } = require('./utilities/socket');
+  initializeSocket(io);
+})();
 
 app.use(cors({
   origin: allowedOrigins,

@@ -7,6 +7,17 @@ Breakroom is a full-stack web application with:
 - **Database**: MariaDB (migrated from PostgreSQL)
 - **Reverse Proxy**: Host nginx (not Docker)
 
+## Recent Changes (Dec 28, 2025)
+
+### Redis Socket.IO Adapter
+- Added Redis as Socket.IO pub/sub adapter for cross-server socket communication
+- Redis 6 installed on EC2 (44.225.148.34:6379) with password authentication
+- Local development connects to EC2 Redis for seamless socket messaging between local and production
+- New file: `backend/utilities/redis.js` - Redis connection utility
+- Added `@socket.io/redis-adapter` and `redis` npm packages
+- Environment variables: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
+- Extensible for multiple backend servers (horizontal scaling)
+
 ## Recent Changes (Dec 25, 2025)
 
 ### PostgreSQL to MariaDB Migration
@@ -60,6 +71,11 @@ DB_PASS=<password>
 DB_NAME=breakroom
 
 CORS_ORIGIN=https://local.prosaurus.com
+
+# Redis (Socket.IO adapter)
+REDIS_HOST=44.225.148.34
+REDIS_PORT=6379
+REDIS_PASSWORD=<password>
 ```
 
 ### Running Locally
@@ -229,6 +245,7 @@ In AWS Console, ensure security group allows:
 | HTTP  | 80   | 0.0.0.0/0 | Redirect to HTTPS    |
 | HTTPS | 443  | 0.0.0.0/0 | Main application     |
 | MySQL | 3306 | Outbound  | Database connection  |
+| Redis | 6379 | Local VM IP/32 | Socket.IO adapter (local dev only) |
 
 ### Useful Commands (on EC2)
 
@@ -263,6 +280,7 @@ scp -i ~/.ssh/Hostgator-Key-1.pem -r frontend/dist/* ec2-user@44.225.148.34:/var
 
 ## File Structure Notes
 - `backend/utilities/db.js` - Database connection wrapper (MySQL2 with pg-compatible interface)
+- `backend/utilities/redis.js` - Redis connection utility for Socket.IO adapter
 - `backend/routes/` - API routes (authentication, user, group, permission)
 - `data/1-user-auth.sql` - MariaDB schema with seed data
 - `nginx-host-local.conf` - Host nginx config template
