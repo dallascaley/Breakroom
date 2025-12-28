@@ -8,7 +8,9 @@ const state = reactive({
   rooms: [],
   messages: [],
   typingUsers: [],
-  error: null
+  error: null,
+  canCreateRoom: false,
+  currentUserId: null
 })
 
 // Get the socket instance, creating if needed
@@ -99,6 +101,12 @@ export const chat = reactive({
   },
   get error() {
     return state.error
+  },
+  get canCreateRoom() {
+    return state.canCreateRoom
+  },
+  get currentUserId() {
+    return state.currentUserId
   },
 
   // Connect to the socket server
@@ -238,6 +246,118 @@ export const chat = reactive({
         socket.emit('typing_stop', state.currentRoom)
       }
     }
+  },
+
+  // Check if user can create rooms
+  async checkCreatePermission() {
+    try {
+      const res = await fetch('/api/auth/can/create_room', {
+        credentials: 'include'
+      })
+      const data = await res.json()
+      state.canCreateRoom = data.has_permission
+    } catch (err) {
+      state.canCreateRoom = false
+    }
+  },
+
+  // Fetch current user ID for ownership checks
+  async fetchCurrentUser() {
+    try {
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        state.currentUserId = data.userId
+      }
+    } catch (err) {
+      state.currentUserId = null
+    }
+  },
+
+  // Create a new room
+  async createRoom(name, description) {
+    try {
+      const res = await fetch('/api/chat/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, description })
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to create room')
+      }
+
+      const data = await res.json()
+      state.rooms.push(data.room)
+      return data.room
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Update a room
+  async updateRoom(roomId, name, description) {
+    try {
+      const res = await fetch(`/api/chat/rooms/${roomId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, description })
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to update room')
+      }
+
+      const data = await res.json()
+      const index = state.rooms.findIndex(r => r.id === roomId)
+      if (index !== -1) {
+        state.rooms[index] = data.room
+      }
+      return data.room
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Delete a room
+  async deleteRoom(roomId) {
+    try {
+      const res = await fetch(`/api/chat/rooms/${roomId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to delete room')
+      }
+
+      state.rooms = state.rooms.filter(r => r.id !== roomId)
+
+      // If we deleted the current room, switch to General
+      if (state.currentRoom === roomId) {
+        const generalRoom = state.rooms.find(r => r.owner_id === null)
+        if (generalRoom) {
+          await this.joinRoom(generalRoom.id)
+        }
+      }
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Check if current user owns a room
+  isRoomOwner(room) {
+    return room && room.owner_id === state.currentUserId
   },
 
   // Clear error

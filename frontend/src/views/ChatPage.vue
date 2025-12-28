@@ -1,11 +1,18 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { chat } from '@/stores/chat.js'
 import { user } from '@/stores/user.js'
+import ChatSidebar from '@/components/ChatSidebar.vue'
 
 const messageInput = ref('')
 const messagesContainer = ref(null)
 const typingTimeout = ref(null)
+
+// Get current room name
+const currentRoomName = computed(() => {
+  const room = chat.rooms.find(r => r.id === chat.currentRoom)
+  return room ? room.name : 'Chat'
+})
 
 // Auto-scroll to bottom when new messages arrive
 const scrollToBottom = () => {
@@ -60,6 +67,12 @@ onMounted(async () => {
   // Connect to socket
   chat.connect()
 
+  // Fetch user info and permissions
+  await Promise.all([
+    chat.fetchCurrentUser(),
+    chat.checkCreatePermission()
+  ])
+
   // Fetch rooms and join the General room (id=1)
   await chat.fetchRooms()
   if (chat.rooms.length > 0) {
@@ -76,13 +89,15 @@ onUnmounted(() => {
 
 <template>
   <main class="chat-page">
-    <div class="chat-container">
-      <div class="chat-header">
-        <h2>{{ chat.rooms.length > 0 ? chat.rooms[0].name : 'Chat' }}</h2>
-        <span class="connection-status" :class="{ connected: chat.connected }">
-          {{ chat.connected ? 'Connected' : 'Disconnected' }}
-        </span>
-      </div>
+    <div class="chat-layout">
+      <ChatSidebar />
+      <div class="chat-container">
+        <div class="chat-header">
+          <h2># {{ currentRoomName }}</h2>
+          <span class="connection-status" :class="{ connected: chat.connected }">
+            {{ chat.connected ? 'Connected' : 'Disconnected' }}
+          </span>
+        </div>
 
       <div class="messages-container" ref="messagesContainer">
         <div v-if="chat.messages.length === 0" class="no-messages">
@@ -126,25 +141,33 @@ onUnmounted(() => {
         {{ chat.error }}
         <button @click="chat.clearError" class="dismiss-btn">Dismiss</button>
       </div>
+      </div>
     </div>
   </main>
 </template>
 
 <style scoped>
 .chat-page {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 20px auto;
   padding: 0 20px;
 }
 
-.chat-container {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.chat-layout {
   display: flex;
-  flex-direction: column;
   height: calc(100vh - 120px);
   min-height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chat-container {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .chat-header {

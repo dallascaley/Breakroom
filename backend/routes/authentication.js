@@ -163,7 +163,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   const token = req.cookies.jwtToken;
 
   if (!token) {
@@ -172,9 +172,70 @@ router.get('/me', (req, res) => {
 
   try {
     const payload = jwt.verify(token, SECRET_KEY);
-    return res.json({ username: payload.username });
+
+    // Fetch user ID from database
+    const client = await getClient();
+    const user = await client.query(
+      'SELECT id FROM users WHERE handle = $1',
+      [payload.username]
+    );
+    client.release();
+
+    if (user.rowCount === 0) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    return res.json({
+      username: payload.username,
+      userId: user.rows[0].id
+    });
   } catch (err) {
     return res.status(401).json({ message: 'Invalid token' });
+  }
+});
+
+// Check if user has a specific permission
+router.get('/can/:permission', async (req, res) => {
+  const token = req.cookies.jwtToken;
+  const { permission } = req.params;
+
+  if (!token) {
+    return res.json({ has_permission: false });
+  }
+
+  try {
+    const payload = jwt.verify(token, SECRET_KEY);
+
+    const client = await getClient();
+    const user = await client.query('SELECT id FROM users WHERE handle = $1', [payload.username]);
+
+    if (user.rowCount === 0) {
+      client.release();
+      return res.json({ has_permission: false });
+    }
+
+    const userId = user.rows[0].id;
+
+    // Check permission via user_permissions or group_permissions
+    const result = await client.query(`
+      SELECT 1 FROM permissions p
+      WHERE p.name = $1 AND p.is_active = true AND (
+        EXISTS (
+          SELECT 1 FROM user_permissions up
+          WHERE up.permission_id = p.id AND up.user_id = $2
+        )
+        OR EXISTS (
+          SELECT 1 FROM group_permissions gp
+          JOIN user_groups ug ON ug.group_id = gp.group_id
+          WHERE gp.permission_id = p.id AND ug.user_id = $2
+        )
+      )
+    `, [permission, userId]);
+
+    client.release();
+    res.json({ has_permission: result.rowCount > 0 });
+  } catch (err) {
+    res.json({ has_permission: false });
   }
 });
 
