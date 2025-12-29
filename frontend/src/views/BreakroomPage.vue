@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { GridLayout, GridItem } from 'vue-grid-layout'
+import { GridLayout, GridItem } from 'grid-layout-plus'
 import { breakroom } from '@/stores/breakroom.js'
 import { user } from '@/stores/user.js'
 import BreakroomBlock from '@/components/BreakroomBlock.vue'
@@ -131,9 +131,8 @@ onMounted(async () => {
 
 <style scoped>
 .breakroom-page {
-  max-width: 1400px;
-  margin: 20px auto;
-  padding: 0 20px;
+  margin: 20px;
+  padding: 0;
   font-family: system-ui, sans-serif;
 }
 
