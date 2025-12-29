@@ -10,7 +10,9 @@ const state = reactive({
   typingUsers: [],
   error: null,
   canCreateRoom: false,
-  currentUserId: null
+  currentUserId: null,
+  invites: [],
+  members: []
 })
 
 // Get the socket instance, creating if needed
@@ -107,6 +109,12 @@ export const chat = reactive({
   },
   get currentUserId() {
     return state.currentUserId
+  },
+  get invites() {
+    return state.invites
+  },
+  get members() {
+    return state.members
   },
 
   // Connect to the socket server
@@ -366,5 +374,98 @@ export const chat = reactive({
   // Clear error
   clearError() {
     state.error = null
+  },
+
+  // Fetch pending invites
+  async fetchInvites() {
+    try {
+      const res = await fetch('/api/chat/invites', {
+        credentials: 'include'
+      })
+      if (!res.ok) throw new Error('Failed to fetch invites')
+      const data = await res.json()
+      state.invites = data.invites
+    } catch (err) {
+      console.error('Error fetching invites:', err)
+      state.error = err.message
+    }
+  },
+
+  // Accept an invite
+  async acceptInvite(roomId) {
+    try {
+      const res = await fetch(`/api/chat/invites/${roomId}/accept`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to accept invite')
+      }
+      const data = await res.json()
+      // Remove from invites and add to rooms
+      state.invites = state.invites.filter(i => i.room_id !== roomId)
+      state.rooms.push(data.room)
+      return data.room
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Decline an invite
+  async declineInvite(roomId) {
+    try {
+      const res = await fetch(`/api/chat/invites/${roomId}/decline`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to decline invite')
+      }
+      state.invites = state.invites.filter(i => i.room_id !== roomId)
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Invite a user to a room
+  async inviteUser(roomId, userId) {
+    try {
+      const res = await fetch(`/api/chat/rooms/${roomId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId })
+      })
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.message || 'Failed to invite user')
+      }
+      const data = await res.json()
+      return data
+    } catch (err) {
+      state.error = err.message
+      throw err
+    }
+  },
+
+  // Fetch members of a room
+  async fetchMembers(roomId) {
+    try {
+      const res = await fetch(`/api/chat/rooms/${roomId}/members`, {
+        credentials: 'include'
+      })
+      if (!res.ok) throw new Error('Failed to fetch members')
+      const data = await res.json()
+      state.members = data.members
+      return data.members
+    } catch (err) {
+      console.error('Error fetching members:', err)
+      state.error = err.message
+      return []
+    }
   }
 })

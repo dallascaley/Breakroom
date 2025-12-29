@@ -1,13 +1,20 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { chat } from '@/stores/chat.js'
+import InviteModal from './InviteModal.vue'
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
+const showInviteModal = ref(false)
+const inviteRoomId = ref(null)
 const newRoomName = ref('')
 const newRoomDescription = ref('')
 const editingRoom = ref(null)
 const formError = ref('')
+
+onMounted(() => {
+  chat.fetchInvites()
+})
 
 // Switch to a room
 const selectRoom = async (room) => {
@@ -73,6 +80,31 @@ const deleteRoom = async (room) => {
     alert(err.message)
   }
 }
+
+// Accept invite
+const acceptInvite = async (invite) => {
+  try {
+    const room = await chat.acceptInvite(invite.room_id)
+    await chat.joinRoom(room.id)
+  } catch (err) {
+    alert(err.message)
+  }
+}
+
+// Decline invite
+const declineInvite = async (invite) => {
+  try {
+    await chat.declineInvite(invite.room_id)
+  } catch (err) {
+    alert(err.message)
+  }
+}
+
+// Open invite modal
+const openInviteModal = (room) => {
+  inviteRoomId.value = room.id
+  showInviteModal.value = true
+}
 </script>
 
 <template>
@@ -88,6 +120,23 @@ const deleteRoom = async (room) => {
       </button>
     </div>
 
+    <!-- Pending Invites -->
+    <div v-if="chat.invites.length > 0" class="invites-section">
+      <div class="section-header">Pending Invites</div>
+      <ul class="invite-list">
+        <li v-for="invite in chat.invites" :key="invite.room_id" class="invite-item">
+          <div class="invite-info">
+            <span class="room-name"># {{ invite.room_name }}</span>
+            <span class="invited-by">from {{ invite.invited_by_handle }}</span>
+          </div>
+          <div class="invite-actions">
+            <button @click="acceptInvite(invite)" class="icon-btn accept" title="Accept">Yes</button>
+            <button @click="declineInvite(invite)" class="icon-btn decline" title="Decline">No</button>
+          </div>
+        </li>
+      </ul>
+    </div>
+
     <ul class="room-list">
       <li
         v-for="room in chat.rooms"
@@ -97,6 +146,9 @@ const deleteRoom = async (room) => {
       >
         <span class="room-name"># {{ room.name }}</span>
         <div v-if="chat.isRoomOwner(room)" class="room-actions" @click.stop>
+          <button @click="openInviteModal(room)" class="icon-btn" title="Invite">
+            <span>Inv</span>
+          </button>
           <button @click="openEditModal(room)" class="icon-btn" title="Edit">
             <span>Edit</span>
           </button>
@@ -154,6 +206,13 @@ const deleteRoom = async (room) => {
         </form>
       </div>
     </div>
+
+    <!-- Invite Modal -->
+    <InviteModal
+      v-if="showInviteModal"
+      :room-id="inviteRoomId"
+      @close="showInviteModal = false"
+    />
   </div>
 </template>
 
@@ -335,5 +394,65 @@ const deleteRoom = async (room) => {
 
 .btn-secondary:hover {
   background: #ccc;
+}
+
+/* Invites section */
+.invites-section {
+  border-bottom: 1px solid #34495e;
+  padding-bottom: 10px;
+}
+
+.section-header {
+  padding: 10px 15px 5px;
+  font-size: 0.85em;
+  color: #95a5a6;
+  text-transform: uppercase;
+}
+
+.invite-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.invite-item {
+  padding: 8px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(66, 185, 131, 0.1);
+  border-left: 3px solid #42b983;
+}
+
+.invite-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invited-by {
+  font-size: 0.75em;
+  color: #95a5a6;
+}
+
+.invite-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn.accept {
+  background: #42b983;
+}
+
+.icon-btn.accept:hover {
+  background: #3aa876;
+}
+
+.icon-btn.decline {
+  background: #95a5a6;
+}
+
+.icon-btn.decline:hover {
+  background: #7f8c8d;
 }
 </style>

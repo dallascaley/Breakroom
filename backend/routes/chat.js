@@ -38,7 +38,7 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Get all chat rooms
+// Get all chat rooms (only rooms user is a member of, plus General)
 router.get('/rooms', authenticateToken, async (req, res) => {
   const client = await getClient();
   try {
@@ -47,8 +47,11 @@ router.get('/rooms', authenticateToken, async (req, res) => {
               cr.owner_id, u.handle as owner_handle
        FROM chat_rooms cr
        LEFT JOIN users u ON cr.owner_id = u.id
+       LEFT JOIN users_rooms ur ON cr.id = ur.room_id AND ur.user_id = $1
        WHERE cr.is_active = true
-       ORDER BY cr.name`
+         AND (cr.owner_id IS NULL OR (ur.user_id IS NOT NULL AND ur.accepted = true))
+       ORDER BY cr.name`,
+      [req.user.id]
     );
 
     res.status(200).json({
@@ -193,6 +196,14 @@ router.post('/rooms', authenticateToken, checkPermission('create_room'), async (
       [name.trim(), description?.trim() || null, req.user.id]
     );
 
+    const roomId = result.insertId;
+
+    // Auto-add creator as accepted member
+    await client.query(
+      'INSERT INTO users_rooms (user_id, room_id, role, accepted) VALUES ($1, $2, $3, $4)',
+      [req.user.id, roomId, 'moderator', true]
+    );
+
     // Fetch the created room
     const newRoom = await client.query(
       `SELECT cr.id, cr.name, cr.description, cr.is_active, cr.created_at,
@@ -200,7 +211,7 @@ router.post('/rooms', authenticateToken, checkPermission('create_room'), async (
        FROM chat_rooms cr
        LEFT JOIN users u ON cr.owner_id = u.id
        WHERE cr.id = $1`,
-      [result.insertId]
+      [roomId]
     );
 
     res.status(201).json({ room: newRoom.rows[0] });
@@ -311,6 +322,212 @@ router.delete('/rooms/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error deleting chat room:', err);
     res.status(500).json({ message: 'Failed to delete chat room' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get pending invites for current user
+router.get('/invites', authenticateToken, async (req, res) => {
+  const client = await getClient();
+  try {
+    const invites = await client.query(
+      `SELECT ur.room_id, ur.created_at as invited_at,
+              cr.name as room_name, cr.description as room_description,
+              u.handle as invited_by_handle
+       FROM users_rooms ur
+       JOIN chat_rooms cr ON ur.room_id = cr.id
+       LEFT JOIN users u ON ur.invited_by = u.id
+       WHERE ur.user_id = $1 AND ur.accepted = false AND cr.is_active = true
+       ORDER BY ur.created_at DESC`,
+      [req.user.id]
+    );
+
+    res.status(200).json({ invites: invites.rows });
+  } catch (err) {
+    console.error('Error fetching invites:', err);
+    res.status(500).json({ message: 'Failed to retrieve invites' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get members of a room
+router.get('/rooms/:roomId/members', authenticateToken, async (req, res) => {
+  const { roomId } = req.params;
+
+  const client = await getClient();
+  try {
+    // Verify user has access to this room (is member or room is General)
+    const room = await client.query(
+      'SELECT owner_id FROM chat_rooms WHERE id = $1 AND is_active = true',
+      [roomId]
+    );
+
+    if (room.rowCount === 0) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // For non-General rooms, verify membership
+    if (room.rows[0].owner_id !== null) {
+      const membership = await client.query(
+        'SELECT 1 FROM users_rooms WHERE user_id = $1 AND room_id = $2 AND accepted = true',
+        [req.user.id, roomId]
+      );
+      if (membership.rowCount === 0) {
+        return res.status(403).json({ message: 'You are not a member of this room' });
+      }
+    }
+
+    const members = await client.query(
+      `SELECT u.id, u.handle, ur.role, ur.created_at as joined_at
+       FROM users_rooms ur
+       JOIN users u ON ur.user_id = u.id
+       WHERE ur.room_id = $1 AND ur.accepted = true
+       ORDER BY ur.created_at`,
+      [roomId]
+    );
+
+    res.status(200).json({ members: members.rows });
+  } catch (err) {
+    console.error('Error fetching room members:', err);
+    res.status(500).json({ message: 'Failed to retrieve room members' });
+  } finally {
+    client.release();
+  }
+});
+
+// Invite a user to a room (owner only)
+router.post('/rooms/:roomId/invite', authenticateToken, async (req, res) => {
+  const { roomId } = req.params;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  const client = await getClient();
+  try {
+    // Verify room exists and user is owner
+    const room = await client.query(
+      'SELECT owner_id FROM chat_rooms WHERE id = $1 AND is_active = true',
+      [roomId]
+    );
+
+    if (room.rowCount === 0) {
+      return res.status(404).json({ message: 'Room not found' });
+    }
+
+    if (room.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({ message: 'Only the room owner can invite users' });
+    }
+
+    // Verify target user exists
+    const targetUser = await client.query(
+      'SELECT id, handle FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (targetUser.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already invited or member
+    const existing = await client.query(
+      'SELECT accepted FROM users_rooms WHERE user_id = $1 AND room_id = $2',
+      [userId, roomId]
+    );
+
+    if (existing.rowCount > 0) {
+      if (existing.rows[0].accepted) {
+        return res.status(409).json({ message: 'User is already a member of this room' });
+      } else {
+        return res.status(409).json({ message: 'User has already been invited to this room' });
+      }
+    }
+
+    // Create the invite
+    await client.query(
+      'INSERT INTO users_rooms (user_id, room_id, invited_by, accepted) VALUES ($1, $2, $3, $4)',
+      [userId, roomId, req.user.id, false]
+    );
+
+    res.status(201).json({ message: 'Invite sent successfully', user: targetUser.rows[0] });
+  } catch (err) {
+    console.error('Error inviting user:', err);
+    res.status(500).json({ message: 'Failed to send invite' });
+  } finally {
+    client.release();
+  }
+});
+
+// Accept an invite
+router.post('/invites/:roomId/accept', authenticateToken, async (req, res) => {
+  const { roomId } = req.params;
+
+  const client = await getClient();
+  try {
+    // Verify invite exists
+    const invite = await client.query(
+      'SELECT 1 FROM users_rooms WHERE user_id = $1 AND room_id = $2 AND accepted = false',
+      [req.user.id, roomId]
+    );
+
+    if (invite.rowCount === 0) {
+      return res.status(404).json({ message: 'Invite not found' });
+    }
+
+    // Accept the invite
+    await client.query(
+      'UPDATE users_rooms SET accepted = true WHERE user_id = $1 AND room_id = $2',
+      [req.user.id, roomId]
+    );
+
+    // Fetch the room details
+    const room = await client.query(
+      `SELECT cr.id, cr.name, cr.description, cr.is_active, cr.created_at,
+              cr.owner_id, u.handle as owner_handle
+       FROM chat_rooms cr
+       LEFT JOIN users u ON cr.owner_id = u.id
+       WHERE cr.id = $1`,
+      [roomId]
+    );
+
+    res.status(200).json({ message: 'Invite accepted', room: room.rows[0] });
+  } catch (err) {
+    console.error('Error accepting invite:', err);
+    res.status(500).json({ message: 'Failed to accept invite' });
+  } finally {
+    client.release();
+  }
+});
+
+// Decline an invite
+router.post('/invites/:roomId/decline', authenticateToken, async (req, res) => {
+  const { roomId } = req.params;
+
+  const client = await getClient();
+  try {
+    // Verify invite exists
+    const invite = await client.query(
+      'SELECT 1 FROM users_rooms WHERE user_id = $1 AND room_id = $2 AND accepted = false',
+      [req.user.id, roomId]
+    );
+
+    if (invite.rowCount === 0) {
+      return res.status(404).json({ message: 'Invite not found' });
+    }
+
+    // Delete the invite
+    await client.query(
+      'DELETE FROM users_rooms WHERE user_id = $1 AND room_id = $2',
+      [req.user.id, roomId]
+    );
+
+    res.status(200).json({ message: 'Invite declined' });
+  } catch (err) {
+    console.error('Error declining invite:', err);
+    res.status(500).json({ message: 'Failed to decline invite' });
   } finally {
     client.release();
   }
