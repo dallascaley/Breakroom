@@ -56,6 +56,7 @@ const groupRoutes = require('./routes/group');
 const chatRoutes = require('./routes/chat');
 const profileRoutes = require('./routes/profile');
 const breakroomRoutes = require('./routes/breakroom');
+const friendsRoutes = require('./routes/friends');
 
 
 
@@ -72,6 +73,7 @@ app.use('/api/group', groupRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/breakroom', breakroomRoutes);
+app.use('/api/friends', friendsRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

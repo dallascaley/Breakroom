@@ -82,6 +82,12 @@ const router = createRouter({
       name: 'chat',
       component: () => import('../views/ChatPage.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/friends',
+      name: 'friends',
+      component: () => import('../views/FriendsPage.vue'),
+      meta: { requiresAuth: true },
     }
   ],
 })
