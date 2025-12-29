@@ -50,7 +50,7 @@ router.post('/signup', async (req, res) => {
       domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
     });
 
-    sendMail(req.body.email, 'dallascaley@gmail.com',
+    sendMail(req.body.email, 'admin@prosaurus.com',
       'Please verify your email for prosaurus.com',
       `<h3>Thank you for registering a new account with prosuarus.com</h3>
        <p>In order to complete your registration we will need to verify
