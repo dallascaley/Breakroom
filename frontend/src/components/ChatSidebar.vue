@@ -1,6 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { chat } from '@/stores/chat.js'
+import { friends } from '@/stores/friends.js'
+import { user } from '@/stores/user.js'
 import InviteModal from './InviteModal.vue'
 
 const showCreateModal = ref(false)
@@ -12,8 +14,29 @@ const newRoomDescription = ref('')
 const editingRoom = ref(null)
 const formError = ref('')
 
+// Invite on create state
+const inviteSearch = ref('')
+const usersToInvite = ref([])
+const allUsers = ref([])
+const loadingUsers = ref(false)
+
+// Filter users for invite search
+const filteredInviteUsers = computed(() => {
+  if (!inviteSearch.value.trim()) return []
+  const query = inviteSearch.value.toLowerCase()
+  const inviteIds = new Set(usersToInvite.value.map(u => u.id))
+  return allUsers.value.filter(u => {
+    if (u.handle === user.username) return false
+    if (inviteIds.has(u.id)) return false
+    return u.handle.toLowerCase().includes(query) ||
+      (u.first_name && u.first_name.toLowerCase().includes(query)) ||
+      (u.last_name && u.last_name.toLowerCase().includes(query))
+  })
+})
+
 onMounted(() => {
   chat.fetchInvites()
+  friends.fetchFriends()
 })
 
 // Switch to a room
@@ -25,11 +48,36 @@ const selectRoom = async (room) => {
 }
 
 // Create room modal handlers
-const openCreateModal = () => {
+const openCreateModal = async () => {
   newRoomName.value = ''
   newRoomDescription.value = ''
   formError.value = ''
+  inviteSearch.value = ''
+  usersToInvite.value = []
   showCreateModal.value = true
+
+  // Load all users for invite search
+  loadingUsers.value = true
+  try {
+    const res = await fetch('/api/user/all', { credentials: 'include' })
+    if (res.ok) {
+      const data = await res.json()
+      allUsers.value = data.users || []
+    }
+  } catch (err) {
+    console.error('Failed to load users:', err)
+  } finally {
+    loadingUsers.value = false
+  }
+}
+
+const addUserToInvite = (userToAdd) => {
+  usersToInvite.value.push(userToAdd)
+  inviteSearch.value = ''
+}
+
+const removeUserFromInvite = (userId) => {
+  usersToInvite.value = usersToInvite.value.filter(u => u.id !== userId)
 }
 
 const createRoom = async () => {
@@ -40,6 +88,16 @@ const createRoom = async () => {
 
   try {
     const room = await chat.createRoom(newRoomName.value, newRoomDescription.value)
+
+    // Send invites to selected users
+    for (const invitee of usersToInvite.value) {
+      try {
+        await chat.inviteUser(room.id, invitee.id)
+      } catch (err) {
+        console.error(`Failed to invite ${invitee.handle}:`, err)
+      }
+    }
+
     showCreateModal.value = false
     await chat.joinRoom(room.id)
   } catch (err) {
@@ -174,6 +232,42 @@ const openInviteModal = (room) => {
             v-model="newRoomDescription"
             placeholder="Description (optional)"
           ></textarea>
+
+          <!-- Invite users section -->
+          <div class="invite-section">
+            <label>Invite Users (optional)</label>
+            <div class="invite-search-container">
+              <input
+                v-model="inviteSearch"
+                type="text"
+                placeholder="Search users to invite..."
+                class="invite-search"
+              />
+              <ul v-if="filteredInviteUsers.length > 0" class="invite-dropdown">
+                <li
+                  v-for="u in filteredInviteUsers"
+                  :key="u.id"
+                  @click="addUserToInvite(u)"
+                >
+                  <span class="dropdown-handle">{{ u.handle }}</span>
+                  <span v-if="u.first_name || u.last_name" class="dropdown-name">
+                    {{ u.first_name }} {{ u.last_name }}
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div v-if="usersToInvite.length > 0" class="selected-users">
+              <span
+                v-for="u in usersToInvite"
+                :key="u.id"
+                class="selected-user-tag"
+              >
+                {{ u.handle }}
+                <button type="button" @click="removeUserFromInvite(u.id)">&times;</button>
+              </span>
+            </div>
+          </div>
+
           <p v-if="formError" class="error">{{ formError }}</p>
           <div class="modal-actions">
             <button type="submit" class="btn-primary">Create</button>
@@ -454,5 +548,103 @@ const openInviteModal = (room) => {
 
 .icon-btn.decline:hover {
   background: #7f8c8d;
+}
+
+/* Invite section in Create Room modal */
+.invite-section {
+  margin-bottom: 10px;
+}
+
+.invite-section label {
+  display: block;
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.invite-search-container {
+  position: relative;
+}
+
+.invite-search {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+.invite-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 150px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.invite-dropdown li {
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invite-dropdown li:hover {
+  background: #f0f0f0;
+}
+
+.dropdown-handle {
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.dropdown-name {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.selected-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.selected-user-tag {
+  background: #42b983;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.selected-user-tag button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.1em;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.8;
+}
+
+.selected-user-tag button:hover {
+  opacity: 1;
 }
 </style>
