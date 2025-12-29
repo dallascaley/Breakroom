@@ -3,7 +3,7 @@ import VerifyForm from '../components/VerifyForm.vue'
 </script>
 
 <template>
-  <main>
+  <main class="page-container">
     <VerifyForm />
   </main>
 </template>

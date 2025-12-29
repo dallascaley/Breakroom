@@ -3,7 +3,7 @@ import HomePageContent from '../components/HomePageContent.vue'
 </script>
 
 <template>
-  <main>
+  <main class="page-container">
     <HomePageContent />
   </main>
 </template>

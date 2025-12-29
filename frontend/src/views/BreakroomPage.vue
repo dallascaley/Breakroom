@@ -61,7 +61,7 @@ onMounted(async () => {
 
 <template>
   <section class="breakroom-page">
-    <header class="breakroom-header">
+    <header class="breakroom-header page-container">
       <h1>Breakroom</h1>
       <button class="add-block-btn" @click="showAddModal = true">
         + Add Block
@@ -131,7 +131,6 @@ onMounted(async () => {
 
 <style scoped>
 .breakroom-page {
-  margin: 20px;
   padding: 0;
   font-family: system-ui, sans-serif;
 }
@@ -140,7 +139,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 0.75rem 2rem !important;
 }
 
 .breakroom-header h1 {

@@ -34,7 +34,7 @@ setInterval(() => {
 <template>
   <header>
 
-    <div class="wrapper">
+    <div class="wrapper page-container">
       <nav>
 
         <template v-if="user.username">

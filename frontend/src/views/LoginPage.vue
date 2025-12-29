@@ -3,7 +3,7 @@ import LoginForm from '../components/LoginForm.vue'
 </script>
 
 <template>
-  <main>
+  <main class="page-container">
     <LoginForm />
   </main>
 </template>

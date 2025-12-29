@@ -1,5 +1,5 @@
 <template>
-  <section class="about-page">
+  <section class="about-page page-container">
     <h1>About Breakroom</h1>
     <p class="intro">
       At Breakroom, we believe social media should be simple, honest, and respectful of your time and mind.

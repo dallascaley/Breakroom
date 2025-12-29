@@ -9,7 +9,7 @@ const goToChat = () => {
 </script>
 
 <template>
-  <main class="welcome">
+  <main class="welcome page-container">
     <h1>Welcome to Breakroom</h1>
     <p>
       There's going to be a lot of stuff here someday, but for now let's just

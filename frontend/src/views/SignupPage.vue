@@ -3,7 +3,7 @@ import SignupForm from '../components/SignupForm.vue'
 </script>
 
 <template>
-  <main>
+  <main class="page-container">
     <SignupForm />
   </main>
 </template>

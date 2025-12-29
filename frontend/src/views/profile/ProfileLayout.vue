@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-layout">
+  <div class="profile-layout page-container">
     <div class="profile-container">
       <nav class="profile-nav">
         <RouterLink to="/profile" class="nav-tab" :class="{ active: $route.path === '/profile' }">

@@ -95,7 +95,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="chat-page">
+  <main class="chat-page page-container">
     <div class="chat-layout">
       <ChatSidebar />
       <div class="chat-container">

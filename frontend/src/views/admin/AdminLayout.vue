@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-layout">
+  <div class="admin-layout page-container">
     <aside class="sidebar">
       <h2>Admin</h2>
       <nav>
