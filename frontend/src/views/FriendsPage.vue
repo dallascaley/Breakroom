@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { friends } from '@/stores/friends.js'
+import { user } from '@/stores/user.js'
 
 const activeTab = ref('friends')
 const searchQuery = ref('')
@@ -45,6 +46,9 @@ async function searchUsers() {
 
     const query = searchQuery.value.toLowerCase()
     searchResults.value = users.filter(u => {
+      // Exclude current user
+      if (u.handle === user.username) return false
+
       const matchesQuery = u.handle.toLowerCase().includes(query) ||
         (u.first_name && u.first_name.toLowerCase().includes(query)) ||
         (u.last_name && u.last_name.toLowerCase().includes(query)) ||
