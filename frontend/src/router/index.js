@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
+import { user } from '@/stores/user.js'
 
 //Admin views
 import AdminLayout from '@/views/admin/AdminLayout.vue'
@@ -31,11 +32,13 @@ const router = createRouter({
       path: '/breakroom',
       name: 'breakroom',
       component: () => import('../views/BreakroomPage.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/admin',
       name: 'admin',
       component: AdminLayout,
+      meta: { requiresAuth: true },
       children: [
         {path: 'users', component: AdminUsers},
         {path: 'permissions', component: AdminPermissions},
@@ -47,6 +50,7 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileLayout,
+      meta: { requiresAuth: true },
       children: [
         { path: '', component: ProfilePage },
         { path: 'billing', component: BillingPage },
@@ -77,8 +81,27 @@ const router = createRouter({
       path: '/chat',
       name: 'chat',
       component: () => import('../views/ChatPage.vue'),
+      meta: { requiresAuth: true },
     }
   ],
+})
+
+router.beforeEach(async (to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // Fetch user if not already loaded
+    if (!user.username) {
+      await user.fetchUser()
+    }
+
+    if (!user.username) {
+      // Not logged in, redirect to about page
+      next({ name: 'about' })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
 })
 
 export default router
