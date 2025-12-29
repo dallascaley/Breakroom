@@ -32,10 +32,10 @@ async function searchUsers() {
   searchError.value = null
 
   try {
-    const res = await fetch('/api/users', { credentials: 'include' })
+    const res = await fetch('/api/user/all', { credentials: 'include' })
     if (!res.ok) throw new Error('Failed to search users')
     const data = await res.json()
-    const users = data.users || data
+    const users = data.users || []
 
     // Filter by search query and exclude current friends/pending
     const friendIds = new Set(friends.friends.map(f => f.id))
@@ -47,7 +47,8 @@ async function searchUsers() {
     searchResults.value = users.filter(u => {
       const matchesQuery = u.handle.toLowerCase().includes(query) ||
         (u.first_name && u.first_name.toLowerCase().includes(query)) ||
-        (u.last_name && u.last_name.toLowerCase().includes(query))
+        (u.last_name && u.last_name.toLowerCase().includes(query)) ||
+        (u.email && u.email.toLowerCase().includes(query))
       const notConnected = !friendIds.has(u.id) && !sentIds.has(u.id) &&
         !requestIds.has(u.id) && !blockedIds.has(u.id)
       return matchesQuery && notConnected

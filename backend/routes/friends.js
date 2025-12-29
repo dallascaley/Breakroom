@@ -46,12 +46,12 @@ router.get('/', authenticate, async (req, res) => {
        FROM friends f
        JOIN users u ON (
          (f.user_id = $1 AND f.friend_id = u.id) OR
-         (f.friend_id = $1 AND f.user_id = u.id)
+         (f.friend_id = $2 AND f.user_id = u.id)
        )
-       WHERE (f.user_id = $1 OR f.friend_id = $1)
+       WHERE (f.user_id = $3 OR f.friend_id = $4)
          AND f.status = 'accepted'
        ORDER BY u.handle`,
-      [req.user.id]
+      [req.user.id, req.user.id, req.user.id, req.user.id]
     );
 
     res.json({ friends: friends.rows });
@@ -135,8 +135,8 @@ router.post('/request/:userId', authenticate, async (req, res) => {
     // Check for existing relationship in either direction
     const existing = await client.query(
       `SELECT status FROM friends
-       WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)`,
-      [req.user.id, targetUserId]
+       WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $3 AND friend_id = $4)`,
+      [req.user.id, targetUserId, targetUserId, req.user.id]
     );
 
     if (existing.rowCount > 0) {
@@ -264,9 +264,9 @@ router.delete('/:userId', authenticate, async (req, res) => {
     // Delete friendship in either direction
     const result = await client.query(
       `DELETE FROM friends
-       WHERE ((user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1))
+       WHERE ((user_id = $1 AND friend_id = $2) OR (user_id = $3 AND friend_id = $4))
          AND status = 'accepted'`,
-      [req.user.id, friendUserId]
+      [req.user.id, friendUserId, friendUserId, req.user.id]
     );
 
     if (result.rowCount === 0) {
@@ -305,8 +305,8 @@ router.post('/block/:userId', authenticate, async (req, res) => {
 
     // Delete any existing relationship in either direction
     await client.query(
-      'DELETE FROM friends WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)',
-      [req.user.id, targetUserId]
+      'DELETE FROM friends WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $3 AND friend_id = $4)',
+      [req.user.id, targetUserId, targetUserId, req.user.id]
     );
 
     // Create block entry

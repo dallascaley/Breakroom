@@ -41,10 +41,10 @@ const filteredUsers = computed(() => {
 onMounted(async () => {
   try {
     // Fetch all users
-    const usersRes = await fetch('/api/users', { credentials: 'include' })
+    const usersRes = await fetch('/api/user/all', { credentials: 'include' })
     if (usersRes.ok) {
       const data = await usersRes.json()
-      users.value = data.users || data
+      users.value = data.users || []
     }
 
     // Fetch current room members
