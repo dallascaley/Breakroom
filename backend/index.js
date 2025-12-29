@@ -55,6 +55,7 @@ const permissionRoutes = require('./routes/permission');
 const groupRoutes = require('./routes/group');
 const chatRoutes = require('./routes/chat');
 const profileRoutes = require('./routes/profile');
+const breakroomRoutes = require('./routes/breakroom');
 
 
 
@@ -70,6 +71,7 @@ app.use('/api/permission', permissionRoutes);
 app.use('/api/group', groupRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/breakroom', breakroomRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
