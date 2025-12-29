@@ -1,7 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { friends } from '@/stores/friends.js'
 import { user } from '@/stores/user.js'
+
+const router = useRouter()
 
 const activeTab = ref('friends')
 const searchQuery = ref('')
@@ -142,6 +145,10 @@ function formatDate(dateStr) {
     day: 'numeric'
   })
 }
+
+function goToProfile(handle) {
+  router.push({ name: 'publicProfile', params: { handle } })
+}
 </script>
 
 <template>
@@ -171,12 +178,12 @@ function formatDate(dateStr) {
           No friends yet. Find users to connect with!
         </div>
         <div v-for="friend in friends.friends" :key="friend.id" class="user-card">
-          <div class="user-avatar">
+          <div class="user-avatar clickable" @click="goToProfile(friend.handle)">
             <img v-if="getPhotoUrl(friend)" :src="getPhotoUrl(friend)" alt="" />
             <span v-else class="avatar-placeholder">{{ getInitial(friend) }}</span>
           </div>
           <div class="user-info">
-            <span class="user-handle">{{ friend.handle }}</span>
+            <span class="user-handle clickable" @click="goToProfile(friend.handle)">{{ friend.handle }}</span>
             <span v-if="friend.first_name || friend.last_name" class="user-name">
               {{ friend.first_name }} {{ friend.last_name }}
             </span>
@@ -195,12 +202,12 @@ function formatDate(dateStr) {
           No pending friend requests.
         </div>
         <div v-for="request in friends.requests" :key="request.id" class="user-card">
-          <div class="user-avatar">
+          <div class="user-avatar clickable" @click="goToProfile(request.handle)">
             <img v-if="getPhotoUrl(request)" :src="getPhotoUrl(request)" alt="" />
             <span v-else class="avatar-placeholder">{{ getInitial(request) }}</span>
           </div>
           <div class="user-info">
-            <span class="user-handle">{{ request.handle }}</span>
+            <span class="user-handle clickable" @click="goToProfile(request.handle)">{{ request.handle }}</span>
             <span v-if="request.first_name || request.last_name" class="user-name">
               {{ request.first_name }} {{ request.last_name }}
             </span>
@@ -219,12 +226,12 @@ function formatDate(dateStr) {
           No pending sent requests.
         </div>
         <div v-for="sent in friends.sent" :key="sent.id" class="user-card">
-          <div class="user-avatar">
+          <div class="user-avatar clickable" @click="goToProfile(sent.handle)">
             <img v-if="getPhotoUrl(sent)" :src="getPhotoUrl(sent)" alt="" />
             <span v-else class="avatar-placeholder">{{ getInitial(sent) }}</span>
           </div>
           <div class="user-info">
-            <span class="user-handle">{{ sent.handle }}</span>
+            <span class="user-handle clickable" @click="goToProfile(sent.handle)">{{ sent.handle }}</span>
             <span v-if="sent.first_name || sent.last_name" class="user-name">
               {{ sent.first_name }} {{ sent.last_name }}
             </span>
@@ -253,19 +260,19 @@ function formatDate(dateStr) {
           No users found matching "{{ searchQuery }}"
         </div>
         <div v-else class="user-list">
-          <div v-for="user in searchResults" :key="user.id" class="user-card">
-            <div class="user-avatar">
-              <img v-if="getPhotoUrl(user)" :src="getPhotoUrl(user)" alt="" />
-              <span v-else class="avatar-placeholder">{{ getInitial(user) }}</span>
+          <div v-for="u in searchResults" :key="u.id" class="user-card">
+            <div class="user-avatar clickable" @click="goToProfile(u.handle)">
+              <img v-if="getPhotoUrl(u)" :src="getPhotoUrl(u)" alt="" />
+              <span v-else class="avatar-placeholder">{{ getInitial(u) }}</span>
             </div>
             <div class="user-info">
-              <span class="user-handle">{{ user.handle }}</span>
-              <span v-if="user.first_name || user.last_name" class="user-name">
-                {{ user.first_name }} {{ user.last_name }}
+              <span class="user-handle clickable" @click="goToProfile(u.handle)">{{ u.handle }}</span>
+              <span v-if="u.first_name || u.last_name" class="user-name">
+                {{ u.first_name }} {{ u.last_name }}
               </span>
             </div>
             <div class="user-actions">
-              <button @click="sendRequest(user)" class="btn-primary">Add Friend</button>
+              <button @click="sendRequest(u)" class="btn-primary">Add Friend</button>
             </div>
           </div>
         </div>
@@ -277,11 +284,11 @@ function formatDate(dateStr) {
           No blocked users.
         </div>
         <div v-for="blocked in friends.blocked" :key="blocked.id" class="user-card">
-          <div class="user-avatar">
+          <div class="user-avatar clickable" @click="goToProfile(blocked.handle)">
             <span class="avatar-placeholder">{{ getInitial(blocked) }}</span>
           </div>
           <div class="user-info">
-            <span class="user-handle">{{ blocked.handle }}</span>
+            <span class="user-handle clickable" @click="goToProfile(blocked.handle)">{{ blocked.handle }}</span>
             <span v-if="blocked.first_name || blocked.last_name" class="user-name">
               {{ blocked.first_name }} {{ blocked.last_name }}
             </span>
@@ -439,6 +446,19 @@ h1 {
 .user-handle {
   font-weight: 600;
   color: #333;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.user-handle.clickable:hover {
+  color: #42b983;
+  text-decoration: underline;
+}
+
+.user-avatar.clickable:hover {
+  opacity: 0.8;
 }
 
 .user-name {

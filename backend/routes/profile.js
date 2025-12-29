@@ -71,20 +71,75 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+// Helper to get friend count for a user
+async function getFriendCount(client, userId) {
+  const result = await client.query(
+    `SELECT COUNT(*) as count FROM friends
+     WHERE (user_id = $1 OR friend_id = $2) AND status = 'accepted'`,
+    [userId, userId]
+  );
+  return parseInt(result.rows[0].count) || 0;
+}
+
 // Get current user's profile
 router.get('/', authenticate, async (req, res) => {
-  res.json({
-    user: {
-      id: req.user.id,
-      handle: req.user.handle,
-      firstName: req.user.first_name,
-      lastName: req.user.last_name,
-      email: req.user.email,
-      bio: req.user.bio,
-      photoPath: req.user.photo_path,
-      createdAt: req.user.created_at
+  const client = await getClient();
+  try {
+    const friendCount = await getFriendCount(client, req.user.id);
+    res.json({
+      user: {
+        id: req.user.id,
+        handle: req.user.handle,
+        firstName: req.user.first_name,
+        lastName: req.user.last_name,
+        email: req.user.email,
+        bio: req.user.bio,
+        photoPath: req.user.photo_path,
+        createdAt: req.user.created_at,
+        friendCount
+      }
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// Get public profile by handle
+router.get('/user/:handle', async (req, res) => {
+  const { handle } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      'SELECT id, handle, first_name, last_name, bio, photo_path, created_at FROM users WHERE handle = $1',
+      [handle]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
     }
-  });
+
+    const user = result.rows[0];
+    const friendCount = await getFriendCount(client, user.id);
+
+    res.json({
+      user: {
+        id: user.id,
+        handle: user.handle,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        bio: user.bio,
+        photoPath: user.photo_path,
+        createdAt: user.created_at,
+        friendCount
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching public profile:', err);
+    res.status(500).json({ message: 'Failed to fetch profile' });
+  } finally {
+    client.release();
+  }
 });
 
 // Update profile (bio and basic info)

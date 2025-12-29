@@ -14,7 +14,8 @@ const profile = ref({
   email: '',
   bio: '',
   photoPath: null,
-  createdAt: null
+  createdAt: null,
+  friendCount: 0
 })
 
 const editForm = ref({
@@ -213,6 +214,7 @@ onMounted(() => {
           <h1>{{ profile.firstName }} {{ profile.lastName }}</h1>
           <p class="handle">@{{ profile.handle }}</p>
           <p class="member-since">Member since {{ memberSince }}</p>
+          <p class="friend-count">{{ profile.friendCount }} {{ profile.friendCount === 1 ? 'friend' : 'friends' }}</p>
         </div>
       </div>
 
@@ -405,7 +407,14 @@ onMounted(() => {
 .member-since {
   color: #888;
   font-size: 0.85rem;
+  margin: 0 0 5px 0;
+}
+
+.friend-count {
+  color: #666;
+  font-size: 0.9rem;
   margin: 0;
+  font-weight: 500;
 }
 
 .success-message {
