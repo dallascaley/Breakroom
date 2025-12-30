@@ -77,6 +77,7 @@ app.use('/api/friends', friendsRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // Serve frontend static files

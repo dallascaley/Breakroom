@@ -128,8 +128,7 @@ async function unblockUser(user) {
 
 function getPhotoUrl(user) {
   if (user.photo_path) {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-    return `${baseUrl}/uploads/${user.photo_path}`
+    return `/api/uploads/${user.photo_path}`
   }
   return null
 }

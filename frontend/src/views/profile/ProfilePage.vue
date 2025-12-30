@@ -28,8 +28,7 @@ const photoInput = ref(null)
 
 const photoUrl = computed(() => {
   if (profile.value.photoPath) {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-    return `${baseUrl}/uploads/${profile.value.photoPath}`
+    return `/api/uploads/${profile.value.photoPath}`
   }
   return null
 })

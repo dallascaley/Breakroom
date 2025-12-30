@@ -121,8 +121,7 @@ const formatTime = (timestamp) => {
 // Get image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
-  return `${baseUrl}/uploads/${imagePath}`
+  return `/api/uploads/${imagePath}`
 }
 
 // Trigger image file input
