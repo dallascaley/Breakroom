@@ -77,12 +77,25 @@ async function getUserSkills(client, userId) {
   return result.rows;
 }
 
+// Helper to get user's jobs
+async function getUserJobs(client, userId) {
+  const result = await client.query(
+    `SELECT id, title, company, location, start_date, end_date, is_current, description
+     FROM user_jobs
+     WHERE user_id = $1
+     ORDER BY is_current DESC, start_date DESC`,
+    [userId]
+  );
+  return result.rows;
+}
+
 // Get current user's profile
 router.get('/', authenticate, async (req, res) => {
   const client = await getClient();
   try {
     const friendCount = await getFriendCount(client, req.user.id);
     const skills = await getUserSkills(client, req.user.id);
+    const jobs = await getUserJobs(client, req.user.id);
     res.json({
       user: {
         id: req.user.id,
@@ -99,7 +112,8 @@ router.get('/', authenticate, async (req, res) => {
         longitude: req.user.longitude,
         createdAt: req.user.created_at,
         friendCount,
-        skills
+        skills,
+        jobs
       }
     });
   } finally {
@@ -125,6 +139,7 @@ router.get('/user/:handle', async (req, res) => {
     const user = result.rows[0];
     const friendCount = await getFriendCount(client, user.id);
     const skills = await getUserSkills(client, user.id);
+    const jobs = await getUserJobs(client, user.id);
 
     res.json({
       user: {
@@ -137,7 +152,8 @@ router.get('/user/:handle', async (req, res) => {
         photoPath: user.photo_path,
         createdAt: user.created_at,
         friendCount,
-        skills
+        skills,
+        jobs
       }
     });
   } catch (err) {
@@ -424,6 +440,140 @@ router.delete('/skills/:skillId', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Error removing skill:', err);
     res.status(500).json({ message: 'Failed to remove skill' });
+  } finally {
+    client.release();
+  }
+});
+
+// Add a job to user's profile
+router.post('/jobs', authenticate, async (req, res) => {
+  const { title, company, location, startDate, endDate, isCurrent, description } = req.body;
+  const client = await getClient();
+
+  try {
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Job title is required' });
+    }
+    if (!company || company.trim().length === 0) {
+      return res.status(400).json({ message: 'Company is required' });
+    }
+    if (!startDate) {
+      return res.status(400).json({ message: 'Start date is required' });
+    }
+
+    await client.query(
+      `INSERT INTO user_jobs (user_id, title, company, location, start_date, end_date, is_current, description)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        req.user.id,
+        title.trim(),
+        company.trim(),
+        location?.trim() || null,
+        startDate,
+        isCurrent ? null : endDate || null,
+        isCurrent || false,
+        description?.trim() || null
+      ]
+    );
+
+    // Get the inserted job
+    const result = await client.query(
+      `SELECT id, title, company, location, start_date, end_date, is_current, description
+       FROM user_jobs
+       WHERE user_id = $1
+       ORDER BY id DESC LIMIT 1`,
+      [req.user.id]
+    );
+
+    res.status(201).json({ job: result.rows[0] });
+  } catch (err) {
+    console.error('Error adding job:', err);
+    res.status(500).json({ message: 'Failed to add job' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update a job
+router.put('/jobs/:jobId', authenticate, async (req, res) => {
+  const { jobId } = req.params;
+  const { title, company, location, startDate, endDate, isCurrent, description } = req.body;
+  const client = await getClient();
+
+  try {
+    // Verify ownership
+    const check = await client.query(
+      'SELECT id FROM user_jobs WHERE id = $1 AND user_id = $2',
+      [jobId, req.user.id]
+    );
+
+    if (check.rowCount === 0) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Job title is required' });
+    }
+    if (!company || company.trim().length === 0) {
+      return res.status(400).json({ message: 'Company is required' });
+    }
+    if (!startDate) {
+      return res.status(400).json({ message: 'Start date is required' });
+    }
+
+    await client.query(
+      `UPDATE user_jobs
+       SET title = $1, company = $2, location = $3, start_date = $4, end_date = $5, is_current = $6, description = $7
+       WHERE id = $8 AND user_id = $9`,
+      [
+        title.trim(),
+        company.trim(),
+        location?.trim() || null,
+        startDate,
+        isCurrent ? null : endDate || null,
+        isCurrent || false,
+        description?.trim() || null,
+        jobId,
+        req.user.id
+      ]
+    );
+
+    // Get updated job
+    const result = await client.query(
+      `SELECT id, title, company, location, start_date, end_date, is_current, description
+       FROM user_jobs
+       WHERE id = $1`,
+      [jobId]
+    );
+
+    res.json({ job: result.rows[0] });
+  } catch (err) {
+    console.error('Error updating job:', err);
+    res.status(500).json({ message: 'Failed to update job' });
+  } finally {
+    client.release();
+  }
+});
+
+// Delete a job
+router.delete('/jobs/:jobId', authenticate, async (req, res) => {
+  const { jobId } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      'DELETE FROM user_jobs WHERE id = $1 AND user_id = $2',
+      [jobId, req.user.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    res.json({ message: 'Job removed successfully' });
+  } catch (err) {
+    console.error('Error removing job:', err);
+    res.status(500).json({ message: 'Failed to remove job' });
   } finally {
     client.release();
   }

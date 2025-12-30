@@ -17,7 +17,8 @@ const profile = ref({
   photoPath: null,
   createdAt: null,
   friendCount: 0,
-  skills: []
+  skills: [],
+  jobs: []
 })
 
 const editForm = ref({
@@ -33,6 +34,20 @@ const skillSuggestions = ref([])
 const showSuggestions = ref(false)
 const isAddingSkill = ref(false)
 let skillSearchTimeout = null
+
+// Jobs management
+const showJobModal = ref(false)
+const editingJob = ref(null)
+const isSavingJob = ref(false)
+const jobForm = ref({
+  title: '',
+  company: '',
+  location: '',
+  startDate: '',
+  endDate: '',
+  isCurrent: false,
+  description: ''
+})
 
 const photoInput = ref(null)
 
@@ -278,6 +293,127 @@ function hideSuggestions() {
   }, 200)
 }
 
+// Jobs functions
+function openAddJobModal() {
+  editingJob.value = null
+  jobForm.value = {
+    title: '',
+    company: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+    isCurrent: false,
+    description: ''
+  }
+  showJobModal.value = true
+}
+
+function openEditJobModal(job) {
+  editingJob.value = job
+  jobForm.value = {
+    title: job.title || '',
+    company: job.company || '',
+    location: job.location || '',
+    startDate: job.start_date ? job.start_date.split('T')[0] : '',
+    endDate: job.end_date ? job.end_date.split('T')[0] : '',
+    isCurrent: job.is_current || false,
+    description: job.description || ''
+  }
+  showJobModal.value = true
+}
+
+function closeJobModal() {
+  showJobModal.value = false
+  editingJob.value = null
+}
+
+async function saveJob() {
+  if (!jobForm.value.title.trim() || !jobForm.value.company.trim() || !jobForm.value.startDate) {
+    error.value = 'Title, company, and start date are required'
+    setTimeout(() => { error.value = null }, 3000)
+    return
+  }
+
+  isSavingJob.value = true
+  error.value = null
+
+  try {
+    const url = editingJob.value
+      ? `/api/profile/jobs/${editingJob.value.id}`
+      : '/api/profile/jobs'
+    const method = editingJob.value ? 'PUT' : 'POST'
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(jobForm.value)
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to save job')
+    }
+
+    const data = await res.json()
+
+    if (editingJob.value) {
+      // Update existing job
+      const index = profile.value.jobs.findIndex(j => j.id === editingJob.value.id)
+      if (index !== -1) {
+        profile.value.jobs[index] = data.job
+      }
+    } else {
+      // Add new job
+      profile.value.jobs.unshift(data.job)
+    }
+
+    // Re-sort jobs (current first, then by start date desc)
+    profile.value.jobs.sort((a, b) => {
+      if (a.is_current && !b.is_current) return -1
+      if (!a.is_current && b.is_current) return 1
+      return new Date(b.start_date) - new Date(a.start_date)
+    })
+
+    closeJobModal()
+    successMessage.value = editingJob.value ? 'Job updated successfully!' : 'Job added successfully!'
+    setTimeout(() => { successMessage.value = null }, 3000)
+  } catch (err) {
+    error.value = err.message
+    setTimeout(() => { error.value = null }, 3000)
+  } finally {
+    isSavingJob.value = false
+  }
+}
+
+async function deleteJob(jobId) {
+  if (!confirm('Are you sure you want to remove this job?')) return
+
+  try {
+    const res = await fetch(`/api/profile/jobs/${jobId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to remove job')
+    }
+
+    profile.value.jobs = profile.value.jobs.filter(j => j.id !== jobId)
+    successMessage.value = 'Job removed successfully!'
+    setTimeout(() => { successMessage.value = null }, 3000)
+  } catch (err) {
+    error.value = err.message
+    setTimeout(() => { error.value = null }, 3000)
+  }
+}
+
+function formatJobDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
 onMounted(() => {
   fetchProfile()
 })
@@ -391,6 +527,36 @@ onMounted(() => {
             </div>
           </div>
 
+          <div class="jobs-section">
+            <div class="section-header">
+              <h2>Work Experience</h2>
+              <button @click="openAddJobModal" class="add-job-btn">+ Add Job</button>
+            </div>
+
+            <div v-if="profile.jobs && profile.jobs.length > 0" class="jobs-list">
+              <div v-for="job in profile.jobs" :key="job.id" class="job-card">
+                <div class="job-header">
+                  <div class="job-title-company">
+                    <h3>{{ job.title }}</h3>
+                    <span class="company-name">{{ job.company }}</span>
+                  </div>
+                  <div class="job-actions">
+                    <button @click="openEditJobModal(job)" class="job-action-btn edit" title="Edit">✎</button>
+                    <button @click="deleteJob(job.id)" class="job-action-btn delete" title="Delete">&times;</button>
+                  </div>
+                </div>
+                <div class="job-meta">
+                  <span class="job-dates">
+                    {{ formatJobDate(job.start_date) }} - {{ job.is_current ? 'Present' : formatJobDate(job.end_date) }}
+                  </span>
+                  <span v-if="job.location" class="job-location">{{ job.location }}</span>
+                </div>
+                <p v-if="job.description" class="job-description">{{ job.description }}</p>
+              </div>
+            </div>
+            <p v-else class="bio-empty">No work experience added yet. Click "Add Job" to get started!</p>
+          </div>
+
           <div class="details-section">
             <h2>Details</h2>
             <div class="detail-row">
@@ -468,6 +634,105 @@ onMounted(() => {
         </template>
       </div>
     </template>
+
+    <!-- Job Modal -->
+    <div v-if="showJobModal" class="modal-overlay" @click.self="closeJobModal">
+      <div class="modal-content job-modal">
+        <div class="modal-header">
+          <h2>{{ editingJob ? 'Edit Job' : 'Add Job' }}</h2>
+          <button @click="closeJobModal" class="modal-close">&times;</button>
+        </div>
+
+        <form @submit.prevent="saveJob" class="job-form">
+          <div class="form-group">
+            <label for="jobTitle">Job Title *</label>
+            <input
+              id="jobTitle"
+              v-model="jobForm.title"
+              type="text"
+              placeholder="e.g., Software Engineer"
+              maxlength="150"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="jobCompany">Company *</label>
+            <input
+              id="jobCompany"
+              v-model="jobForm.company"
+              type="text"
+              placeholder="e.g., Acme Inc."
+              maxlength="150"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="jobLocation">Location</label>
+            <input
+              id="jobLocation"
+              v-model="jobForm.location"
+              type="text"
+              placeholder="e.g., San Francisco, CA"
+              maxlength="150"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="jobStartDate">Start Date *</label>
+              <input
+                id="jobStartDate"
+                v-model="jobForm.startDate"
+                type="date"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="jobEndDate">End Date</label>
+              <input
+                id="jobEndDate"
+                v-model="jobForm.endDate"
+                type="date"
+                :disabled="jobForm.isCurrent"
+              />
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                v-model="jobForm.isCurrent"
+                @change="jobForm.isCurrent && (jobForm.endDate = '')"
+              />
+              I currently work here
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="jobDescription">Description</label>
+            <textarea
+              id="jobDescription"
+              v-model="jobForm.description"
+              placeholder="Describe your responsibilities and achievements..."
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" :disabled="isSavingJob" class="save-btn">
+              {{ isSavingJob ? 'Saving...' : (editingJob ? 'Update Job' : 'Add Job') }}
+            </button>
+            <button type="button" @click="closeJobModal" class="cancel-btn">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -864,5 +1129,210 @@ onMounted(() => {
 .add-skill-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+/* Jobs styles */
+.jobs-section {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 15px;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 0;
+}
+
+.add-job-btn {
+  background: #42b983;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.add-job-btn:hover {
+  background: #3aa876;
+}
+
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.job-card {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.job-title-company h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.company-name {
+  color: #42b983;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.job-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.job-action-btn {
+  background: none;
+  border: 1px solid #ddd;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.job-action-btn.edit:hover {
+  background: #e8f5e9;
+  border-color: #42b983;
+  color: #42b983;
+}
+
+.job-action-btn.delete:hover {
+  background: #ffe0e0;
+  border-color: #c00;
+  color: #c00;
+}
+
+.job-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.job-dates {
+  font-weight: 500;
+}
+
+.job-location {
+  color: #888;
+}
+
+.job-location::before {
+  content: '📍 ';
+}
+
+.job-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.job-form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 </style>

@@ -16,7 +16,8 @@ const profile = ref({
   photoPath: null,
   createdAt: null,
   friendCount: 0,
-  skills: []
+  skills: [],
+  jobs: []
 })
 
 const photoUrl = computed(() => {
@@ -42,6 +43,12 @@ const displayName = computed(() => {
   }
   return profile.value.handle
 })
+
+function formatJobDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
 
 async function fetchProfile() {
   isLoading.value = true
@@ -132,6 +139,25 @@ onMounted(() => {
             >
               {{ skill.name }}
             </span>
+          </div>
+        </div>
+
+        <div class="jobs-section" v-if="profile.jobs && profile.jobs.length > 0">
+          <h2>Work Experience</h2>
+          <div class="jobs-list">
+            <div v-for="job in profile.jobs" :key="job.id" class="job-card">
+              <div class="job-header">
+                <h3>{{ job.title }}</h3>
+                <span class="company-name">{{ job.company }}</span>
+              </div>
+              <div class="job-meta">
+                <span class="job-dates">
+                  {{ formatJobDate(job.start_date) }} - {{ job.is_current ? 'Present' : formatJobDate(job.end_date) }}
+                </span>
+                <span v-if="job.location" class="job-location">{{ job.location }}</span>
+              </div>
+              <p v-if="job.description" class="job-description">{{ job.description }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -235,19 +261,22 @@ onMounted(() => {
 
 .bio-section,
 .work-bio-section,
-.skills-section {
+.skills-section,
+.jobs-section {
   margin-bottom: 20px;
 }
 
 .bio-section:last-child,
 .work-bio-section:last-child,
-.skills-section:last-child {
+.skills-section:last-child,
+.jobs-section:last-child {
   margin-bottom: 0;
 }
 
 .bio-section h2,
 .work-bio-section h2,
-.skills-section h2 {
+.skills-section h2,
+.jobs-section h2 {
   font-size: 1.1rem;
   color: #333;
   margin: 0 0 12px 0;
@@ -282,5 +311,59 @@ onMounted(() => {
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+/* Jobs styles */
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.job-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.job-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.company-name {
+  color: #42b983;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.job-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #666;
+  margin: 8px 0;
+}
+
+.job-dates {
+  font-weight: 500;
+}
+
+.job-location {
+  color: #888;
+}
+
+.job-location::before {
+  content: '📍 ';
+}
+
+.job-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 </style>
