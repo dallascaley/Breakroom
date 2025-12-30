@@ -12,9 +12,11 @@ const profile = ref({
   firstName: '',
   lastName: '',
   bio: '',
+  workBio: '',
   photoPath: null,
   createdAt: null,
-  friendCount: 0
+  friendCount: 0,
+  skills: []
 })
 
 const photoUrl = computed(() => {
@@ -113,6 +115,24 @@ onMounted(() => {
           <h2>About</h2>
           <p v-if="profile.bio" class="bio-text">{{ profile.bio }}</p>
           <p v-else class="bio-empty">This user hasn't added a bio yet.</p>
+        </div>
+
+        <div class="work-bio-section" v-if="profile.workBio">
+          <h2>Work Biography</h2>
+          <p class="bio-text">{{ profile.workBio }}</p>
+        </div>
+
+        <div class="skills-section" v-if="profile.skills && profile.skills.length > 0">
+          <h2>Skills</h2>
+          <div class="skills-list">
+            <span
+              v-for="skill in profile.skills"
+              :key="skill.id"
+              class="skill-tag"
+            >
+              {{ skill.name }}
+            </span>
+          </div>
         </div>
       </div>
     </template>
@@ -213,7 +233,21 @@ onMounted(() => {
   padding: 20px;
 }
 
-.bio-section h2 {
+.bio-section,
+.work-bio-section,
+.skills-section {
+  margin-bottom: 20px;
+}
+
+.bio-section:last-child,
+.work-bio-section:last-child,
+.skills-section:last-child {
+  margin-bottom: 0;
+}
+
+.bio-section h2,
+.work-bio-section h2,
+.skills-section h2 {
   font-size: 1.1rem;
   color: #333;
   margin: 0 0 12px 0;
@@ -232,5 +266,21 @@ onMounted(() => {
   color: #999;
   font-style: italic;
   margin: 0;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  display: inline-block;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 </style>

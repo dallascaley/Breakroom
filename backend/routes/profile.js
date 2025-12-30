@@ -39,7 +39,7 @@ const authenticate = async (req, res, next) => {
     const payload = jwt.verify(token, SECRET_KEY);
     const client = await getClient();
     const result = await client.query(
-      'SELECT id, handle, first_name, last_name, email, bio, photo_path, timezone, city, latitude, longitude, created_at FROM users WHERE handle = $1',
+      'SELECT id, handle, first_name, last_name, email, bio, work_bio, photo_path, timezone, city, latitude, longitude, created_at FROM users WHERE handle = $1',
       [payload.username]
     );
     client.release();
@@ -65,11 +65,24 @@ async function getFriendCount(client, userId) {
   return parseInt(result.rows[0].count) || 0;
 }
 
+// Helper to get user's skills
+async function getUserSkills(client, userId) {
+  const result = await client.query(
+    `SELECT s.id, s.name FROM skills s
+     JOIN user_skills us ON us.skill_id = s.id
+     WHERE us.user_id = $1
+     ORDER BY s.name`,
+    [userId]
+  );
+  return result.rows;
+}
+
 // Get current user's profile
 router.get('/', authenticate, async (req, res) => {
   const client = await getClient();
   try {
     const friendCount = await getFriendCount(client, req.user.id);
+    const skills = await getUserSkills(client, req.user.id);
     res.json({
       user: {
         id: req.user.id,
@@ -78,13 +91,15 @@ router.get('/', authenticate, async (req, res) => {
         lastName: req.user.last_name,
         email: req.user.email,
         bio: req.user.bio,
+        workBio: req.user.work_bio,
         photoPath: req.user.photo_path,
         timezone: req.user.timezone,
         city: req.user.city,
         latitude: req.user.latitude,
         longitude: req.user.longitude,
         createdAt: req.user.created_at,
-        friendCount
+        friendCount,
+        skills
       }
     });
   } finally {
@@ -99,7 +114,7 @@ router.get('/user/:handle', async (req, res) => {
 
   try {
     const result = await client.query(
-      'SELECT id, handle, first_name, last_name, bio, photo_path, created_at FROM users WHERE handle = $1',
+      'SELECT id, handle, first_name, last_name, bio, work_bio, photo_path, created_at FROM users WHERE handle = $1',
       [handle]
     );
 
@@ -109,6 +124,7 @@ router.get('/user/:handle', async (req, res) => {
 
     const user = result.rows[0];
     const friendCount = await getFriendCount(client, user.id);
+    const skills = await getUserSkills(client, user.id);
 
     res.json({
       user: {
@@ -117,9 +133,11 @@ router.get('/user/:handle', async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         bio: user.bio,
+        workBio: user.work_bio,
         photoPath: user.photo_path,
         createdAt: user.created_at,
-        friendCount
+        friendCount,
+        skills
       }
     });
   } catch (err) {
@@ -130,15 +148,15 @@ router.get('/user/:handle', async (req, res) => {
   }
 });
 
-// Update profile (bio and basic info)
+// Update profile (bio, work bio, and basic info)
 router.put('/', authenticate, async (req, res) => {
-  const { bio, firstName, lastName } = req.body;
+  const { bio, workBio, firstName, lastName } = req.body;
   const client = await getClient();
 
   try {
     await client.query(
-      'UPDATE users SET bio = $1, first_name = $2, last_name = $3 WHERE id = $4',
-      [bio, firstName, lastName, req.user.id]
+      'UPDATE users SET bio = $1, work_bio = $2, first_name = $3, last_name = $4 WHERE id = $5',
+      [bio, workBio, firstName, lastName, req.user.id]
     );
 
     res.json({ message: 'Profile updated successfully' });
@@ -292,6 +310,120 @@ router.delete('/photo', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Error deleting photo:', err);
     res.status(500).json({ message: 'Failed to delete photo' });
+  } finally {
+    client.release();
+  }
+});
+
+// Search skills for autocomplete
+router.get('/skills/search', authenticate, async (req, res) => {
+  const { q } = req.query;
+  const client = await getClient();
+
+  try {
+    if (!q || q.trim().length === 0) {
+      return res.json({ skills: [] });
+    }
+
+    const result = await client.query(
+      `SELECT id, name FROM skills
+       WHERE LOWER(name) LIKE LOWER($1)
+       ORDER BY name
+       LIMIT 10`,
+      [`%${q.trim()}%`]
+    );
+
+    res.json({ skills: result.rows });
+  } catch (err) {
+    console.error('Error searching skills:', err);
+    res.status(500).json({ message: 'Failed to search skills' });
+  } finally {
+    client.release();
+  }
+});
+
+// Add a skill to user's profile
+router.post('/skills', authenticate, async (req, res) => {
+  const { name } = req.body;
+  const client = await getClient();
+
+  try {
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ message: 'Skill name is required' });
+    }
+
+    const skillName = name.trim();
+
+    // Check if skill exists, create if not
+    let skillResult = await client.query(
+      'SELECT id, name FROM skills WHERE LOWER(name) = LOWER($1)',
+      [skillName]
+    );
+
+    let skillId;
+    let finalName;
+
+    if (skillResult.rowCount === 0) {
+      // Create new skill
+      await client.query(
+        'INSERT INTO skills (name) VALUES ($1)',
+        [skillName]
+      );
+      skillResult = await client.query(
+        'SELECT id, name FROM skills WHERE LOWER(name) = LOWER($1)',
+        [skillName]
+      );
+    }
+
+    skillId = skillResult.rows[0].id;
+    finalName = skillResult.rows[0].name;
+
+    // Check if user already has this skill
+    const existingLink = await client.query(
+      'SELECT id FROM user_skills WHERE user_id = $1 AND skill_id = $2',
+      [req.user.id, skillId]
+    );
+
+    if (existingLink.rowCount > 0) {
+      return res.status(400).json({ message: 'Skill already added' });
+    }
+
+    // Add skill to user
+    await client.query(
+      'INSERT INTO user_skills (user_id, skill_id) VALUES ($1, $2)',
+      [req.user.id, skillId]
+    );
+
+    res.status(201).json({
+      skill: { id: skillId, name: finalName }
+    });
+  } catch (err) {
+    console.error('Error adding skill:', err);
+    res.status(500).json({ message: 'Failed to add skill' });
+  } finally {
+    client.release();
+  }
+});
+
+// Remove a skill from user's profile
+router.delete('/skills/:skillId', authenticate, async (req, res) => {
+  const { skillId } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      'DELETE FROM user_skills WHERE user_id = $1 AND skill_id = $2',
+      [req.user.id, skillId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Skill not found' });
+    }
+
+    res.json({ message: 'Skill removed successfully' });
+  } catch (err) {
+    console.error('Error removing skill:', err);
+    res.status(500).json({ message: 'Failed to remove skill' });
   } finally {
     client.release();
   }
