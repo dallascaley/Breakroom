@@ -73,7 +73,7 @@ router.get('/feed', authenticate, async (req, res) => {
                   WHEN user_id = $1 THEN friend_id
                   ELSE user_id
                 END
-                FROM friendships
+                FROM friends
                 WHERE (user_id = $1 OR friend_id = $1)
                   AND status = 'accepted'
               ))
