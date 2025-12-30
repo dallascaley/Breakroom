@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import ChatWidget from './ChatWidget.vue'
+import UpdatesWidget from './UpdatesWidget.vue'
 
 const props = defineProps({
   block: {
@@ -22,6 +23,9 @@ const blockTitle = computed(() => {
   if (props.block.block_type === 'placeholder') {
     return 'Placeholder'
   }
+  if (props.block.block_type === 'updates') {
+    return 'Breakroom Updates'
+  }
   return 'Block'
 })
 
@@ -30,6 +34,7 @@ const blockTypeLabel = computed(() => {
   switch (props.block.block_type) {
     case 'chat': return 'Chat'
     case 'placeholder': return 'Empty'
+    case 'updates': return 'Updates'
     default: return props.block.block_type
   }
 })
@@ -58,6 +63,9 @@ const blockTypeLabel = computed(() => {
         <p>Empty Block</p>
         <p class="hint">This is a placeholder for future content</p>
       </div>
+
+      <!-- Updates block -->
+      <UpdatesWidget v-else-if="block.block_type === 'updates'" />
 
       <!-- Unknown block type -->
       <div v-else class="unknown-content">

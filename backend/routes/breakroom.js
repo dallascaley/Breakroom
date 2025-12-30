@@ -196,6 +196,37 @@ router.put('/layout', authenticateToken, async (req, res) => {
   }
 });
 
+// Get breakroom updates (public endpoint)
+router.get('/updates', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+  const offset = parseInt(req.query.offset) || 0;
+
+  const client = await getClient();
+  try {
+    const updates = await client.query(
+      `SELECT id, summary, commit_hash, created_at
+       FROM breakroom_updates
+       ORDER BY created_at DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+
+    const total = await client.query('SELECT COUNT(*) as count FROM breakroom_updates');
+
+    res.status(200).json({
+      updates: updates.rows,
+      total: total.rows[0].count,
+      limit,
+      offset
+    });
+  } catch (err) {
+    console.error('Error fetching updates:', err);
+    res.status(500).json({ message: 'Failed to fetch updates' });
+  } finally {
+    client.release();
+  }
+});
+
 // Delete a block
 router.delete('/blocks/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;

@@ -5,13 +5,22 @@ import { chat } from '@/stores/chat.js'
 
 const emit = defineEmits(['close', 'added'])
 
-const blockType = ref('chat')
+const blockType = ref('widget')
 const selectedRoom = ref(null)
+const selectedWidget = ref('placeholder')
 const blockWidth = ref(2)
 const blockHeight = ref(2)
 const customTitle = ref('')
 const loading = ref(false)
 const error = ref('')
+
+// Available widget types
+const widgetTypes = [
+  { value: 'placeholder', label: 'Placeholder', desc: 'Empty block for later' },
+  { value: 'updates', label: 'Breakroom Updates', desc: 'Latest news and updates' },
+  { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display' },
+  { value: 'weather', label: 'Weather', desc: 'Current weather conditions' }
+]
 
 // Fetch rooms when modal opens
 onMounted(async () => {
@@ -37,8 +46,11 @@ const handleSubmit = async () => {
     const nextX = breakroom.blocks.length % 5
     const nextY = Math.floor(breakroom.blocks.length / 5) * 2
 
+    // Determine actual block type (chat or the selected widget type)
+    const actualBlockType = blockType.value === 'chat' ? 'chat' : selectedWidget.value
+
     await breakroom.addBlock(
-      blockType.value,
+      actualBlockType,
       blockType.value === 'chat' ? selectedRoom.value : null,
       {
         x: nextX,
@@ -73,10 +85,10 @@ const handleSubmit = async () => {
               <span class="type-label">Chat Room</span>
               <span class="type-desc">Embed a chat room</span>
             </label>
-            <label class="type-option" :class="{ selected: blockType === 'placeholder' }">
-              <input type="radio" v-model="blockType" value="placeholder" />
-              <span class="type-label">Placeholder</span>
-              <span class="type-desc">Empty block for later</span>
+            <label class="type-option" :class="{ selected: blockType === 'widget' }">
+              <input type="radio" v-model="blockType" value="widget" />
+              <span class="type-label">Widget</span>
+              <span class="type-desc">Add a widget block</span>
             </label>
           </div>
         </div>
@@ -89,6 +101,17 @@ const handleSubmit = async () => {
               # {{ room.name }}
             </option>
           </select>
+        </div>
+
+        <!-- Widget Type Selection -->
+        <div v-if="blockType === 'widget'" class="form-group">
+          <label for="widget">Widget Type</label>
+          <select id="widget" v-model="selectedWidget">
+            <option v-for="widget in widgetTypes" :key="widget.value" :value="widget.value">
+              {{ widget.label }}
+            </option>
+          </select>
+          <p class="widget-desc">{{ widgetTypes.find(w => w.value === selectedWidget)?.desc }}</p>
         </div>
 
         <!-- Size Options -->
@@ -290,5 +313,11 @@ input[type="text"]:focus {
 
 .btn-secondary:hover {
   background: #ccc;
+}
+
+.widget-desc {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #666;
 }
 </style>
