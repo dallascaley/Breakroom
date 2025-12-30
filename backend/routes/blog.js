@@ -79,7 +79,7 @@ router.get('/feed', authenticate, async (req, res) => {
               ))
        ORDER BY bp.updated_at DESC
        LIMIT 20`,
-      [req.user.id]
+      [req.user.id, req.user.id, req.user.id, req.user.id]
     );
 
     res.json({ posts: result.rows });
