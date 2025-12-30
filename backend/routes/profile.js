@@ -39,7 +39,7 @@ const authenticate = async (req, res, next) => {
     const payload = jwt.verify(token, SECRET_KEY);
     const client = await getClient();
     const result = await client.query(
-      'SELECT id, handle, first_name, last_name, email, bio, photo_path, timezone, created_at FROM users WHERE handle = $1',
+      'SELECT id, handle, first_name, last_name, email, bio, photo_path, timezone, city, latitude, longitude, created_at FROM users WHERE handle = $1',
       [payload.username]
     );
     client.release();
@@ -80,6 +80,9 @@ router.get('/', authenticate, async (req, res) => {
         bio: req.user.bio,
         photoPath: req.user.photo_path,
         timezone: req.user.timezone,
+        city: req.user.city,
+        latitude: req.user.latitude,
+        longitude: req.user.longitude,
         createdAt: req.user.created_at,
         friendCount
       }
@@ -142,6 +145,60 @@ router.put('/', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Error updating profile:', err);
     res.status(500).json({ message: 'Failed to update profile' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update user location (city with geocoding)
+router.put('/location', authenticate, async (req, res) => {
+  const { city } = req.body;
+  const client = await getClient();
+
+  try {
+    if (!city || city.trim().length === 0) {
+      // Clear location
+      await client.query(
+        'UPDATE users SET city = NULL, latitude = NULL, longitude = NULL WHERE id = $1',
+        [req.user.id]
+      );
+      return res.json({ message: 'Location cleared' });
+    }
+
+    // Geocode the city using Open-Meteo geocoding API
+    const geoResponse = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+    );
+
+    if (!geoResponse.ok) {
+      return res.status(500).json({ message: 'Failed to geocode city' });
+    }
+
+    const geoData = await geoResponse.json();
+
+    if (!geoData.results || geoData.results.length === 0) {
+      return res.status(400).json({ message: 'City not found' });
+    }
+
+    const location = geoData.results[0];
+    const cityName = location.admin1
+      ? `${location.name}, ${location.admin1}, ${location.country}`
+      : `${location.name}, ${location.country}`;
+
+    await client.query(
+      'UPDATE users SET city = $1, latitude = $2, longitude = $3 WHERE id = $4',
+      [cityName, location.latitude, location.longitude, req.user.id]
+    );
+
+    res.json({
+      message: 'Location updated successfully',
+      city: cityName,
+      latitude: location.latitude,
+      longitude: location.longitude
+    });
+  } catch (err) {
+    console.error('Error updating location:', err);
+    res.status(500).json({ message: 'Failed to update location' });
   } finally {
     client.release();
   }
