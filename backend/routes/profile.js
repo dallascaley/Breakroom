@@ -2,32 +2,16 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const { getClient } = require('../utilities/db');
+const { uploadToS3, deleteFromS3 } = require('../utilities/aws-s3');
 
 require('dotenv').config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename with user id and timestamp
-    const ext = path.extname(file.originalname);
-    const filename = `profile_${req.user.id}_${Date.now()}${ext}`;
-    cb(null, filename);
-  }
-});
+// Configure multer for memory storage (buffer for S3 upload)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -170,23 +154,31 @@ router.post('/photo', authenticate, upload.single('photo'), async (req, res) => 
 
   const client = await getClient();
   try {
-    // Delete old photo if exists
-    if (req.user.photo_path) {
-      const oldPath = path.join(uploadsDir, req.user.photo_path);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
+    // Generate S3 key
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const s3Key = `profiles/profile_${req.user.id}_${Date.now()}${ext}`;
+
+    // Upload to S3
+    const uploadResult = await uploadToS3(req.file.buffer, s3Key, req.file.mimetype);
+
+    if (!uploadResult.success) {
+      return res.status(500).json({ message: 'Failed to upload to S3: ' + uploadResult.error });
     }
 
-    // Update database with new photo path
+    // Delete old photo from S3 if exists
+    if (req.user.photo_path) {
+      await deleteFromS3(req.user.photo_path);
+    }
+
+    // Update database with new S3 key
     await client.query(
       'UPDATE users SET photo_path = $1 WHERE id = $2',
-      [req.file.filename, req.user.id]
+      [s3Key, req.user.id]
     );
 
     res.json({
       message: 'Photo uploaded successfully',
-      photoPath: req.file.filename
+      photoPath: s3Key
     });
   } catch (err) {
     console.error('Error uploading photo:', err);
@@ -202,10 +194,8 @@ router.delete('/photo', authenticate, async (req, res) => {
 
   try {
     if (req.user.photo_path) {
-      const photoPath = path.join(uploadsDir, req.user.photo_path);
-      if (fs.existsSync(photoPath)) {
-        fs.unlinkSync(photoPath);
-      }
+      // Delete from S3
+      await deleteFromS3(req.user.photo_path);
 
       await client.query(
         'UPDATE users SET photo_path = NULL WHERE id = $1',

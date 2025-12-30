@@ -57,6 +57,7 @@ const chatRoutes = require('./routes/chat');
 const profileRoutes = require('./routes/profile');
 const breakroomRoutes = require('./routes/breakroom');
 const friendsRoutes = require('./routes/friends');
+const { getS3Url } = require('./utilities/aws-s3');
 
 
 
@@ -75,9 +76,27 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/breakroom', breakroomRoutes);
 app.use('/api/friends', friendsRoutes);
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+// Redirect uploaded file requests to S3
+const handleS3Redirect = (req, res) => {
+  // req.path is relative to mount point, so /api/uploads/chat/file.jpg becomes /chat/file.jpg
+  const key = req.path.replace(/^\//, ''); // Remove leading slash
+  if (!key) {
+    return res.status(404).json({ message: 'File not found' });
+  }
+  // Handle both new S3 keys (profiles/..., chat/...) and legacy filenames
+  let s3Key = key;
+  if (!key.startsWith('profiles/') && !key.startsWith('chat/')) {
+    // Legacy filename - add appropriate prefix
+    if (key.startsWith('profile_')) {
+      s3Key = `profiles/${key}`;
+    } else if (key.startsWith('chat_')) {
+      s3Key = `chat/${key}`;
+    }
+  }
+  res.redirect(301, getS3Url(s3Key));
+};
+app.use('/uploads', handleS3Redirect);
+app.use('/api/uploads', handleS3Redirect);
 
 
 // Serve frontend static files

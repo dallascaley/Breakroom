@@ -25,5 +25,8 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # S3 configuration
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_BUCKET_REGION: ${S3_BUCKET_REGION}
     restart: unless-stopped
     command: sh -c "npm run start"

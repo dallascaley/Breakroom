@@ -3,30 +3,15 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const { getClient } = require('../utilities/db');
 const { checkPermission } = require('../middleware/checkPermission');
 const { getIO } = require('../utilities/socket');
+const { uploadToS3 } = require('../utilities/aws-s3');
 
 require('dotenv').config();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure multer for chat image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `chat_${req.user.id}_${Date.now()}${ext}`;
-    cb(null, filename);
-  }
-});
+// Configure multer for memory storage (buffer for S3 upload)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -220,10 +205,21 @@ router.post('/rooms/:roomId/image', authenticateToken, upload.single('image'), a
       return res.status(404).json({ message: 'Chat room not found' });
     }
 
-    // Insert message with image
+    // Generate S3 key
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const s3Key = `chat/chat_${req.user.id}_${Date.now()}${ext}`;
+
+    // Upload to S3
+    const uploadResult = await uploadToS3(req.file.buffer, s3Key, req.file.mimetype);
+
+    if (!uploadResult.success) {
+      return res.status(500).json({ message: 'Failed to upload image: ' + uploadResult.error });
+    }
+
+    // Insert message with S3 key as image_path
     const result = await client.query(
       'INSERT INTO chat_messages (room_id, user_id, message, image_path) VALUES ($1, $2, $3, $4)',
-      [roomId, req.user.id, message?.trim() || null, req.file.filename]
+      [roomId, req.user.id, message?.trim() || null, s3Key]
     );
 
     // Get the inserted message with user info
