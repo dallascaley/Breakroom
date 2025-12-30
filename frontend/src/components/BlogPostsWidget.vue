@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { authFetch } from '../utilities/authFetch'
 
 const router = useRouter()
 const posts = ref([])
@@ -12,9 +13,7 @@ const fetchPosts = async () => {
   error.value = null
 
   try {
-    const response = await fetch('/api/blog/posts', {
-      credentials: 'include'
-    })
+    const response = await authFetch('/api/blog/feed')
 
     if (!response.ok) {
       throw new Error('Failed to fetch posts')
@@ -47,6 +46,10 @@ const formatDate = (dateStr) => {
   }
 }
 
+const viewPost = (postId) => {
+  router.push(`/blog/view/${postId}`)
+}
+
 const goToBlog = () => {
   router.push('/blog')
 }
@@ -56,6 +59,13 @@ const stripHtml = (html) => {
   const tmp = document.createElement('div')
   tmp.innerHTML = html
   return tmp.textContent || tmp.innerText || ''
+}
+
+const getAuthorName = (post) => {
+  if (post.author_first_name || post.author_last_name) {
+    return `${post.author_first_name || ''} ${post.author_last_name || ''}`.trim()
+  }
+  return post.author_handle
 }
 
 onMounted(() => {
@@ -84,19 +94,15 @@ onMounted(() => {
         v-for="post in posts.slice(0, 5)"
         :key="post.id"
         class="post-item"
-        @click="goToBlog"
+        @click="viewPost(post.id)"
       >
         <div class="post-header">
-          <span class="post-status" :class="{ published: post.is_published }">
-            {{ post.is_published ? 'Published' : 'Draft' }}
-          </span>
+          <span class="post-author">{{ getAuthorName(post) }}</span>
           <span class="post-date">{{ formatDate(post.updated_at) }}</span>
         </div>
         <h3 class="post-title">{{ post.title }}</h3>
+        <p class="post-preview">{{ stripHtml(post.content) }}</p>
       </div>
-      <button v-if="posts.length > 5" class="view-all-btn" @click="goToBlog">
-        View all {{ posts.length }} posts
-      </button>
     </div>
 
     <!-- Empty state -->
@@ -177,17 +183,26 @@ onMounted(() => {
 
 .posts-list {
   padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .post-item {
   background: white;
   border-radius: 6px;
   padding: 10px 12px;
-  margin-bottom: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.1s;
   border-left: 3px solid #42b983;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .post-item:hover {
@@ -195,30 +210,18 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
-.post-item:last-child {
-  margin-bottom: 0;
-}
-
 .post-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
-.post-status {
-  font-size: 0.65rem;
+.post-author {
+  font-size: 0.7rem;
   font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: #ffeb99;
-  color: #996600;
-  text-transform: uppercase;
-}
-
-.post-status.published {
-  background: #c8f7c5;
-  color: #2e7d32;
+  color: #42b983;
 }
 
 .post-date {
@@ -227,32 +230,24 @@ onMounted(() => {
 }
 
 .post-title {
-  margin: 0;
+  margin: 0 0 6px 0;
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.3;
   color: #222;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  flex-shrink: 0;
+}
+
+.post-preview {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #666;
+  line-height: 1.4;
+  flex: 1;
   overflow: hidden;
-}
-
-.view-all-btn {
-  width: 100%;
-  margin-top: 8px;
-  padding: 8px;
-  background: #e8f5e9;
-  color: #2e7d32;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.view-all-btn:hover {
-  background: #c8e6c9;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10;
 }
 
 .empty-state {

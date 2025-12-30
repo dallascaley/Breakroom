@@ -55,6 +55,71 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+// Get feed of posts (own + friends' published posts)
+router.get('/feed', authenticate, async (req, res) => {
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      `SELECT bp.id, bp.title, bp.content, bp.is_published, bp.created_at, bp.updated_at,
+              u.id as author_id, u.handle as author_handle, u.first_name as author_first_name,
+              u.last_name as author_last_name, u.photo_path as author_photo
+       FROM blog_posts bp
+       JOIN users u ON bp.user_id = u.id
+       WHERE bp.is_published = TRUE
+         AND (bp.user_id = $1
+              OR bp.user_id IN (
+                SELECT CASE
+                  WHEN user_id = $1 THEN friend_id
+                  ELSE user_id
+                END
+                FROM friendships
+                WHERE (user_id = $1 OR friend_id = $1)
+                  AND status = 'accepted'
+              ))
+       ORDER BY bp.updated_at DESC
+       LIMIT 20`,
+      [req.user.id]
+    );
+
+    res.json({ posts: result.rows });
+  } catch (err) {
+    console.error('Error fetching blog feed:', err);
+    res.status(500).json({ message: 'Failed to fetch feed' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get a single published post (public view)
+router.get('/view/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      `SELECT bp.id, bp.title, bp.content, bp.is_published, bp.created_at, bp.updated_at,
+              u.id as author_id, u.handle as author_handle, u.first_name as author_first_name,
+              u.last_name as author_last_name, u.photo_path as author_photo, u.bio as author_bio
+       FROM blog_posts bp
+       JOIN users u ON bp.user_id = u.id
+       WHERE bp.id = $1 AND bp.is_published = TRUE`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.json({ post: result.rows[0] });
+  } catch (err) {
+    console.error('Error fetching blog post:', err);
+    res.status(500).json({ message: 'Failed to fetch post' });
+  } finally {
+    client.release();
+  }
+});
+
 // Get all posts for current user
 router.get('/posts', authenticate, async (req, res) => {
   const client = await getClient();
