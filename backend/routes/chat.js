@@ -1,10 +1,47 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { getClient } = require('../utilities/db');
 const { checkPermission } = require('../middleware/checkPermission');
+const { getIO } = require('../utilities/socket');
 
 require('dotenv').config();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for chat image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `chat_${req.user.id}_${Date.now()}${ext}`;
+    cb(null, filename);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowedTypes.test(file.mimetype);
+    if (ext && mime) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -79,7 +116,7 @@ router.get('/rooms/:roomId/messages', authenticateToken, async (req, res) => {
       // Get messages before a specific message ID (for loading older messages)
       query = `
         SELECT
-          m.id, m.message, m.created_at,
+          m.id, m.message, m.image_path, m.created_at,
           u.id as user_id, u.handle
         FROM chat_messages m
         JOIN users u ON m.user_id = u.id
@@ -92,7 +129,7 @@ router.get('/rooms/:roomId/messages', authenticateToken, async (req, res) => {
       // Get most recent messages
       query = `
         SELECT
-          m.id, m.message, m.created_at,
+          m.id, m.message, m.image_path, m.created_at,
           u.id as user_id, u.handle
         FROM chat_messages m
         JOIN users u ON m.user_id = u.id
@@ -147,7 +184,7 @@ router.post('/rooms/:roomId/messages', authenticateToken, async (req, res) => {
     // Get the inserted message with user info
     const newMessage = await client.query(
       `SELECT
-        m.id, m.message, m.created_at,
+        m.id, m.message, m.image_path, m.created_at,
         u.id as user_id, u.handle
       FROM chat_messages m
       JOIN users u ON m.user_id = u.id
@@ -161,6 +198,62 @@ router.post('/rooms/:roomId/messages', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error sending message:', err);
     res.status(500).json({ message: 'Failed to send message' });
+  } finally {
+    client.release();
+  }
+});
+
+// Upload an image to a room
+router.post('/rooms/:roomId/image', authenticateToken, upload.single('image'), async (req, res) => {
+  const { roomId } = req.params;
+  const { message } = req.body; // Optional text message with the image
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image uploaded' });
+  }
+
+  const client = await getClient();
+  try {
+    // Verify room exists
+    const room = await client.query('SELECT id FROM chat_rooms WHERE id = $1 AND is_active = true', [roomId]);
+    if (room.rowCount === 0) {
+      return res.status(404).json({ message: 'Chat room not found' });
+    }
+
+    // Insert message with image
+    const result = await client.query(
+      'INSERT INTO chat_messages (room_id, user_id, message, image_path) VALUES ($1, $2, $3, $4)',
+      [roomId, req.user.id, message?.trim() || null, req.file.filename]
+    );
+
+    // Get the inserted message with user info
+    const newMessage = await client.query(
+      `SELECT
+        m.id, m.message, m.image_path, m.created_at,
+        u.id as user_id, u.handle
+      FROM chat_messages m
+      JOIN users u ON m.user_id = u.id
+      WHERE m.id = $1`,
+      [result.insertId]
+    );
+
+    const messageData = newMessage.rows[0];
+
+    // Broadcast message to everyone in the room via socket
+    const io = getIO();
+    if (io) {
+      io.to(`room_${roomId}`).emit('new_message', {
+        roomId: parseInt(roomId),
+        message: messageData
+      });
+    }
+
+    res.status(201).json({
+      message: messageData
+    });
+  } catch (err) {
+    console.error('Error uploading image:', err);
+    res.status(500).json({ message: 'Failed to upload image' });
   } finally {
     client.release();
   }

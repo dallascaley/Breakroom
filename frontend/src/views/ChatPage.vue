@@ -7,6 +7,8 @@ import ChatSidebar from '@/components/ChatSidebar.vue'
 const messageInput = ref('')
 const messagesContainer = ref(null)
 const typingTimeout = ref(null)
+const imageInput = ref(null)
+const uploadingImage = ref(false)
 
 // Get current room info
 const currentRoom = computed(() => {
@@ -70,6 +72,55 @@ const isOwnMessage = (handle) => {
   return handle === user.username
 }
 
+// Get image URL
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+  return `${baseUrl}/uploads/${imagePath}`
+}
+
+// Trigger image file input
+const triggerImageUpload = () => {
+  imageInput.value?.click()
+}
+
+// Handle image selection and upload
+const onImageSelected = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  if (!chat.currentRoom) {
+    chat.error = 'Please join a room first'
+    return
+  }
+
+  uploadingImage.value = true
+
+  const formData = new FormData()
+  formData.append('image', file)
+
+  try {
+    const res = await fetch(`/api/chat/rooms/${chat.currentRoom}/image`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to upload image')
+    }
+
+    // Message will be received via socket
+  } catch (err) {
+    console.error('Error uploading image:', err)
+    chat.error = err.message
+  } finally {
+    uploadingImage.value = false
+    event.target.value = ''
+  }
+}
+
 onMounted(async () => {
   // Connect to socket
   chat.connect()
@@ -124,7 +175,12 @@ onUnmounted(() => {
             <span class="message-author">{{ msg.handle }}</span>
             <span class="message-time">{{ formatTime(msg.created_at) }}</span>
           </div>
-          <div class="message-content">{{ msg.message }}</div>
+          <div v-if="msg.image_path" class="message-image">
+            <a :href="getImageUrl(msg.image_path)" target="_blank">
+              <img :src="getImageUrl(msg.image_path)" alt="Shared image" />
+            </a>
+          </div>
+          <div v-if="msg.message" class="message-content">{{ msg.message }}</div>
         </div>
       </div>
 
@@ -133,6 +189,22 @@ onUnmounted(() => {
       </div>
 
       <div class="message-input-container">
+        <input
+          ref="imageInput"
+          type="file"
+          accept="image/*"
+          class="hidden-input"
+          @change="onImageSelected"
+        />
+        <button
+          type="button"
+          class="image-btn"
+          @click="triggerImageUpload"
+          :disabled="!chat.connected || uploadingImage"
+          title="Upload image"
+        >
+          {{ uploadingImage ? '...' : 'Img' }}
+        </button>
         <input
           v-model="messageInput"
           @keyup.enter="sendMessage"
@@ -262,6 +334,21 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
+.message-image {
+  margin: 6px 0;
+}
+
+.message-image img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.message-image a {
+  display: block;
+}
+
 .typing-indicator {
   padding: 5px 20px;
   font-size: 0.85em;
@@ -309,6 +396,30 @@ onUnmounted(() => {
 
 .message-input-container button:disabled {
   background: #ccc;
+  cursor: not-allowed;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.image-btn {
+  padding: 12px 15px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.image-btn:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.image-btn:disabled {
+  background: #adb5bd;
   cursor: not-allowed;
 }
 

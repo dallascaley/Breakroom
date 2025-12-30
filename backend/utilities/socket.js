@@ -8,7 +8,14 @@ const SECRET_KEY = process.env.SECRET_KEY;
 // Store socket connections by user ID
 const userSockets = new Map();
 
+// Store io instance for use in other modules
+let ioInstance = null;
+
+const getIO = () => ioInstance;
+
 const initializeSocket = (io) => {
+  ioInstance = io;
+
   // Middleware to authenticate socket connections
   io.use(async (socket, next) => {
     try {
@@ -130,7 +137,7 @@ const initializeSocket = (io) => {
         // Get the inserted message
         const newMessage = await client.query(
           `SELECT
-            m.id, m.message, m.created_at,
+            m.id, m.message, m.image_path, m.created_at,
             u.id as user_id, u.handle
           FROM chat_messages m
           JOIN users u ON m.user_id = u.id
@@ -176,4 +183,4 @@ const initializeSocket = (io) => {
   });
 };
 
-module.exports = { initializeSocket, userSockets };
+module.exports = { initializeSocket, userSockets, getIO };
