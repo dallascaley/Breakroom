@@ -1,5 +1,6 @@
 import { reactive, ref } from 'vue'
 import { io } from 'socket.io-client'
+import { authFetch } from '../utilities/authFetch'
 
 const state = reactive({
   socket: null,
@@ -135,9 +136,7 @@ export const chat = reactive({
   // Fetch available rooms via REST API
   async fetchRooms() {
     try {
-      const res = await fetch('/api/chat/rooms', {
-        credentials: 'include'
-      })
+      const res = await authFetch('/api/chat/rooms')
       if (!res.ok) throw new Error('Failed to fetch rooms')
       const data = await res.json()
       state.rooms = data.rooms
@@ -154,9 +153,7 @@ export const chat = reactive({
       if (before) {
         url += `&before=${before}`
       }
-      const res = await fetch(url, {
-        credentials: 'include'
-      })
+      const res = await authFetch(url)
       if (!res.ok) throw new Error('Failed to fetch messages')
       const data = await res.json()
       return data.messages
@@ -219,12 +216,11 @@ export const chat = reactive({
     if (!state.currentRoom) return
 
     try {
-      const res = await fetch(`/api/chat/rooms/${state.currentRoom}/messages`, {
+      const res = await authFetch(`/api/chat/rooms/${state.currentRoom}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({ message: message.trim() })
       })
       if (!res.ok) throw new Error('Failed to send message')
@@ -290,10 +286,9 @@ export const chat = reactive({
   // Create a new room
   async createRoom(name, description) {
     try {
-      const res = await fetch('/api/chat/rooms', {
+      const res = await authFetch('/api/chat/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, description })
       })
 
@@ -314,10 +309,9 @@ export const chat = reactive({
   // Update a room
   async updateRoom(roomId, name, description) {
     try {
-      const res = await fetch(`/api/chat/rooms/${roomId}`, {
+      const res = await authFetch(`/api/chat/rooms/${roomId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ name, description })
       })
 
@@ -341,9 +335,8 @@ export const chat = reactive({
   // Delete a room
   async deleteRoom(roomId) {
     try {
-      const res = await fetch(`/api/chat/rooms/${roomId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/chat/rooms/${roomId}`, {
+        method: 'DELETE'
       })
 
       if (!res.ok) {
@@ -379,9 +372,7 @@ export const chat = reactive({
   // Fetch pending invites
   async fetchInvites() {
     try {
-      const res = await fetch('/api/chat/invites', {
-        credentials: 'include'
-      })
+      const res = await authFetch('/api/chat/invites')
       if (!res.ok) throw new Error('Failed to fetch invites')
       const data = await res.json()
       state.invites = data.invites
@@ -394,9 +385,8 @@ export const chat = reactive({
   // Accept an invite
   async acceptInvite(roomId) {
     try {
-      const res = await fetch(`/api/chat/invites/${roomId}/accept`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/chat/invites/${roomId}/accept`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const error = await res.json()
@@ -416,9 +406,8 @@ export const chat = reactive({
   // Decline an invite
   async declineInvite(roomId) {
     try {
-      const res = await fetch(`/api/chat/invites/${roomId}/decline`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/chat/invites/${roomId}/decline`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const error = await res.json()
@@ -434,10 +423,9 @@ export const chat = reactive({
   // Invite a user to a room
   async inviteUser(roomId, userId) {
     try {
-      const res = await fetch(`/api/chat/rooms/${roomId}/invite`, {
+      const res = await authFetch(`/api/chat/rooms/${roomId}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ userId })
       })
       if (!res.ok) {
@@ -455,9 +443,7 @@ export const chat = reactive({
   // Fetch members of a room
   async fetchMembers(roomId) {
     try {
-      const res = await fetch(`/api/chat/rooms/${roomId}/members`, {
-        credentials: 'include'
-      })
+      const res = await authFetch(`/api/chat/rooms/${roomId}/members`)
       if (!res.ok) throw new Error('Failed to fetch members')
       const data = await res.json()
       state.members = data.members

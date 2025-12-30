@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { authFetch } from '../utilities/authFetch'
 
 const state = reactive({
   blocks: [],
@@ -23,9 +24,7 @@ export const breakroom = reactive({
     state.error = null
 
     try {
-      const res = await fetch('/api/breakroom/layout', {
-        credentials: 'include'
-      })
+      const res = await authFetch('/api/breakroom/layout')
 
       if (!res.ok) {
         throw new Error('Failed to fetch layout')
@@ -48,10 +47,9 @@ export const breakroom = reactive({
   // Add a new block
   async addBlock(blockType, contentId = null, options = {}) {
     try {
-      const res = await fetch('/api/breakroom/blocks', {
+      const res = await authFetch('/api/breakroom/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           block_type: blockType,
           content_id: contentId,
@@ -86,10 +84,9 @@ export const breakroom = reactive({
   // Update a single block
   async updateBlock(id, updates) {
     try {
-      const res = await fetch(`/api/breakroom/blocks/${id}`, {
+      const res = await authFetch(`/api/breakroom/blocks/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(updates)
       })
 
@@ -125,10 +122,9 @@ export const breakroom = reactive({
         h: b.h
       }))
 
-      const res = await fetch('/api/breakroom/layout', {
+      const res = await authFetch('/api/breakroom/layout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ blocks: layoutData })
       })
 
@@ -156,9 +152,8 @@ export const breakroom = reactive({
   // Remove a block
   async removeBlock(id) {
     try {
-      const res = await fetch(`/api/breakroom/blocks/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/breakroom/blocks/${id}`, {
+        method: 'DELETE'
       })
 
       if (!res.ok) {

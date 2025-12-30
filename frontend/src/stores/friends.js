@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { authFetch } from '../utilities/authFetch'
 
 const state = reactive({
   friends: [],
@@ -32,7 +33,7 @@ export const friends = reactive({
   // Fetch friends list
   async fetchFriends() {
     try {
-      const res = await fetch('/api/friends', { credentials: 'include' })
+      const res = await authFetch('/api/friends')
       if (!res.ok) throw new Error('Failed to fetch friends')
       const data = await res.json()
       state.friends = data.friends
@@ -45,7 +46,7 @@ export const friends = reactive({
   // Fetch incoming friend requests
   async fetchRequests() {
     try {
-      const res = await fetch('/api/friends/requests', { credentials: 'include' })
+      const res = await authFetch('/api/friends/requests')
       if (!res.ok) throw new Error('Failed to fetch requests')
       const data = await res.json()
       state.requests = data.requests
@@ -58,7 +59,7 @@ export const friends = reactive({
   // Fetch sent friend requests
   async fetchSent() {
     try {
-      const res = await fetch('/api/friends/sent', { credentials: 'include' })
+      const res = await authFetch('/api/friends/sent')
       if (!res.ok) throw new Error('Failed to fetch sent requests')
       const data = await res.json()
       state.sent = data.sent
@@ -71,7 +72,7 @@ export const friends = reactive({
   // Fetch blocked users
   async fetchBlocked() {
     try {
-      const res = await fetch('/api/friends/blocked', { credentials: 'include' })
+      const res = await authFetch('/api/friends/blocked')
       if (!res.ok) throw new Error('Failed to fetch blocked users')
       const data = await res.json()
       state.blocked = data.blocked
@@ -97,9 +98,8 @@ export const friends = reactive({
   // Send friend request
   async sendRequest(userId) {
     try {
-      const res = await fetch(`/api/friends/request/${userId}`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/request/${userId}`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -122,9 +122,8 @@ export const friends = reactive({
   // Accept friend request
   async acceptRequest(userId) {
     try {
-      const res = await fetch(`/api/friends/accept/${userId}`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/accept/${userId}`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -148,9 +147,8 @@ export const friends = reactive({
   // Decline friend request
   async declineRequest(userId) {
     try {
-      const res = await fetch(`/api/friends/decline/${userId}`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/decline/${userId}`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -166,9 +164,8 @@ export const friends = reactive({
   // Cancel sent request
   async cancelRequest(userId) {
     try {
-      const res = await fetch(`/api/friends/request/${userId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/request/${userId}`, {
+        method: 'DELETE'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -184,9 +181,8 @@ export const friends = reactive({
   // Remove friend
   async removeFriend(userId) {
     try {
-      const res = await fetch(`/api/friends/${userId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/${userId}`, {
+        method: 'DELETE'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -202,9 +198,8 @@ export const friends = reactive({
   // Block user
   async blockUser(userId) {
     try {
-      const res = await fetch(`/api/friends/block/${userId}`, {
-        method: 'POST',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/block/${userId}`, {
+        method: 'POST'
       })
       if (!res.ok) {
         const data = await res.json()
@@ -235,9 +230,8 @@ export const friends = reactive({
   // Unblock user
   async unblockUser(userId) {
     try {
-      const res = await fetch(`/api/friends/block/${userId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/friends/block/${userId}`, {
+        method: 'DELETE'
       })
       if (!res.ok) {
         const data = await res.json()

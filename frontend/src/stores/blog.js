@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { authFetch } from '../utilities/authFetch'
 
 const state = reactive({
   posts: [],
@@ -31,9 +32,7 @@ export const blog = reactive({
     state.error = null
 
     try {
-      const res = await fetch('/api/blog/posts', {
-        credentials: 'include'
-      })
+      const res = await authFetch('/api/blog/posts')
 
       if (!res.ok) {
         throw new Error('Failed to fetch posts')
@@ -55,9 +54,7 @@ export const blog = reactive({
     state.error = null
 
     try {
-      const res = await fetch(`/api/blog/posts/${id}`, {
-        credentials: 'include'
-      })
+      const res = await authFetch(`/api/blog/posts/${id}`)
 
       if (!res.ok) {
         throw new Error('Failed to fetch post')
@@ -81,10 +78,9 @@ export const blog = reactive({
     state.error = null
 
     try {
-      const res = await fetch('/api/blog/posts', {
+      const res = await authFetch('/api/blog/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ title, content, isPublished })
       })
 
@@ -112,10 +108,9 @@ export const blog = reactive({
     state.error = null
 
     try {
-      const res = await fetch(`/api/blog/posts/${id}`, {
+      const res = await authFetch(`/api/blog/posts/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ title, content, isPublished })
       })
 
@@ -152,9 +147,8 @@ export const blog = reactive({
     state.error = null
 
     try {
-      const res = await fetch(`/api/blog/posts/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const res = await authFetch(`/api/blog/posts/${id}`, {
+        method: 'DELETE'
       })
 
       if (!res.ok) {
@@ -180,9 +174,8 @@ export const blog = reactive({
     formData.append('image', file)
 
     try {
-      const res = await fetch('/api/blog/upload-image', {
+      const res = await authFetch('/api/blog/upload-image', {
         method: 'POST',
-        credentials: 'include',
         body: formData
       })
 
