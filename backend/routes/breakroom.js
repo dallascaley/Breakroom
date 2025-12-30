@@ -2,8 +2,14 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { getClient } = require('../utilities/db');
+const { XMLParser } = require('fast-xml-parser');
 
 require('dotenv').config();
+
+// News RSS feed URL (NPR Top Stories)
+const NEWS_RSS_URL = 'https://feeds.npr.org/1001/rss.xml';
+const NEWS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+let newsCache = { data: null, timestamp: 0 };
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
@@ -224,6 +230,64 @@ router.get('/updates', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch updates' });
   } finally {
     client.release();
+  }
+});
+
+// Get news feed (public endpoint, cached)
+router.get('/news', async (req, res) => {
+  const now = Date.now();
+
+  // Return cached data if still valid
+  if (newsCache.data && (now - newsCache.timestamp) < NEWS_CACHE_DURATION) {
+    return res.status(200).json(newsCache.data);
+  }
+
+  try {
+    const response = await fetch(NEWS_RSS_URL);
+    if (!response.ok) {
+      throw new Error('Failed to fetch news feed');
+    }
+
+    const xmlText = await response.text();
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_'
+    });
+    const result = parser.parse(xmlText);
+
+    // Extract items from RSS feed
+    const channel = result.rss?.channel;
+    if (!channel) {
+      throw new Error('Invalid RSS format');
+    }
+
+    const items = (channel.item || []).slice(0, 20).map(item => ({
+      title: item.title || '',
+      link: item.link || '',
+      description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) || '',
+      pubDate: item.pubDate || '',
+      source: 'NPR'
+    }));
+
+    const data = {
+      title: channel.title || 'News',
+      items,
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Update cache
+    newsCache = { data, timestamp: now };
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Error fetching news:', err);
+
+    // Return stale cache if available
+    if (newsCache.data) {
+      return res.status(200).json(newsCache.data);
+    }
+
+    res.status(500).json({ message: 'Failed to fetch news' });
   }
 });
 

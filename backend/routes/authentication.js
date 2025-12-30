@@ -54,7 +54,7 @@ router.post('/signup', async (req, res) => {
       { block_type: 'calendar', content_id: null, x: 4, y: 0, w: 2, h: 1, title: null },
       // Second row
       { block_type: 'weather', content_id: null, x: 0, y: 2, w: 2, h: 1, title: null },
-      { block_type: 'placeholder', content_id: null, x: 2, y: 2, w: 2, h: 2, title: null },
+      { block_type: 'news', content_id: null, x: 2, y: 2, w: 2, h: 2, title: null },
       { block_type: 'placeholder', content_id: null, x: 4, y: 2, w: 2, h: 2, title: null }
     ];
 
