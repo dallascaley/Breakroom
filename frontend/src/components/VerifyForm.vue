@@ -1,8 +1,40 @@
 <template>
-  <div>
-    <p v-if="isLoading">Verifying your email...</p>
-    <p v-if="message">{{ message }}</p>
-    <p v-if="error">{{ error }}</p>
+  <div class="verify-container">
+    <div class="verify-card">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="verify-content">
+        <div class="spinner"></div>
+        <h2>Verifying Your Email</h2>
+        <p class="subtitle">Please wait a moment...</p>
+      </div>
+
+      <!-- Success State -->
+      <div v-else-if="message" class="verify-content">
+        <div class="icon-circle success">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2>Email Verified!</h2>
+        <p class="subtitle">Your email address has been successfully verified.</p>
+        <p class="message">You now have full access to all Prosaurus features.</p>
+        <router-link to="/breakroom" class="btn-primary">Go to Breakroom</router-link>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="verify-content">
+        <div class="icon-circle error">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </div>
+        <h2>Verification Failed</h2>
+        <p class="subtitle">We couldn't verify your email address.</p>
+        <p class="error-message">{{ error }}</p>
+        <router-link to="/signup" class="btn-secondary">Try Again</router-link>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -23,6 +55,9 @@ export default {
 
     if (token) {
       this.verifyEmail(token);
+    } else {
+      this.isLoading = false;
+      this.error = 'No verification token provided.';
     }
   },
   methods: {
@@ -33,7 +68,11 @@ export default {
         });
         this.message = result.data.message;
       } catch (err) {
-        this.error = 'An error occurred while verifying your email: ' + err;
+        if (err.response && err.response.data && err.response.data.message) {
+          this.error = err.response.data.message;
+        } else {
+          this.error = 'The verification link may have expired or is invalid.';
+        }
       } finally {
         this.isLoading = false;
       }
@@ -42,37 +81,129 @@ export default {
 };
 </script>
 
-<style>
-  form {
-    max-width: 420px;
-    margin: 30px auto;
-    background: white;
-    text-align: left;
-    padding: 40px;
-    border-radius: 10px;
-  }
-  label {
-    color: #aaa;
-    display: inline-block;
-    margin: 25px 0 15px;
-    font-size: 0.6em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: bold;
-  }
-  input, button {
-    display: block;
-    padding: 10px 6px;
-    width: 100%;
-    box-sizing: border-box;
-    border: none;
-    border-bottom: 1px solid #ddd;
-    color: #555;
-  }
-  .error {
-    color: #ff0062;
-    margin-top: 10px;
-    font-size: 0.8em;
-    font-weight: bold;
-  }
+<style scoped>
+.verify-container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.verify-card {
+  max-width: 480px;
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.verify-content {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.icon-circle svg {
+  width: 40px;
+  height: 40px;
+}
+
+.icon-circle.success {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.icon-circle.error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: white;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 20px;
+}
+
+.message {
+  font-size: 15px;
+  color: #888;
+  margin: 0 0 32px;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #e74c3c;
+  background: #fdf2f2;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 0 0 32px;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-secondary {
+  display: inline-block;
+  background: #f5f5f5;
+  color: #666;
+  text-decoration: none;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #eee;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  margin: 0 auto 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 </style>
