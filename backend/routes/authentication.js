@@ -42,6 +42,30 @@ router.post('/signup', async (req, res) => {
       await client.query('INSERT INTO user_groups (user_id, group_id) VALUES ($1, $2)', [newUserId, standardGroup.rows[0].id]);
     }
 
+    // Create default breakroom blocks for new user
+    // Find the General chat room
+    const generalRoom = await client.query('SELECT id FROM chat_rooms WHERE name = $1', ['General']);
+    const generalRoomId = generalRoom.rowCount > 0 ? generalRoom.rows[0].id : null;
+
+    const defaultBlocks = [
+      // Top row
+      { block_type: 'chat', content_id: generalRoomId, x: 0, y: 0, w: 2, h: 2, title: null },
+      { block_type: 'updates', content_id: null, x: 2, y: 0, w: 2, h: 2, title: null },
+      { block_type: 'calendar', content_id: null, x: 4, y: 0, w: 2, h: 1, title: null },
+      // Second row
+      { block_type: 'weather', content_id: null, x: 0, y: 2, w: 2, h: 1, title: null },
+      { block_type: 'placeholder', content_id: null, x: 2, y: 2, w: 2, h: 2, title: null },
+      { block_type: 'placeholder', content_id: null, x: 4, y: 2, w: 2, h: 2, title: null }
+    ];
+
+    for (const block of defaultBlocks) {
+      await client.query(
+        `INSERT INTO breakroom_blocks (user_id, block_type, content_id, x, y, w, h, title)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [newUserId, block.block_type, block.content_id, block.x, block.y, block.w, block.h, block.title]
+      );
+    }
+
     // Auto-login: set JWT cookie
     const payload = { username: req.body.handle };
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
