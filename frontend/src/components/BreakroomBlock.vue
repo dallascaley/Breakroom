@@ -5,6 +5,7 @@ import UpdatesWidget from './UpdatesWidget.vue'
 import CalendarWidget from './CalendarWidget.vue'
 import WeatherWidget from './WeatherWidget.vue'
 import NewsWidget from './NewsWidget.vue'
+import BlogPostsWidget from './BlogPostsWidget.vue'
 
 const props = defineProps({
   block: {
@@ -38,6 +39,9 @@ const blockTitle = computed(() => {
   if (props.block.block_type === 'news') {
     return 'News'
   }
+  if (props.block.block_type === 'blog') {
+    return 'Blog Posts'
+  }
   return 'Block'
 })
 
@@ -50,6 +54,7 @@ const blockTypeLabel = computed(() => {
     case 'calendar': return 'Calendar'
     case 'weather': return 'Weather'
     case 'news': return 'News'
+    case 'blog': return 'Blog'
     default: return props.block.block_type
   }
 })
@@ -90,6 +95,9 @@ const blockTypeLabel = computed(() => {
 
       <!-- News block -->
       <NewsWidget v-else-if="block.block_type === 'news'" />
+
+      <!-- Blog Posts block -->
+      <BlogPostsWidget v-else-if="block.block_type === 'blog'" />
 
       <!-- Unknown block type -->
       <div v-else class="unknown-content">

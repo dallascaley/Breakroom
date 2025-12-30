@@ -24,12 +24,21 @@ let socket = null
 let typingTimeout = null
 
 // Scroll to bottom of messages
-const scrollToBottom = () => {
-  nextTick(() => {
+const scrollToBottom = (immediate = false) => {
+  const doScroll = () => {
     if (messagesContainer.value) {
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
-  })
+  }
+
+  if (immediate) {
+    doScroll()
+  } else {
+    // Use nextTick + small delay to ensure DOM is fully updated
+    nextTick(() => {
+      setTimeout(doScroll, 50)
+    })
+  }
 }
 
 // Fetch messages via REST

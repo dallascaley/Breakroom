@@ -57,6 +57,7 @@ const chatRoutes = require('./routes/chat');
 const profileRoutes = require('./routes/profile');
 const breakroomRoutes = require('./routes/breakroom');
 const friendsRoutes = require('./routes/friends');
+const blogRoutes = require('./routes/blog');
 const { getS3Url } = require('./utilities/aws-s3');
 
 
@@ -75,6 +76,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/breakroom', breakroomRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/blog', blogRoutes);
 
 // Redirect uploaded file requests to S3
 const handleS3Redirect = (req, res) => {
@@ -83,9 +85,9 @@ const handleS3Redirect = (req, res) => {
   if (!key) {
     return res.status(404).json({ message: 'File not found' });
   }
-  // Handle both new S3 keys (profiles/..., chat/...) and legacy filenames
+  // Handle both new S3 keys (profiles/..., chat/..., blog/...) and legacy filenames
   let s3Key = key;
-  if (!key.startsWith('profiles/') && !key.startsWith('chat/')) {
+  if (!key.startsWith('profiles/') && !key.startsWith('chat/') && !key.startsWith('blog/')) {
     // Legacy filename - add appropriate prefix
     if (key.startsWith('profile_')) {
       s3Key = `profiles/${key}`;

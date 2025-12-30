@@ -20,7 +20,8 @@ const widgetTypes = [
   { value: 'updates', label: 'Breakroom Updates', desc: 'Latest news and updates', w: 2, h: 2 },
   { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display', w: 2, h: 1 },
   { value: 'weather', label: 'Weather', desc: 'Current weather conditions', w: 2, h: 1 },
-  { value: 'news', label: 'News', desc: 'NPR news headlines', w: 2, h: 2 }
+  { value: 'news', label: 'News', desc: 'NPR news headlines', w: 2, h: 2 },
+  { value: 'blog', label: 'Blog Posts', desc: 'Your recent blog posts', w: 3, h: 2 }
 ]
 
 // Default sizes for block types
