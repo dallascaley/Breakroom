@@ -38,7 +38,7 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: AdminLayout,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
       children: [
         {path: 'users', component: AdminUsers},
         {path: 'permissions', component: AdminPermissions},
@@ -120,6 +120,22 @@ router.beforeEach(async (to, from, next) => {
     if (!user.username) {
       // Not logged in, redirect to about page
       next({ name: 'about' })
+    } else if (to.matched.some(record => record.meta.requiresAdmin)) {
+      // Check for admin permission
+      try {
+        const res = await fetch('/api/auth/can/admin_access', {
+          credentials: 'include'
+        })
+        const data = await res.json()
+        if (data.has_permission) {
+          next()
+        } else {
+          // Not an admin, redirect to breakroom
+          next({ name: 'breakroom' })
+        }
+      } catch (err) {
+        next({ name: 'breakroom' })
+      }
     } else {
       next()
     }

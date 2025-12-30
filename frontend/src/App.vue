@@ -1,13 +1,36 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { user } from './stores/user.js'
 
 const router = useRouter()
 const route = useRoute()
 const showMenu = ref(false)
+const isAdmin = ref(false)
 
-user.fetchUser()
+async function checkAdminPermission() {
+  if (!user.username) {
+    isAdmin.value = false
+    return
+  }
+  try {
+    const res = await fetch('/api/auth/can/admin_access', {
+      credentials: 'include'
+    })
+    const data = await res.json()
+    isAdmin.value = data.has_permission || false
+  } catch (err) {
+    isAdmin.value = false
+  }
+}
+
+user.fetchUser().then(() => {
+  checkAdminPermission()
+})
+
+watch(() => user.username, () => {
+  checkAdminPermission()
+})
 
 function toggleMenu() {
   showMenu.value = !showMenu.value
@@ -15,6 +38,7 @@ function toggleMenu() {
 
 function logout() {
   user.logout()
+  isAdmin.value = false
   router.push('/login')
   showMenu.value = false
 }
@@ -42,7 +66,7 @@ setInterval(() => {
           <RouterLink to="/blog">Blog</RouterLink>
           <RouterLink to="/chat">Chat</RouterLink>
           <RouterLink to="/friends">Friends</RouterLink>
-          <RouterLink to="/admin">Admin</RouterLink>
+          <RouterLink v-if="isAdmin" to="/admin">Admin</RouterLink>
           <div class="user-menu">
             <div @click="toggleMenu">
               {{ user.username }}
