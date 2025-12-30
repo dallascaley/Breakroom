@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { breakroom } from '@/stores/breakroom.js'
 import { user } from '@/stores/user.js'
@@ -17,9 +17,12 @@ const rowHeight = ref(150)
 // Debounce timer for saving layout
 let saveTimeout = null
 
-// Convert blocks to vue-grid-layout format
-const layoutItems = computed(() => {
-  return breakroom.blocks.map(block => ({
+// Layout items for grid (mutable ref for two-way binding)
+const layoutItems = ref([])
+
+// Initialize layout from store (only once after fetch)
+const initializeLayout = () => {
+  layoutItems.value = breakroom.blocks.map(block => ({
     i: block.i,
     x: block.x,
     y: block.y,
@@ -27,7 +30,7 @@ const layoutItems = computed(() => {
     h: block.h,
     block: block
   }))
-})
+}
 
 // Handle layout change (drag/resize)
 const onLayoutUpdated = (newLayout) => {
@@ -50,12 +53,15 @@ const onRemoveBlock = async (blockId) => {
 // Handle new block added
 const onBlockAdded = () => {
   showAddModal.value = false
+  // Reinitialize layout with new block
+  initializeLayout()
   // Force re-render of grid
   layoutKey.value++
 }
 
 onMounted(async () => {
   await breakroom.fetchLayout()
+  initializeLayout()
 })
 </script>
 
@@ -80,7 +86,7 @@ onMounted(async () => {
     <div v-else class="grid-container">
       <GridLayout
         :key="layoutKey"
-        :layout="layoutItems"
+        v-model:layout="layoutItems"
         :col-num="5"
         :row-height="rowHeight"
         :is-draggable="true"
@@ -214,6 +220,7 @@ onMounted(async () => {
 /* Vue Grid Layout overrides */
 :deep(.vue-grid-item) {
   transition: all 200ms ease;
+  touch-action: none;
 }
 
 :deep(.vue-grid-item.vue-grid-placeholder) {
@@ -222,7 +229,4 @@ onMounted(async () => {
   border-radius: 8px;
 }
 
-:deep(.vue-resizable-handle) {
-  z-index: 10;
-}
 </style>
