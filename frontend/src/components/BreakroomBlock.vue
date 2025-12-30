@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import ChatWidget from './ChatWidget.vue'
 import UpdatesWidget from './UpdatesWidget.vue'
+import CalendarWidget from './CalendarWidget.vue'
 
 const props = defineProps({
   block: {
@@ -26,6 +27,9 @@ const blockTitle = computed(() => {
   if (props.block.block_type === 'updates') {
     return 'Breakroom Updates'
   }
+  if (props.block.block_type === 'calendar') {
+    return 'Calendar'
+  }
   return 'Block'
 })
 
@@ -35,6 +39,7 @@ const blockTypeLabel = computed(() => {
     case 'chat': return 'Chat'
     case 'placeholder': return 'Empty'
     case 'updates': return 'Updates'
+    case 'calendar': return 'Calendar'
     default: return props.block.block_type
   }
 })
@@ -66,6 +71,9 @@ const blockTypeLabel = computed(() => {
 
       <!-- Updates block -->
       <UpdatesWidget v-else-if="block.block_type === 'updates'" />
+
+      <!-- Calendar block -->
+      <CalendarWidget v-else-if="block.block_type === 'calendar'" />
 
       <!-- Unknown block type -->
       <div v-else class="unknown-content">

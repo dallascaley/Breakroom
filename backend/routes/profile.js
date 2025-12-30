@@ -39,7 +39,7 @@ const authenticate = async (req, res, next) => {
     const payload = jwt.verify(token, SECRET_KEY);
     const client = await getClient();
     const result = await client.query(
-      'SELECT id, handle, first_name, last_name, email, bio, photo_path, created_at FROM users WHERE handle = $1',
+      'SELECT id, handle, first_name, last_name, email, bio, photo_path, timezone, created_at FROM users WHERE handle = $1',
       [payload.username]
     );
     client.release();
@@ -79,6 +79,7 @@ router.get('/', authenticate, async (req, res) => {
         email: req.user.email,
         bio: req.user.bio,
         photoPath: req.user.photo_path,
+        timezone: req.user.timezone,
         createdAt: req.user.created_at,
         friendCount
       }
@@ -141,6 +142,33 @@ router.put('/', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Error updating profile:', err);
     res.status(500).json({ message: 'Failed to update profile' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update user timezone
+router.put('/timezone', authenticate, async (req, res) => {
+  const { timezone } = req.body;
+  const client = await getClient();
+
+  try {
+    // Validate timezone is a valid IANA timezone
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: timezone });
+    } catch (e) {
+      return res.status(400).json({ message: 'Invalid timezone' });
+    }
+
+    await client.query(
+      'UPDATE users SET timezone = $1 WHERE id = $2',
+      [timezone, req.user.id]
+    );
+
+    res.json({ message: 'Timezone updated successfully', timezone });
+  } catch (err) {
+    console.error('Error updating timezone:', err);
+    res.status(500).json({ message: 'Failed to update timezone' });
   } finally {
     client.release();
   }
