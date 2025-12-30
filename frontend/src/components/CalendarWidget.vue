@@ -252,43 +252,47 @@ onUnmounted(() => {
 .calendar-widget {
   height: 100%;
   display: flex;
-  flex-direction: column;
-  padding: 12px;
+  flex-direction: row;
+  padding: 8px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  overflow-y: auto;
+  overflow: hidden;
+  gap: 10px;
 }
 
 .time-section {
-  text-align: center;
-  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 120px;
   position: relative;
 }
 
 .time-display {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 300;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
 }
 
 .date-display {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   opacity: 0.9;
-  margin-top: 4px;
+  margin-top: 2px;
+  text-align: center;
 }
 
 .timezone-btn {
-  position: absolute;
-  top: 0;
-  right: 0;
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.6rem;
   cursor: pointer;
   transition: background 0.2s;
+  margin-top: 4px;
 }
 
 .timezone-btn:hover {
@@ -296,16 +300,21 @@ onUnmounted(() => {
 }
 
 .timezone-selector {
-  margin-bottom: 12px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin-top: 4px;
 }
 
 .timezone-selector select {
   width: 100%;
-  padding: 8px;
+  padding: 4px;
   border: none;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.95);
   color: #333;
 }
 
@@ -314,16 +323,17 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 6px;
+  padding: 6px;
+  min-width: 0;
 }
 
 .calendar-header {
   text-align: center;
   font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
+  font-size: 0.7rem;
+  margin-bottom: 4px;
+  padding-bottom: 3px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -331,16 +341,16 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-around;
 }
 
 .weekday-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   font-weight: 600;
   opacity: 0.8;
-  margin-bottom: 4px;
 }
 
 .week-row {
@@ -350,14 +360,13 @@ onUnmounted(() => {
 }
 
 .day-cell {
-  padding: 4px 2px;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   border-radius: 50%;
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1px;
+  line-height: 1;
+  padding: 2px;
 }
 
 .day-cell.other-month {

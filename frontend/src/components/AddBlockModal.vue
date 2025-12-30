@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { breakroom } from '@/stores/breakroom.js'
 import { chat } from '@/stores/chat.js'
 
@@ -14,13 +14,44 @@ const customTitle = ref('')
 const loading = ref(false)
 const error = ref('')
 
-// Available widget types
+// Available widget types with default sizes
 const widgetTypes = [
-  { value: 'placeholder', label: 'Placeholder', desc: 'Empty block for later' },
-  { value: 'updates', label: 'Breakroom Updates', desc: 'Latest news and updates' },
-  { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display' },
-  { value: 'weather', label: 'Weather', desc: 'Current weather conditions' }
+  { value: 'placeholder', label: 'Placeholder', desc: 'Empty block for later', w: 2, h: 2 },
+  { value: 'updates', label: 'Breakroom Updates', desc: 'Latest news and updates', w: 2, h: 2 },
+  { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display', w: 2, h: 1 },
+  { value: 'weather', label: 'Weather', desc: 'Current weather conditions', w: 2, h: 1 }
 ]
+
+// Default sizes for block types
+const defaultSizes = {
+  chat: { w: 2, h: 2 }
+}
+
+// Update size when block type changes
+watch(blockType, (newType) => {
+  if (newType === 'chat') {
+    blockWidth.value = defaultSizes.chat.w
+    blockHeight.value = defaultSizes.chat.h
+  } else {
+    // Use widget default
+    const widget = widgetTypes.find(w => w.value === selectedWidget.value)
+    if (widget) {
+      blockWidth.value = widget.w
+      blockHeight.value = widget.h
+    }
+  }
+})
+
+// Update size when widget type changes
+watch(selectedWidget, (newWidget) => {
+  if (blockType.value === 'widget') {
+    const widget = widgetTypes.find(w => w.value === newWidget)
+    if (widget) {
+      blockWidth.value = widget.w
+      blockHeight.value = widget.h
+    }
+  }
+})
 
 // Fetch rooms when modal opens
 onMounted(async () => {
