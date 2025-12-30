@@ -50,14 +50,18 @@ router.post('/signup', async (req, res) => {
       domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
     });
 
-    sendMail(req.body.email, 'admin@prosaurus.com',
-      'Please verify your email for prosaurus.com',
-      `<h3>Thank you for registering a new account with prosuarus.com</h3>
-       <p>In order to complete your registration we will need to verify
-          your email address.  You can do that by clicking
-          <a href='https://prosaurus.com/verify?token=${verificationToken}'>here</a>.
-       </p>`
+    // Fetch email template from database
+    const emailTemplate = await client.query(
+      'SELECT from_address, subject, html_content FROM system_emails WHERE email_key = $1 AND is_active = true',
+      ['signup_verification']
     );
+
+    if (emailTemplate.rowCount > 0) {
+      const { from_address, subject, html_content } = emailTemplate.rows[0];
+      // Replace placeholder with actual verification token
+      const processedContent = html_content.replace(/\{\{verification_token\}\}/g, verificationToken);
+      sendMail(req.body.email, from_address, subject, processedContent);
+    }
 
     client.release();
 
