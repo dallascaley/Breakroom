@@ -48,14 +48,14 @@ router.post('/signup', async (req, res) => {
     const generalRoomId = generalRoom.rowCount > 0 ? generalRoom.rows[0].id : null;
 
     const defaultBlocks = [
-      // Top row
+      // Top row: Chat, Blog, Weather
       { block_type: 'chat', content_id: generalRoomId, x: 0, y: 0, w: 2, h: 2, title: null },
-      { block_type: 'updates', content_id: null, x: 2, y: 0, w: 2, h: 2, title: null },
-      { block_type: 'calendar', content_id: null, x: 4, y: 0, w: 2, h: 1, title: null },
-      // Second row
-      { block_type: 'weather', content_id: null, x: 0, y: 2, w: 2, h: 1, title: null },
-      { block_type: 'news', content_id: null, x: 2, y: 2, w: 2, h: 2, title: null },
-      { block_type: 'placeholder', content_id: null, x: 4, y: 2, w: 2, h: 2, title: null }
+      { block_type: 'blog', content_id: null, x: 2, y: 0, w: 2, h: 2, title: null },
+      { block_type: 'weather', content_id: null, x: 4, y: 0, w: 1, h: 2, title: null },
+      // Second row: Calendar, News, Updates
+      { block_type: 'calendar', content_id: null, x: 0, y: 2, w: 1, h: 2, title: null },
+      { block_type: 'news', content_id: null, x: 1, y: 2, w: 2, h: 2, title: null },
+      { block_type: 'updates', content_id: null, x: 3, y: 2, w: 2, h: 2, title: null }
     ];
 
     for (const block of defaultBlocks) {
