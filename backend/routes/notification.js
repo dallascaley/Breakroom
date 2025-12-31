@@ -51,11 +51,14 @@ router.get('/admin/all', authenticateToken, checkPermission('read_notification')
       SELECT
         n.*,
         nt.name as type_name,
+        e.name as event_name,
+        e.code as event_code,
         u.handle as created_by_handle,
         (SELECT COUNT(*) FROM user_notifications un WHERE un.notification_id = n.id) as recipient_count,
         (SELECT COUNT(*) FROM user_notifications un WHERE un.notification_id = n.id AND un.read_at IS NOT NULL) as read_count
       FROM notifications n
       LEFT JOIN notification_types nt ON n.type_id = nt.id
+      LEFT JOIN events e ON n.event_id = e.id
       LEFT JOIN users u ON n.created_by = u.id
       ORDER BY n.created_at DESC
     `);
@@ -93,7 +96,8 @@ router.post('/', authenticateToken, checkPermission('create_notification'), asyn
   const {
     type_id, title, content, target_all_users,
     target_user_ids, target_group_ids,
-    display_mode, priority, publish_at, expires_at
+    display_mode, priority, publish_at, expires_at,
+    event_id, trigger_mode, condition_json
   } = req.body;
 
   if (!title || !content) {
@@ -102,22 +106,25 @@ router.post('/', authenticateToken, checkPermission('create_notification'), asyn
 
   const client = await getClient();
   try {
-    await client.query('BEGIN');
+    await client.beginTransaction();
 
     // Insert notification
     const insertResult = await client.query(`
       INSERT INTO notifications
-        (type_id, title, content, target_all_users, display_mode, priority, publish_at, expires_at, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (type_id, event_id, trigger_mode, condition_json, title, content, target_all_users, display_mode, priority, publish_at, expires_at, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `, [
       type_id || null,
+      event_id || null,
+      event_id ? (trigger_mode || 'always') : null,
+      event_id && condition_json ? JSON.stringify(condition_json) : null,
       title,
       content,
-      target_all_users || false,
+      event_id ? false : (target_all_users || false), // Event-triggered notifications don't use target_all_users
       display_mode || 'simple',
       priority || 0,
-      publish_at || null,
-      expires_at || null,
+      event_id ? null : (publish_at || null), // Event-triggered notifications don't use scheduling
+      event_id ? null : (expires_at || null),
       req.user.id
     ]);
 
@@ -143,7 +150,7 @@ router.post('/', authenticateToken, checkPermission('create_notification'), asyn
       }
     }
 
-    await client.query('COMMIT');
+    await client.commit();
 
     // Fetch the created notification
     const result = await client.query('SELECT * FROM notifications WHERE id = $1', [notificationId]);
@@ -156,7 +163,7 @@ router.post('/', authenticateToken, checkPermission('create_notification'), asyn
 
     res.status(201).json({ message: 'Notification created', notification: notification });
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.rollback();
     console.error('Error creating notification:', err);
     res.status(500).json({ message: 'Failed to create notification' });
   } finally {
@@ -173,19 +180,35 @@ router.put('/:id', authenticateToken, checkPermission('update_notification'), as
   const {
     type_id, title, content, target_all_users,
     target_user_ids, target_group_ids,
-    display_mode, priority, publish_at, expires_at, is_active
+    display_mode, priority, publish_at, expires_at, is_active,
+    event_id, trigger_mode, condition_json
   } = req.body;
 
   const client = await getClient();
   try {
-    await client.query('BEGIN');
+    await client.beginTransaction();
 
     await client.query(`
       UPDATE notifications SET
-        type_id = $1, title = $2, content = $3, target_all_users = $4,
-        display_mode = $5, priority = $6, publish_at = $7, expires_at = $8, is_active = $9
-      WHERE id = $10
-    `, [type_id, title, content, target_all_users, display_mode, priority, publish_at, expires_at, is_active, id]);
+        type_id = $1, event_id = $2, trigger_mode = $3, condition_json = $4,
+        title = $5, content = $6, target_all_users = $7,
+        display_mode = $8, priority = $9, publish_at = $10, expires_at = $11, is_active = $12
+      WHERE id = $13
+    `, [
+      type_id,
+      event_id || null,
+      event_id ? (trigger_mode || 'always') : null,
+      event_id && condition_json ? JSON.stringify(condition_json) : null,
+      title,
+      content,
+      event_id ? false : target_all_users,
+      display_mode,
+      priority,
+      event_id ? null : publish_at,
+      event_id ? null : expires_at,
+      is_active,
+      id
+    ]);
 
     // Update target users
     await client.query('DELETE FROM notification_users WHERE notification_id = $1', [id]);
@@ -209,12 +232,12 @@ router.put('/:id', authenticateToken, checkPermission('update_notification'), as
       }
     }
 
-    await client.query('COMMIT');
+    await client.commit();
 
     const result = await client.query('SELECT * FROM notifications WHERE id = $1', [id]);
     res.json({ message: 'Notification updated', notification: result.rows[0] });
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.rollback();
     console.error('Error updating notification:', err);
     res.status(500).json({ message: 'Failed to update notification' });
   } finally {

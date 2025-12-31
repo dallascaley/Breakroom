@@ -73,7 +73,7 @@ router.put('/:id', async (req, res) => {
     const now = new Date()
 
     // Begin the transactional part of the process
-    await client.query('BEGIN');
+    await client.beginTransaction();
 
     const updateResult = await client.query(
       'UPDATE `groups` SET name = ?, description = ?, is_active = ?, updated_at = ? WHERE id = ?',
@@ -111,7 +111,7 @@ router.put('/:id', async (req, res) => {
       );
     }
 
-    await client.query('COMMIT');
+    await client.commit();
 
     res.status(200).json(result.rows[0])
   } catch (err) {

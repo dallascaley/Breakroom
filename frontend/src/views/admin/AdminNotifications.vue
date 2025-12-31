@@ -14,6 +14,7 @@
         <div class="form-row">
           <label>Content</label>
           <textarea v-model="form.content" required rows="4" placeholder="Notification content..."></textarea>
+          <small v-if="form.event_id">Supports placeholders like {{data.fieldName}}</small>
         </div>
 
         <div class="form-row">
@@ -24,6 +25,39 @@
               {{ type.name }}
             </option>
           </select>
+        </div>
+
+        <!-- Event Trigger Section -->
+        <div class="form-section">
+          <h3>Event Trigger (Optional)</h3>
+          <p class="hint">Link this notification to an event to trigger it automatically</p>
+
+          <div class="form-row">
+            <label>Trigger Event</label>
+            <select v-model="form.event_id">
+              <option :value="null">-- Manual Only (no event trigger) --</option>
+              <option v-for="event in events" :key="event.id" :value="event.id">
+                {{ event.name }} ({{ event.code }})
+              </option>
+            </select>
+          </div>
+
+          <template v-if="form.event_id">
+            <div class="form-row">
+              <label>Trigger Mode</label>
+              <select v-model="form.trigger_mode">
+                <option value="always">Every time the event fires</option>
+                <option value="once">Only the first time (per user)</option>
+                <option value="until_silenced">Every time until user silences</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label>Condition (Optional JSON)</label>
+              <textarea v-model="form.condition_json" rows="2" placeholder='{"to": {"$lte": 2}}'></textarea>
+              <small>Only trigger when condition matches. Operators: $eq, $ne, $gt, $gte, $lt, $lte, $in</small>
+            </div>
+          </template>
         </div>
 
         <div class="form-row">
@@ -39,38 +73,41 @@
           <input type="number" v-model.number="form.priority" min="0" max="100" />
         </div>
 
-        <div class="form-row">
-          <label>
-            <input type="checkbox" v-model="form.target_all_users" />
-            Send to all users
-          </label>
-        </div>
-
-        <div v-if="!form.target_all_users" class="targeting-section">
+        <!-- Manual targeting (only when no event) -->
+        <template v-if="!form.event_id">
           <div class="form-row">
-            <label>Target Groups</label>
-            <div class="checkbox-list">
-              <label v-for="group in groups" :key="group.id">
-                <input
-                  type="checkbox"
-                  :value="group.id"
-                  v-model="form.target_group_ids"
-                />
-                {{ group.name }}
-              </label>
+            <label>
+              <input type="checkbox" v-model="form.target_all_users" />
+              Send to all users
+            </label>
+          </div>
+
+          <div v-if="!form.target_all_users" class="targeting-section">
+            <div class="form-row">
+              <label>Target Groups</label>
+              <div class="checkbox-list">
+                <label v-for="group in groups" :key="group.id">
+                  <input
+                    type="checkbox"
+                    :value="group.id"
+                    v-model="form.target_group_ids"
+                  />
+                  {{ group.name }}
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="form-row">
-          <label>Publish At (optional, leave blank for immediate)</label>
-          <input type="datetime-local" v-model="form.publish_at" />
-        </div>
+          <div class="form-row">
+            <label>Publish At (optional, leave blank for immediate)</label>
+            <input type="datetime-local" v-model="form.publish_at" />
+          </div>
 
-        <div class="form-row">
-          <label>Expires At (optional)</label>
-          <input type="datetime-local" v-model="form.expires_at" />
-        </div>
+          <div class="form-row">
+            <label>Expires At (optional)</label>
+            <input type="datetime-local" v-model="form.expires_at" />
+          </div>
+        </template>
 
         <button type="submit" class="submit-btn">Create Notification</button>
         <p v-if="formError" class="error">{{ formError }}</p>
@@ -86,9 +123,10 @@
           <thead>
             <tr>
               <th>Title</th>
+              <th>Event</th>
+              <th>Trigger</th>
               <th>Type</th>
               <th>Mode</th>
-              <th>Target</th>
               <th>Recipients</th>
               <th>Read</th>
               <th>Status</th>
@@ -98,9 +136,10 @@
           <tbody>
             <tr v-for="notification in data.notifications" :key="notification.id">
               <td>{{ notification.title }}</td>
+              <td>{{ notification.event_name || 'Manual' }}</td>
+              <td>{{ formatTriggerMode(notification.trigger_mode) }}</td>
               <td>{{ notification.type_name || '-' }}</td>
               <td>{{ notification.display_mode }}</td>
-              <td>{{ notification.target_all_users ? 'All Users' : 'Targeted' }}</td>
               <td>{{ notification.recipient_count }}</td>
               <td>{{ notification.read_count }}</td>
               <td>{{ notification.is_active ? 'Active' : 'Inactive' }}</td>
@@ -137,6 +176,29 @@
             </select>
           </div>
           <div class="form-row">
+            <label>Trigger Event</label>
+            <select v-model="editingNotification.event_id">
+              <option :value="null">-- Manual Only --</option>
+              <option v-for="event in events" :key="event.id" :value="event.id">
+                {{ event.name }}
+              </option>
+            </select>
+          </div>
+          <template v-if="editingNotification.event_id">
+            <div class="form-row">
+              <label>Trigger Mode</label>
+              <select v-model="editingNotification.trigger_mode">
+                <option value="always">Every time</option>
+                <option value="once">First time only</option>
+                <option value="until_silenced">Until silenced</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Condition (JSON)</label>
+              <textarea v-model="editingNotification.condition_json" rows="2"></textarea>
+            </div>
+          </template>
+          <div class="form-row">
             <label>Display Mode</label>
             <select v-model="editingNotification.display_mode">
               <option value="simple">Simple</option>
@@ -170,6 +232,7 @@ import { authFetch } from '@/utilities/authFetch'
 
 const types = ref([])
 const groups = ref([])
+const events = ref([])
 const fetchKey = ref(0)
 const formError = ref('')
 const formSuccess = ref('')
@@ -179,6 +242,9 @@ const form = ref({
   title: '',
   content: '',
   type_id: null,
+  event_id: null,
+  trigger_mode: 'always',
+  condition_json: '',
   display_mode: 'simple',
   priority: 0,
   target_all_users: true,
@@ -207,15 +273,50 @@ async function fetchGroups() {
   }
 }
 
+async function fetchEvents() {
+  try {
+    const res = await authFetch('/api/event/admin/all')
+    const data = await res.json()
+    events.value = data.events.filter(e => e.is_active)
+  } catch (err) {
+    console.error('Error fetching events:', err)
+  }
+}
+
+function formatTriggerMode(mode) {
+  if (!mode) return '-'
+  const modes = {
+    always: 'Every time',
+    once: 'Once',
+    until_silenced: 'Until silenced'
+  }
+  return modes[mode] || mode
+}
+
 async function createNotification() {
   formError.value = ''
   formSuccess.value = ''
 
   try {
+    // Parse condition JSON if provided
+    let conditionJson = null
+    if (form.value.event_id && form.value.condition_json) {
+      try {
+        conditionJson = JSON.parse(form.value.condition_json)
+      } catch (e) {
+        throw new Error('Invalid JSON in condition field')
+      }
+    }
+
+    const payload = {
+      ...form.value,
+      condition_json: conditionJson
+    }
+
     const res = await authFetch('/api/notification', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(payload)
     })
 
     if (!res.ok) {
@@ -228,6 +329,9 @@ async function createNotification() {
       title: '',
       content: '',
       type_id: null,
+      event_id: null,
+      trigger_mode: 'always',
+      condition_json: '',
       display_mode: 'simple',
       priority: 0,
       target_all_users: true,
@@ -242,15 +346,35 @@ async function createNotification() {
 }
 
 function editNotification(notification) {
-  editingNotification.value = { ...notification }
+  editingNotification.value = {
+    ...notification,
+    condition_json: notification.condition_json
+      ? (typeof notification.condition_json === 'object'
+          ? JSON.stringify(notification.condition_json)
+          : notification.condition_json)
+      : ''
+  }
 }
 
 async function updateNotification() {
   try {
+    let conditionJson = null
+    if (editingNotification.value.event_id && editingNotification.value.condition_json) {
+      try {
+        conditionJson = JSON.parse(editingNotification.value.condition_json)
+      } catch (e) {
+        alert('Invalid JSON in condition field')
+        return
+      }
+    }
+
     const res = await authFetch(`/api/notification/${editingNotification.value.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editingNotification.value)
+      body: JSON.stringify({
+        ...editingNotification.value,
+        condition_json: conditionJson
+      })
     })
 
     if (!res.ok) throw new Error('Failed to update notification')
@@ -281,6 +405,7 @@ async function deleteNotification(id) {
 onMounted(() => {
   fetchTypes()
   fetchGroups()
+  fetchEvents()
 })
 </script>
 
@@ -298,6 +423,25 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.form-section {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.form-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.form-section .hint {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #666;
+}
+
 .form-row {
   margin-bottom: 16px;
 }
@@ -311,6 +455,7 @@ onMounted(() => {
 .form-row input[type="text"],
 .form-row input[type="number"],
 .form-row input[type="datetime-local"],
+.form-row input:not([type="checkbox"]),
 .form-row textarea,
 .form-row select {
   width: 100%;
@@ -323,6 +468,13 @@ onMounted(() => {
 
 .form-row input[type="checkbox"] {
   margin-right: 8px;
+}
+
+.form-row small {
+  display: block;
+  color: #666;
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .checkbox-list {
