@@ -106,6 +106,30 @@ const router = createRouter({
       name: 'publicProfile',
       component: () => import('../views/PublicProfilePage.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/about-company',
+      name: 'aboutCompany',
+      component: () => import('../views/AboutCompanyPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/employment',
+      name: 'employment',
+      component: () => import('../views/EmploymentPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/help-desk',
+      name: 'helpDesk',
+      component: () => import('../views/HelpDeskPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/company-portal',
+      name: 'companyPortal',
+      component: () => import('../views/CompanyPortalPage.vue'),
+      meta: { requiresAuth: true },
     }
   ],
 })

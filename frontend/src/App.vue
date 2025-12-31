@@ -99,12 +99,23 @@ setInterval(() => {
 /* Main body styles */
 body {
   margin: 0;
-  background: #eee;
+  background:
+    linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%),
+    radial-gradient(ellipse at top left, rgba(66, 185, 131, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(46, 134, 222, 0.08) 0%, transparent 50%),
+    #f5f7fa;
+  min-height: 100vh;
 }
 
 header {
   line-height: 1.5;
   max-height: 100vh;
+  padding: 0.25rem 0;
+}
+
+header .page-container {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 nav {

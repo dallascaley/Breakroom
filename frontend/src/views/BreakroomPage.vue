@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { breakroom } from '@/stores/breakroom.js'
 import { user } from '@/stores/user.js'
@@ -134,6 +135,14 @@ onMounted(async () => {
       @close="showAddModal = false"
       @added="onBlockAdded"
     />
+
+    <!-- Bottom Menu -->
+    <nav class="bottom-menu">
+      <RouterLink to="/about-company">About</RouterLink>
+      <RouterLink to="/employment">Employment</RouterLink>
+      <RouterLink to="/help-desk">Help Desk</RouterLink>
+      <RouterLink to="/company-portal">Company Portal</RouterLink>
+    </nav>
   </section>
 </template>
 
@@ -147,13 +156,19 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 2rem !important;
+  padding: 0.25rem 0 !important;
+  margin-bottom: 0.5rem;
 }
 
 .breakroom-header h1 {
   margin: 0;
-  font-size: 2rem;
-  color: #2e86de;
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #42b983 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .add-block-btn {
@@ -197,7 +212,7 @@ onMounted(async () => {
 }
 
 .grid-container {
-  min-height: 400px;
+  min-height: 300px;
 }
 
 .error-message {
@@ -229,6 +244,37 @@ onMounted(async () => {
   background: #42b983;
   opacity: 0.2;
   border-radius: 8px;
+}
+
+/* Bottom Menu */
+.bottom-menu {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem 2rem;
+  margin-top: 1.5rem;
+  background: #2c3e50;
+  border-radius: 8px;
+}
+
+.bottom-menu a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.bottom-menu a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.bottom-menu a.router-link-exact-active {
+  background: rgba(66, 185, 131, 0.3);
+  color: #42b983;
 }
 
 </style>
