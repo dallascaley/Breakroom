@@ -43,7 +43,8 @@ const router = createRouter({
         {path: 'users', component: AdminUsers},
         {path: 'permissions', component: AdminPermissions},
         {path: 'groups', component: AdminGroups},
-        {path: 'billing', component: AdminBilling}
+        {path: 'billing', component: AdminBilling},
+        {path: 'notifications', component: () => import('@/views/admin/AdminNotifications.vue')}
       ]
     },
     {

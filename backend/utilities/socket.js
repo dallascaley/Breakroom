@@ -53,6 +53,10 @@ const initializeSocket = (io) => {
     // Store socket reference
     userSockets.set(socket.user.id, socket);
 
+    // Join user's personal notification room for targeted notifications
+    socket.join(`user_${socket.user.id}`);
+    console.log(`${socket.user.handle} joined notification room user_${socket.user.id}`);
+
     // Join a chat room
     socket.on('join_room', async (roomId) => {
       const client = await getClient();
