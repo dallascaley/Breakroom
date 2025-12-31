@@ -2,25 +2,123 @@
 </script>
 
 <template>
-  <div class="page-container stub-page">
-    <h1>About</h1>
-    <p class="coming-soon">This page is coming soon.</p>
+  <div class="page-container about-page">
+    <h1>What is Prosaurus?</h1>
+
+    <div class="story">
+      <p>
+        Well, the story goes back about 10 years. Back then I had an idea for a better
+        project management tool, because that's what I had to work with all day. The
+        current tools were all bad for various reasons.
+      </p>
+
+      <p>
+        But as the years went by and I tried to build it several times, I always ran into
+        a problem. Usually that problem was that I was too busy with my day job to care
+        much about making this dream project management software happen.
+      </p>
+
+      <p>
+        Then, about a year ago, my mind started to wander. I started asking myself,
+        <em>what is the most difficult part of managing projects?</em>
+      </p>
+
+      <p>
+        Certainly it's the people, right? It's all that communication which has to be
+        carefully controlled between the owners of the company, the developers, the
+        managers, the clients, and everyone else involved.
+      </p>
+
+      <p>
+        I thought, so, if I have to make a really good communications platform, why limit
+        myself to project management? There's all kinds of things where good communication
+        would come in handy, right?
+      </p>
+
+      <h2>The Pivot</h2>
+
+      <p>
+        So that's how I came up with the idea of <strong>Breakroom</strong>. Where project
+        management is simply about getting work done, Breakroom is something more. It's a
+        social thing also, and so I pivoted into making a social media platform instead.
+      </p>
+
+      <p>
+        Then I started to think. Well, what's wrong with the current social media platforms?
+      </p>
+
+      <p>
+        Certainly the main problem was all the advertising. Second was all the AI stuff
+        (but that is more recent). What if I made a platform that doesn't have any of
+        that garbage?
+      </p>
+
+      <h2>The Solution</h2>
+
+      <p>
+        The only problem is, how will I pay for it?
+      </p>
+
+      <p class="solution">
+        The solution is simple. <strong>You pay for it.</strong>
+      </p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.stub-page {
-  text-align: center;
-  padding: 60px 20px;
+.about-page {
+  max-width: 800px;
 }
 
-.stub-page h1 {
+.about-page h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #42b983 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+}
+
+.about-page h2 {
   color: #2c3e50;
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
   margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #42b983;
 }
 
-.coming-soon {
-  color: #888;
+.story {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.story p {
+  color: #444;
   font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+}
+
+.story em {
+  color: #764ba2;
+  font-style: italic;
+}
+
+.story strong {
+  color: #42b983;
+}
+
+.solution {
+  font-size: 1.3rem !important;
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(66, 185, 131, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 8px;
+  margin-top: 1.5rem;
 }
 </style>

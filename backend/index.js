@@ -58,6 +58,7 @@ const profileRoutes = require('./routes/profile');
 const breakroomRoutes = require('./routes/breakroom');
 const friendsRoutes = require('./routes/friends');
 const blogRoutes = require('./routes/blog');
+const helpdeskRoutes = require('./routes/helpdesk');
 const { getS3Url } = require('./utilities/aws-s3');
 
 
@@ -77,6 +78,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/breakroom', breakroomRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/blog', blogRoutes);
+app.use('/api/helpdesk', helpdeskRoutes);
 
 // Redirect uploaded file requests to S3
 const handleS3Redirect = (req, res) => {
