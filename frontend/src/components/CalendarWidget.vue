@@ -252,12 +252,12 @@ onUnmounted(() => {
 .calendar-widget {
   height: 100%;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   padding: 8px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   overflow: hidden;
-  gap: 10px;
+  gap: 6px;
 }
 
 .time-section {
@@ -265,8 +265,10 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-width: 120px;
+  gap: 2px;
   position: relative;
+  flex-shrink: 0;
+  padding: 4px 0;
 }
 
 .time-display {
@@ -277,9 +279,8 @@ onUnmounted(() => {
 }
 
 .date-display {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   opacity: 0.9;
-  margin-top: 2px;
   text-align: center;
 }
 
@@ -289,10 +290,10 @@ onUnmounted(() => {
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   cursor: pointer;
   transition: background 0.2s;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .timezone-btn:hover {
@@ -324,8 +325,10 @@ onUnmounted(() => {
   flex-direction: column;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
-  padding: 6px;
+  padding: 4px 6px;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-header {

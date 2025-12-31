@@ -18,8 +18,8 @@ const error = ref('')
 const widgetTypes = [
   { value: 'placeholder', label: 'Placeholder', desc: 'Empty block for later', w: 2, h: 2 },
   { value: 'updates', label: 'Breakroom Updates', desc: 'Latest news and updates', w: 2, h: 2 },
-  { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display', w: 2, h: 1 },
-  { value: 'weather', label: 'Weather', desc: 'Current weather conditions', w: 2, h: 1 },
+  { value: 'calendar', label: 'Calendar/Time', desc: 'Date and time display', w: 1, h: 2 },
+  { value: 'weather', label: 'Weather', desc: 'Current weather conditions', w: 1, h: 2 },
   { value: 'news', label: 'News', desc: 'NPR news headlines', w: 2, h: 2 },
   { value: 'blog', label: 'Blog Posts', desc: 'Your recent blog posts', w: 3, h: 2 }
 ]
@@ -65,6 +65,45 @@ onMounted(async () => {
   }
 })
 
+// Find the first available position for a block of given width and height
+const findNextPosition = (w, h, cols = 5) => {
+  const blocks = breakroom.blocks
+
+  // Build a grid of occupied cells (track up to 20 rows)
+  const maxRows = 20
+  const occupied = Array(maxRows).fill(null).map(() => Array(cols).fill(false))
+
+  // Mark occupied cells
+  blocks.forEach(block => {
+    for (let row = block.y; row < block.y + block.h && row < maxRows; row++) {
+      for (let col = block.x; col < block.x + block.w && col < cols; col++) {
+        occupied[row][col] = true
+      }
+    }
+  })
+
+  // Find first position where block fits (top-left priority)
+  for (let y = 0; y < maxRows; y++) {
+    for (let x = 0; x <= cols - w; x++) {
+      // Check if all cells needed for this block are free
+      let fits = true
+      for (let row = y; row < y + h && fits; row++) {
+        for (let col = x; col < x + w && fits; col++) {
+          if (row >= maxRows || occupied[row][col]) {
+            fits = false
+          }
+        }
+      }
+      if (fits) {
+        return { x, y }
+      }
+    }
+  }
+
+  // Fallback: place at bottom
+  return { x: 0, y: maxRows }
+}
+
 const handleSubmit = async () => {
   error.value = ''
   loading.value = true
@@ -75,9 +114,8 @@ const handleSubmit = async () => {
       throw new Error('Please select a chat room')
     }
 
-    // Find next available position (simple: just put at y=0, x based on count)
-    const nextX = breakroom.blocks.length % 5
-    const nextY = Math.floor(breakroom.blocks.length / 5) * 2
+    // Find next available position that fits the block
+    const { x: nextX, y: nextY } = findNextPosition(blockWidth.value, blockHeight.value)
 
     // Determine actual block type (chat or the selected widget type)
     const actualBlockType = blockType.value === 'chat' ? 'chat' : selectedWidget.value

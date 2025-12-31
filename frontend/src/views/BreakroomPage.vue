@@ -47,6 +47,8 @@ const onLayoutUpdated = (newLayout) => {
 const onRemoveBlock = async (blockId) => {
   if (confirm('Remove this block from your layout?')) {
     await breakroom.removeBlock(blockId)
+    // Immediately remove from layoutItems for instant UI update
+    layoutItems.value = layoutItems.value.filter(item => item.block.id !== blockId)
   }
 }
 
