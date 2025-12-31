@@ -60,6 +60,7 @@ const friendsRoutes = require('./routes/friends');
 const blogRoutes = require('./routes/blog');
 const helpdeskRoutes = require('./routes/helpdesk');
 const companyRoutes = require('./routes/company');
+const positionsRoutes = require('./routes/positions');
 const { getS3Url } = require('./utilities/aws-s3');
 
 
@@ -81,6 +82,7 @@ app.use('/api/friends', friendsRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
 app.use('/api/company', companyRoutes);
+app.use('/api/positions', positionsRoutes);
 
 // Redirect uploaded file requests to S3
 const handleS3Redirect = (req, res) => {
