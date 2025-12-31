@@ -141,12 +141,18 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    // Fetch user if not already loaded
-    if (!user.username) {
-      await user.fetchUser()
-    }
+  // Fetch user if not already loaded
+  if (!user.username) {
+    await user.fetchUser()
+  }
 
+  // Redirect logged-in users away from home page to breakroom
+  if (to.name === 'home' && user.username) {
+    next({ name: 'breakroom' })
+    return
+  }
+
+  if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!user.username) {
       // Not logged in, redirect to about page
       next({ name: 'about' })

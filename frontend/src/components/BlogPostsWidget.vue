@@ -61,6 +61,14 @@ const stripHtml = (html) => {
   return tmp.textContent || tmp.innerText || ''
 }
 
+const getFirstImage = (html) => {
+  if (!html) return null
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  const img = tmp.querySelector('img')
+  return img ? img.src : null
+}
+
 const getAuthorName = (post) => {
   if (post.author_first_name || post.author_last_name) {
     return `${post.author_first_name || ''} ${post.author_last_name || ''}`.trim()
@@ -94,14 +102,23 @@ onMounted(() => {
         v-for="post in posts.slice(0, 5)"
         :key="post.id"
         class="post-item"
+        :class="{ 'has-image': getFirstImage(post.content) }"
         @click="viewPost(post.id)"
       >
-        <div class="post-header">
-          <span class="post-author">{{ getAuthorName(post) }}</span>
-          <span class="post-date">{{ formatDate(post.updated_at) }}</span>
+        <img
+          v-if="getFirstImage(post.content)"
+          :src="getFirstImage(post.content)"
+          class="post-image"
+          alt=""
+        />
+        <div class="post-content">
+          <div class="post-header">
+            <span class="post-author">{{ getAuthorName(post) }}</span>
+            <span class="post-date">{{ formatDate(post.updated_at) }}</span>
+          </div>
+          <h3 class="post-title">{{ post.title }}</h3>
+          <p class="post-preview">{{ stripHtml(post.content) }}</p>
         </div>
-        <h3 class="post-title">{{ post.title }}</h3>
-        <p class="post-preview">{{ stripHtml(post.content) }}</p>
       </div>
     </div>
 
@@ -200,6 +217,27 @@ onMounted(() => {
   border-left: 3px solid #42b983;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.post-item.has-image {
+  flex-direction: row;
+  gap: 10px;
+}
+
+.post-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.post-content {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
