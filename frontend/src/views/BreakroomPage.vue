@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { breakroom } from '@/stores/breakroom.js'
@@ -33,14 +33,22 @@ const initializeLayout = () => {
   }))
 }
 
-// Handle layout change (drag/resize)
-const onLayoutUpdated = (newLayout) => {
-  // Debounce saving to avoid too many API calls
+// Handle user-initiated move/resize (not triggered by responsive changes)
+const onItemMoved = () => {
+  saveLayoutDebounced()
+}
+
+const onItemResized = () => {
+  saveLayoutDebounced()
+}
+
+// Debounced save - only saves after user drags/resizes
+const saveLayoutDebounced = () => {
   if (saveTimeout) {
     clearTimeout(saveTimeout)
   }
   saveTimeout = setTimeout(() => {
-    breakroom.saveLayout(newLayout)
+    breakroom.saveLayout(layoutItems.value)
   }, 500)
 }
 
@@ -100,7 +108,6 @@ onMounted(async () => {
         :vertical-compact="true"
         :use-css-transforms="true"
         :margin="[10, 10]"
-        @layout-updated="onLayoutUpdated"
       >
         <GridItem
           v-for="item in layoutItems"
@@ -116,6 +123,8 @@ onMounted(async () => {
           :max-h="4"
           drag-allow-from=".block-header"
           drag-ignore-from=".block-content"
+          @moved="onItemMoved"
+          @resized="onItemResized"
         >
           <BreakroomBlock
             :block="item.block"
