@@ -66,6 +66,13 @@ router.post('/signup', async (req, res) => {
       );
     }
 
+    // Create default blog settings for new user
+    await client.query(
+      `INSERT INTO user_blog (user_id, blog_url, blog_name)
+       VALUES ($1, $2, $3)`,
+      [newUserId, req.body.handle, req.body.handle + "'s Blog"]
+    );
+
     // Auto-login: set JWT cookie
     const payload = { username: req.body.handle };
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });

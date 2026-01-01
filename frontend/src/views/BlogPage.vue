@@ -2,13 +2,42 @@
 import { ref, onMounted } from 'vue'
 import { blog } from '@/stores/blog.js'
 import BlogEditor from '@/components/BlogEditor.vue'
+import BlogSettings from '@/components/BlogSettings.vue'
 
 const showEditor = ref(false)
+const showSettings = ref(false)
 const editingPost = ref(null)
+const blogSettings = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
   blog.fetchPosts()
+  await fetchBlogSettings()
 })
+
+async function fetchBlogSettings() {
+  try {
+    const res = await fetch('/api/blog/settings', { credentials: 'include' })
+    if (res.ok) {
+      const data = await res.json()
+      blogSettings.value = data.settings
+    }
+  } catch (err) {
+    console.error('Failed to fetch blog settings:', err)
+  }
+}
+
+function openSettings() {
+  showSettings.value = true
+}
+
+function closeSettings() {
+  showSettings.value = false
+}
+
+function onSettingsSaved(settings) {
+  blogSettings.value = settings
+  showSettings.value = false
+}
 
 const createNewPost = () => {
   editingPost.value = null
@@ -61,13 +90,35 @@ const formatDate = (dateStr) => {
       @saved="onPostSaved"
     />
 
+    <!-- Settings Modal -->
+    <BlogSettings
+      v-if="showSettings"
+      @close="closeSettings"
+      @saved="onSettingsSaved"
+    />
+
     <!-- Blog Posts List -->
     <div v-else class="blog-container">
       <div class="blog-header">
-        <h1>My Blog</h1>
-        <button class="btn-primary" @click="createNewPost">
-          + New Post
-        </button>
+        <div class="blog-header-left">
+          <h1>My Blog</h1>
+          <a
+            v-if="blogSettings"
+            :href="`/b/${blogSettings.blog_url}`"
+            target="_blank"
+            class="public-blog-link"
+          >
+            View Public Blog
+          </a>
+        </div>
+        <div class="blog-header-actions">
+          <button class="btn-secondary" @click="openSettings">
+            Settings
+          </button>
+          <button class="btn-primary" @click="createNewPost">
+            + New Post
+          </button>
+        </div>
       </div>
 
       <div v-if="blog.loading" class="loading">
@@ -136,10 +187,46 @@ const formatDate = (dateStr) => {
   border-bottom: 1px solid #eee;
 }
 
+.blog-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .blog-header h1 {
   margin: 0;
   color: #333;
   font-size: 1.5rem;
+}
+
+.public-blog-link {
+  color: #42b983;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.public-blog-link:hover {
+  text-decoration: underline;
+}
+
+.blog-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: #d0d0d0;
 }
 
 .btn-primary {

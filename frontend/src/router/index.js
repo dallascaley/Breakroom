@@ -94,6 +94,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/b/:blogUrl',
+      name: 'publicBlog',
+      component: () => import('../views/PublicBlogPage.vue'),
+      // No requiresAuth - truly public
+    },
+    {
+      path: '/b/:blogUrl/:postId',
+      name: 'publicBlogPost',
+      component: () => import('../views/PublicBlogPage.vue'),
+      // No requiresAuth - truly public
+    },
+    {
       path: '/chat',
       name: 'chat',
       component: () => import('../views/ChatPage.vue'),

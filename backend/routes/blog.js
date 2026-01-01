@@ -55,6 +55,276 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+// =====================
+// PUBLIC BLOG ENDPOINTS (no auth required)
+// =====================
+
+// Get public blog by URL - returns blog info and all published posts
+router.get('/public/:blogUrl', async (req, res) => {
+  const { blogUrl } = req.params;
+  const client = await getClient();
+
+  try {
+    // Get blog info and user details
+    const blogResult = await client.query(
+      `SELECT ub.id, ub.blog_url, ub.blog_name, ub.user_id,
+              u.handle, u.first_name, u.last_name, u.photo_path, u.bio
+       FROM user_blog ub
+       JOIN users u ON ub.user_id = u.id
+       WHERE ub.blog_url = $1`,
+      [blogUrl]
+    );
+
+    if (blogResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+
+    const blog = blogResult.rows[0];
+
+    // Get all published posts for this user
+    const postsResult = await client.query(
+      `SELECT id, title, content, created_at, updated_at
+       FROM blog_posts
+       WHERE user_id = $1 AND is_published = TRUE
+       ORDER BY updated_at DESC`,
+      [blog.user_id]
+    );
+
+    res.json({
+      blog: {
+        id: blog.id,
+        blog_url: blog.blog_url,
+        blog_name: blog.blog_name,
+        author: {
+          handle: blog.handle,
+          first_name: blog.first_name,
+          last_name: blog.last_name,
+          photo_path: blog.photo_path,
+          bio: blog.bio
+        }
+      },
+      posts: postsResult.rows
+    });
+  } catch (err) {
+    console.error('Error fetching public blog:', err);
+    res.status(500).json({ message: 'Failed to fetch blog' });
+  } finally {
+    client.release();
+  }
+});
+
+// Get a single post from a public blog
+router.get('/public/:blogUrl/:postId', async (req, res) => {
+  const { blogUrl, postId } = req.params;
+  const client = await getClient();
+
+  try {
+    // Verify blog exists and get post
+    const result = await client.query(
+      `SELECT bp.id, bp.title, bp.content, bp.created_at, bp.updated_at,
+              ub.blog_url, ub.blog_name,
+              u.handle, u.first_name, u.last_name, u.photo_path, u.bio
+       FROM blog_posts bp
+       JOIN users u ON bp.user_id = u.id
+       JOIN user_blog ub ON ub.user_id = u.id
+       WHERE ub.blog_url = $1 AND bp.id = $2 AND bp.is_published = TRUE`,
+      [blogUrl, postId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const row = result.rows[0];
+    res.json({
+      post: {
+        id: row.id,
+        title: row.title,
+        content: row.content,
+        created_at: row.created_at,
+        updated_at: row.updated_at
+      },
+      blog: {
+        blog_url: row.blog_url,
+        blog_name: row.blog_name,
+        author: {
+          handle: row.handle,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          photo_path: row.photo_path,
+          bio: row.bio
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching public blog post:', err);
+    res.status(500).json({ message: 'Failed to fetch post' });
+  } finally {
+    client.release();
+  }
+});
+
+// =====================
+// BLOG SETTINGS ENDPOINTS (auth required)
+// =====================
+
+// Get current user's blog settings
+router.get('/settings', authenticate, async (req, res) => {
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      `SELECT id, blog_url, blog_name, created_at
+       FROM user_blog
+       WHERE user_id = $1`,
+      [req.user.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.json({ settings: null });
+    }
+
+    res.json({ settings: result.rows[0] });
+  } catch (err) {
+    console.error('Error fetching blog settings:', err);
+    res.status(500).json({ message: 'Failed to fetch settings' });
+  } finally {
+    client.release();
+  }
+});
+
+// Create blog settings
+router.post('/settings', authenticate, async (req, res) => {
+  const { blog_url, blog_name } = req.body;
+  const client = await getClient();
+
+  try {
+    // Check if user already has settings
+    const existing = await client.query(
+      'SELECT id FROM user_blog WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    if (existing.rowCount > 0) {
+      return res.status(400).json({ message: 'Blog settings already exist. Use PUT to update.' });
+    }
+
+    // Use handle as default blog_url if not provided
+    const finalBlogUrl = blog_url || req.user.handle;
+    const finalBlogName = blog_name || `${req.user.handle}'s Blog`;
+
+    // Check uniqueness
+    const urlCheck = await client.query(
+      'SELECT id FROM user_blog WHERE blog_url = $1',
+      [finalBlogUrl]
+    );
+
+    if (urlCheck.rowCount > 0) {
+      return res.status(400).json({ message: 'This blog URL is already taken' });
+    }
+
+    await client.query(
+      `INSERT INTO user_blog (user_id, blog_url, blog_name)
+       VALUES ($1, $2, $3)`,
+      [req.user.id, finalBlogUrl, finalBlogName]
+    );
+
+    const result = await client.query(
+      'SELECT id, blog_url, blog_name, created_at FROM user_blog WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    res.status(201).json({ settings: result.rows[0] });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'This blog URL is already taken' });
+    }
+    console.error('Error creating blog settings:', err);
+    res.status(500).json({ message: 'Failed to create settings' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update blog settings
+router.put('/settings', authenticate, async (req, res) => {
+  const { blog_url, blog_name } = req.body;
+  const client = await getClient();
+
+  try {
+    if (!blog_url || blog_url.trim().length === 0) {
+      return res.status(400).json({ message: 'Blog URL is required' });
+    }
+
+    // Check if URL is taken by another user
+    const urlCheck = await client.query(
+      'SELECT id, user_id FROM user_blog WHERE blog_url = $1',
+      [blog_url.trim()]
+    );
+
+    if (urlCheck.rowCount > 0 && urlCheck.rows[0].user_id !== req.user.id) {
+      return res.status(400).json({ message: 'This blog URL is already taken' });
+    }
+
+    const result = await client.query(
+      `UPDATE user_blog SET blog_url = $1, blog_name = $2 WHERE user_id = $3`,
+      [blog_url.trim(), blog_name || `${req.user.handle}'s Blog`, req.user.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Blog settings not found' });
+    }
+
+    const updated = await client.query(
+      'SELECT id, blog_url, blog_name, created_at FROM user_blog WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    res.json({ settings: updated.rows[0] });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'This blog URL is already taken' });
+    }
+    console.error('Error updating blog settings:', err);
+    res.status(500).json({ message: 'Failed to update settings' });
+  } finally {
+    client.release();
+  }
+});
+
+// Check if a blog URL is available
+router.get('/check-url/:blogUrl', authenticate, async (req, res) => {
+  const { blogUrl } = req.params;
+  const client = await getClient();
+
+  try {
+    const result = await client.query(
+      'SELECT id, user_id FROM user_blog WHERE blog_url = $1',
+      [blogUrl]
+    );
+
+    if (result.rowCount === 0) {
+      return res.json({ available: true });
+    }
+
+    // If it's the current user's URL, it's "available" for them
+    if (result.rows[0].user_id === req.user.id) {
+      return res.json({ available: true, isOwn: true });
+    }
+
+    res.json({ available: false });
+  } catch (err) {
+    console.error('Error checking blog URL:', err);
+    res.status(500).json({ message: 'Failed to check URL' });
+  } finally {
+    client.release();
+  }
+});
+
+// =====================
+// AUTHENTICATED BLOG ENDPOINTS
+// =====================
+
 // Get feed of posts (own + friends' published posts)
 router.get('/feed', authenticate, async (req, res) => {
   const client = await getClient();
@@ -176,6 +446,34 @@ router.post('/posts', authenticate, async (req, res) => {
   try {
     if (!title || title.trim().length === 0) {
       return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // Auto-create blog settings if they don't exist
+    const existingBlog = await client.query(
+      'SELECT id FROM user_blog WHERE user_id = $1',
+      [req.user.id]
+    );
+
+    if (existingBlog.rowCount === 0) {
+      // Create default blog settings with handle as URL
+      try {
+        await client.query(
+          `INSERT INTO user_blog (user_id, blog_url, blog_name)
+           VALUES ($1, $2, $3)`,
+          [req.user.id, req.user.handle, `${req.user.handle}'s Blog`]
+        );
+      } catch (blogErr) {
+        // If handle is taken, append user ID
+        if (blogErr.code === 'ER_DUP_ENTRY') {
+          await client.query(
+            `INSERT INTO user_blog (user_id, blog_url, blog_name)
+             VALUES ($1, $2, $3)`,
+            [req.user.id, `${req.user.handle}-${req.user.id}`, `${req.user.handle}'s Blog`]
+          );
+        } else {
+          throw blogErr;
+        }
+      }
     }
 
     await client.query(
