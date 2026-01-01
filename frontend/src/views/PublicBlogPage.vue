@@ -61,6 +61,10 @@ async function fetchBlog() {
     blog.value = data.blog
     posts.value = data.posts
 
+    // Set page title
+    const firstName = data.blog.author?.first_name || data.blog.author?.handle || ''
+    document.title = `${data.blog.blog_name} - ${firstName}'s Blog`
+
     // Select post based on URL or default to most recent
     if (postId.value) {
       selectPostById(postId.value)
