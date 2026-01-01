@@ -9,6 +9,7 @@ import AdminPermissions from '@/views/admin/AdminPermissions.vue'
 import AdminGroups from '@/views/admin/AdminGroups.vue'
 import AdminBilling from '@/views/admin/AdminBilling.vue'
 import AdminNotifications from '@/views/admin/AdminNotifications.vue'
+import AdminSystemEmails from '@/views/admin/AdminSystemEmails.vue'
 
 //Profile views
 import ProfileLayout from '@/views/profile/ProfileLayout.vue'
@@ -45,7 +46,8 @@ const router = createRouter({
         {path: 'permissions', component: AdminPermissions},
         {path: 'groups', component: AdminGroups},
         {path: 'notifications', component: AdminNotifications},
-        {path: 'billing', component: AdminBilling}
+        {path: 'billing', component: AdminBilling},
+        {path: 'system-emails', component: AdminSystemEmails}
       ]
     },
     {
