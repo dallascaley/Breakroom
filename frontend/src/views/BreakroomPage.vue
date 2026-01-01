@@ -6,16 +6,9 @@ import { breakroom } from '@/stores/breakroom.js'
 import { user } from '@/stores/user.js'
 import BreakroomBlock from '@/components/BreakroomBlock.vue'
 import AddBlockModal from '@/components/AddBlockModal.vue'
-import { createDebouncedEventTrigger } from '@/utilities/eventService'
 
 const showAddModal = ref(false)
 const layoutKey = ref(0)
-
-// Track previous column count for breakpoint change detection
-let lastCols = null
-
-// Debounced event trigger for breakpoint changes (500ms delay)
-const debouncedBreakpointEvent = createDebouncedEventTrigger('breakpoint_changed', 500)
 
 // Responsive breakpoints and column counts
 const breakpoints = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
@@ -77,19 +70,6 @@ const onBlockAdded = () => {
   layoutKey.value++
 }
 
-// Handle breakpoint changes (responsive column count changes)
-const onBreakpointChanged = (breakpoint, newCols) => {
-  // Only trigger event if columns actually changed (not on initial load)
-  if (lastCols !== null && lastCols !== newCols) {
-    debouncedBreakpointEvent({
-      from: lastCols,
-      to: newCols,
-      breakpoint: breakpoint
-    })
-  }
-  lastCols = newCols
-}
-
 onMounted(async () => {
   await breakroom.fetchLayout()
   initializeLayout()
@@ -128,7 +108,6 @@ onMounted(async () => {
         :vertical-compact="true"
         :use-css-transforms="true"
         :margin="[10, 10]"
-        @breakpoint-changed="onBreakpointChanged"
       >
         <GridItem
           v-for="item in layoutItems"

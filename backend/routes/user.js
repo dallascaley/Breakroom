@@ -116,7 +116,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Begin the transactional part of the process
-    await client.beginTransaction();
+    await client.query('BEGIN');
 
     const searchResult = await client.query(
       `UPDATE users SET 
@@ -177,13 +177,13 @@ router.put('/:id', async (req, res) => {
       );
     }
 
-    await client.commit();
+    await client.query('COMMIT');
 
     // Return updated user (optionally with fresh data if needed)
     const result = await client.query('SELECT * FROM users WHERE id = $1', [id]);
     res.status(200).json(result.rows[0]);
   } catch (err) {
-    await client.rollback();
+    await client.query('ROLLBACK');
     console.error('Error updating user', err);
     res.status(500).json({ message: 'Failed to update user' });
   } finally {

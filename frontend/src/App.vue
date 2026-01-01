@@ -2,9 +2,6 @@
 import { ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { user } from './stores/user.js'
-import { notifications } from './stores/notification.js'
-import NotificationBell from './components/NotificationBell.vue'
-import NotificationModal from './components/NotificationModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -29,20 +26,10 @@ async function checkAdminPermission() {
 
 user.fetchUser().then(() => {
   checkAdminPermission()
-  if (user.username) {
-    notifications.connect()
-    notifications.fetchNotifications()
-  }
 })
 
-watch(() => user.username, (newUsername) => {
+watch(() => user.username, () => {
   checkAdminPermission()
-  if (newUsername) {
-    notifications.connect()
-    notifications.fetchNotifications()
-  } else {
-    notifications.reset()
-  }
 })
 
 function toggleMenu() {
@@ -80,7 +67,6 @@ setInterval(() => {
           <RouterLink to="/chat">Chat</RouterLink>
           <RouterLink to="/friends">Friends</RouterLink>
           <RouterLink v-if="isAdmin" to="/admin">Admin</RouterLink>
-          <NotificationBell />
           <div class="user-menu">
             <div @click="toggleMenu">
               {{ user.username }}
@@ -107,7 +93,6 @@ setInterval(() => {
   </header>
 
   <RouterView />
-  <NotificationModal />
 </template>
 
 <style>
