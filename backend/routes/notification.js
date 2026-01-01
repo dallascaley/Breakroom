@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getClient } = require('../utilities/db');
-const { getIO, userSockets } = require('../utilities/socket');
+const { emitToUser } = require('../utilities/socket');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -371,7 +371,6 @@ router.post('/trigger/:eventTypeCode', authenticate, async (req, res) => {
     );
 
     const createdNotifications = [];
-    const io = getIO();
 
     for (const notifType of notifTypesResult.rows) {
       // Get target groups for this notification type
@@ -461,13 +460,8 @@ router.post('/trigger/:eventTypeCode', authenticate, async (req, res) => {
 
         createdNotifications.push(notification);
 
-        // Emit Socket.IO event to the user if they're connected
-        if (io) {
-          const userSocket = userSockets.get(userId);
-          if (userSocket) {
-            userSocket.emit('new_notification', notification);
-          }
-        }
+        // Emit Socket.IO event to the user (works with multiple tabs and Redis adapter)
+        emitToUser(userId, 'new_notification', notification);
       }
     }
 

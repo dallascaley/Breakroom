@@ -50,7 +50,10 @@ const initializeSocket = (io) => {
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.user.handle} (socket: ${socket.id})`);
 
-    // Store socket reference
+    // Join user-specific room for notifications (works with multiple tabs and Redis adapter)
+    socket.join(`user_${socket.user.id}`);
+
+    // Store socket reference (kept for chat functionality)
     userSockets.set(socket.user.id, socket);
 
     // Join a chat room
@@ -183,4 +186,11 @@ const initializeSocket = (io) => {
   });
 };
 
-module.exports = { initializeSocket, userSockets, getIO };
+// Emit to a specific user by their user ID (uses rooms for multi-tab and Redis support)
+const emitToUser = (userId, event, data) => {
+  if (ioInstance) {
+    ioInstance.to(`user_${userId}`).emit(event, data);
+  }
+};
+
+module.exports = { initializeSocket, userSockets, getIO, emitToUser };

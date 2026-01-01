@@ -57,6 +57,8 @@ function acknowledge() {
   color: #555;
   margin-bottom: 25px;
   line-height: 1.6;
+  text-align: left;
+  white-space: pre-wrap;
 }
 
 .popup-button {
