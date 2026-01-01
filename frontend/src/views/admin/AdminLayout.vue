@@ -7,6 +7,7 @@
           <li><RouterLink to="/admin/users">Users</RouterLink></li>
           <li><RouterLink to="/admin/groups">Groups</RouterLink></li>
           <li><RouterLink to="/admin/permissions">Permissions</RouterLink></li>
+          <li><RouterLink to="/admin/notifications">Notifications</RouterLink></li>
           <li><RouterLink to="/admin/billing">Billing</RouterLink></li>
         </ul>
       </nav>

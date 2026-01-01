@@ -8,6 +8,7 @@ import AdminUsers from '@/views/admin/AdminUsers.vue'
 import AdminPermissions from '@/views/admin/AdminPermissions.vue'
 import AdminGroups from '@/views/admin/AdminGroups.vue'
 import AdminBilling from '@/views/admin/AdminBilling.vue'
+import AdminNotifications from '@/views/admin/AdminNotifications.vue'
 
 //Profile views
 import ProfileLayout from '@/views/profile/ProfileLayout.vue'
@@ -43,6 +44,7 @@ const router = createRouter({
         {path: 'users', component: AdminUsers},
         {path: 'permissions', component: AdminPermissions},
         {path: 'groups', component: AdminGroups},
+        {path: 'notifications', component: AdminNotifications},
         {path: 'billing', component: AdminBilling}
       ]
     },

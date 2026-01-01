@@ -1,7 +1,12 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { user } from './stores/user.js'
+import { notificationStore } from './stores/notification.js'
+import { initEventService, destroyEventService } from './utilities/eventService.js'
+import HeaderNotification from './components/HeaderNotification.vue'
+import PopupNotification from './components/PopupNotification.vue'
+import { io } from 'socket.io-client'
 
 const router = useRouter()
 const route = useRoute()
@@ -24,12 +29,65 @@ async function checkAdminPermission() {
   }
 }
 
+// Socket.IO for real-time notifications
+let socket = null
+const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+
+function setupNotificationSocket() {
+  if (socket) return
+
+  socket = io(baseUrl, {
+    withCredentials: true,
+    autoConnect: false
+  })
+
+  socket.on('connect', () => {
+    console.log('Notification socket connected')
+  })
+
+  socket.on('new_notification', (notification) => {
+    console.log('Received new notification:', notification)
+    notificationStore.addNotification(notification)
+  })
+
+  socket.on('disconnect', () => {
+    console.log('Notification socket disconnected')
+  })
+
+  socket.connect()
+}
+
+function teardownNotificationSocket() {
+  if (socket) {
+    socket.disconnect()
+    socket = null
+  }
+}
+
 user.fetchUser().then(() => {
   checkAdminPermission()
+  if (user.username) {
+    notificationStore.fetchNotifications()
+    initEventService()
+    setupNotificationSocket()
+  }
 })
 
-watch(() => user.username, () => {
+watch(() => user.username, (newUsername) => {
   checkAdminPermission()
+  if (newUsername) {
+    notificationStore.fetchNotifications()
+    initEventService()
+    setupNotificationSocket()
+  } else {
+    destroyEventService()
+    teardownNotificationSocket()
+  }
+})
+
+onUnmounted(() => {
+  destroyEventService()
+  teardownNotificationSocket()
 })
 
 function toggleMenu() {
@@ -56,6 +114,10 @@ setInterval(() => {
 </script>
 
 <template>
+  <!-- Notification components -->
+  <HeaderNotification />
+  <PopupNotification />
+
   <header>
 
     <div class="wrapper page-container">
