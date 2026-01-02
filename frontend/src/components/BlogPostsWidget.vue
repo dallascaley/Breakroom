@@ -203,8 +203,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 100%;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .post-item {
@@ -215,8 +215,7 @@ onMounted(() => {
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.1s;
   border-left: 3px solid #42b983;
-  flex: 1;
-  min-height: 0;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -281,11 +280,10 @@ onMounted(() => {
   font-size: 0.75rem;
   color: #666;
   line-height: 1.4;
-  flex: 1;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 10;
+  -webkit-line-clamp: 3;
 }
 
 .empty-state {
