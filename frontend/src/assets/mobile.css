@@ -23,14 +23,17 @@
      NAVIGATION
      =========================================== */
 
-  /* Compact nav links */
+  /* Centered, equally spaced nav */
   nav {
-    gap: 0;
+    justify-content: center;
     font-size: 14px;
   }
 
   nav a {
-    padding: 0.5rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    border-left: none;
   }
 
   /* Hide username text, show icon */
@@ -43,7 +46,10 @@
   }
 
   .user-menu {
-    padding: 0.5rem 0.6rem;
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    border-left: none;
   }
 
   /* Adjust dropdown position for mobile */
@@ -56,11 +62,33 @@
      COMPONENTS
      =========================================== */
 
-  /* Add component mobile styles here */
+  /* Show expand button on mobile */
+  .breakroom-block .expand-btn {
+    display: inline-block !important;
+  }
+
+  .breakroom-block .block-header {
+    cursor: pointer;
+  }
 
   /* ===========================================
      PAGES
      =========================================== */
 
-  /* Add page-specific mobile styles here */
+  /* Bottom menu - centered and fits screen */
+  .bottom-menu {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0.75rem 0.5rem;
+    margin-top: 1rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+
+  .bottom-menu a {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.8rem;
+  }
 }

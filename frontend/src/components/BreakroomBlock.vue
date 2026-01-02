@@ -11,12 +11,16 @@ const props = defineProps({
   block: {
     type: Object,
     required: true
+  },
+  expanded: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['remove'])
+const emit = defineEmits(['remove', 'toggle'])
 
-// Determine block title
+// Determine block title (user title or fallback to block type name)
 const blockTitle = computed(() => {
   if (props.block.title) {
     return props.block.title
@@ -24,50 +28,31 @@ const blockTitle = computed(() => {
   if (props.block.block_type === 'chat' && props.block.content_name) {
     return `# ${props.block.content_name}`
   }
-  if (props.block.block_type === 'placeholder') {
-    return 'Placeholder'
-  }
-  if (props.block.block_type === 'updates') {
-    return 'Breakroom Updates'
-  }
-  if (props.block.block_type === 'calendar') {
-    return 'Calendar'
-  }
-  if (props.block.block_type === 'weather') {
-    return 'Weather'
-  }
-  if (props.block.block_type === 'news') {
-    return 'News'
-  }
-  if (props.block.block_type === 'blog') {
-    return 'Blog Posts'
-  }
-  return 'Block'
-})
-
-// Get block type icon/label
-const blockTypeLabel = computed(() => {
   switch (props.block.block_type) {
     case 'chat': return 'Chat'
     case 'placeholder': return 'Empty'
-    case 'updates': return 'Updates'
+    case 'updates': return 'Breakroom Updates'
     case 'calendar': return 'Calendar'
     case 'weather': return 'Weather'
     case 'news': return 'News'
-    case 'blog': return 'Blog'
-    default: return props.block.block_type
+    case 'blog': return 'Blog Posts'
+    default: return 'Block'
   }
 })
 </script>
 
 <template>
-  <div class="breakroom-block">
-    <div class="block-header">
+  <div class="breakroom-block" :class="{ expanded }">
+    <div class="block-header" @click="emit('toggle')">
+      <button class="remove-btn" @click.stop="emit('remove')" title="Remove block">
+        &times;
+      </button>
       <span class="block-title">{{ blockTitle }}</span>
       <div class="block-actions">
-        <span class="block-type">{{ blockTypeLabel }}</span>
-        <button class="remove-btn" @click="emit('remove')" title="Remove block">
-          &times;
+        <button class="expand-btn" :class="{ rotated: expanded }" title="Expand/Collapse">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -120,35 +105,13 @@ const blockTypeLabel = computed(() => {
 
 .block-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
   background: #2c3e50;
   color: white;
   cursor: move;
   flex-shrink: 0;
-}
-
-.block-title {
-  font-weight: 500;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.block-actions {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-}
-
-.block-type {
-  font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 6px;
-  border-radius: 3px;
 }
 
 .remove-btn {
@@ -160,11 +123,49 @@ const blockTypeLabel = computed(() => {
   padding: 0 4px;
   opacity: 0.7;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .remove-btn:hover {
   opacity: 1;
   color: #ff6b6b;
+}
+
+.block-title {
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.block-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.expand-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.expand-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s;
+}
+
+.expand-btn.rotated svg {
+  transform: rotate(180deg);
 }
 
 .block-content {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { breakroom } from '@/stores/breakroom.js'
@@ -9,6 +9,18 @@ import AddBlockModal from '@/components/AddBlockModal.vue'
 
 const showAddModal = ref(false)
 const layoutKey = ref(0)
+
+// Mobile detection
+const isMobile = ref(false)
+const MOBILE_BREAKPOINT = 480
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= MOBILE_BREAKPOINT &&
+    (window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= MOBILE_BREAKPOINT)
+}
+
+// Track which block is expanded (for mobile accordion - only one at a time)
+const expandedBlockId = ref(null)
 
 // Responsive breakpoints and column counts
 const breakpoints = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
@@ -31,6 +43,19 @@ const initializeLayout = () => {
     h: block.h,
     block: block
   }))
+  // Set first block as expanded by default on mobile
+  if (layoutItems.value.length > 0 && expandedBlockId.value === null) {
+    expandedBlockId.value = layoutItems.value[0].block.id
+  }
+}
+
+// Toggle block expansion (only one at a time)
+const toggleBlock = (blockId) => {
+  if (expandedBlockId.value === blockId) {
+    expandedBlockId.value = null
+  } else {
+    expandedBlockId.value = blockId
+  }
 }
 
 // Handle user-initiated move/resize (not triggered by responsive changes)
@@ -71,8 +96,14 @@ const onBlockAdded = () => {
 }
 
 onMounted(async () => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
   await breakroom.fetchLayout()
   initializeLayout()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
@@ -94,6 +125,24 @@ onMounted(async () => {
       <p class="hint">Click "Add Block" to add chat rooms and other content.</p>
     </div>
 
+    <!-- Mobile: Simple accordion list -->
+    <div v-else-if="isMobile" class="mobile-blocks">
+      <div
+        v-for="item in layoutItems"
+        :key="item.i"
+        class="mobile-block-wrapper"
+        :class="{ expanded: expandedBlockId === item.block.id }"
+      >
+        <BreakroomBlock
+          :block="item.block"
+          :expanded="expandedBlockId === item.block.id"
+          @remove="onRemoveBlock(item.block.id)"
+          @toggle="toggleBlock(item.block.id)"
+        />
+      </div>
+    </div>
+
+    <!-- Desktop: Grid layout -->
     <div v-else class="grid-container">
       <GridLayout
         :key="layoutKey"
@@ -128,7 +177,9 @@ onMounted(async () => {
         >
           <BreakroomBlock
             :block="item.block"
+            :expanded="expandedBlockId === item.block.id"
             @remove="onRemoveBlock(item.block.id)"
+            @toggle="toggleBlock(item.block.id)"
           />
         </GridItem>
       </GridLayout>
@@ -286,4 +337,38 @@ onMounted(async () => {
   color: #42b983;
 }
 
+/* Mobile accordion layout */
+.mobile-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.mobile-block-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mobile-block-wrapper :deep(.breakroom-block) {
+  height: auto;
+}
+
+.mobile-block-wrapper :deep(.block-content) {
+  display: none;
+}
+
+.mobile-block-wrapper.expanded {
+  height: calc(100vh - 180px);
+}
+
+.mobile-block-wrapper.expanded :deep(.breakroom-block) {
+  height: 100%;
+}
+
+.mobile-block-wrapper.expanded :deep(.block-content) {
+  display: flex !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+}
 </style>

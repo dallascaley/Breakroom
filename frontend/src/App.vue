@@ -124,7 +124,7 @@ setInterval(() => {
       <nav>
 
         <template v-if="user.username">
-          <RouterLink to="/breakroom">Breakroom</RouterLink>
+          <RouterLink to="/breakroom">Home</RouterLink>
           <RouterLink to="/blog">Blog</RouterLink>
           <RouterLink to="/chat">Chat</RouterLink>
           <RouterLink to="/friends">Friends</RouterLink>
