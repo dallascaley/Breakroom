@@ -30,8 +30,11 @@ const fetchUpdates = async () => {
 const formatDate = (dateStr) => {
   const date = new Date(dateStr)
   const now = new Date()
-  const diffMs = now - date
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  // Compare calendar days, not time difference
+  const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = Math.round((nowDay - dateDay) / (1000 * 60 * 60 * 24))
 
   if (diffDays === 0) {
     return 'Today'

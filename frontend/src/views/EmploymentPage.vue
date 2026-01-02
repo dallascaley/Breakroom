@@ -118,7 +118,11 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   const now = new Date()
-  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+
+  // Compare calendar days, not time difference
+  const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = Math.round((nowDay - dateDay) / (1000 * 60 * 60 * 24))
 
   if (diffDays === 0) return 'Today'
   if (diffDays === 1) return 'Yesterday'
