@@ -1,0 +1,66 @@
+/*
+ * Mobile-specific styles for phone devices
+ *
+ * This file contains overrides for narrow screens (phones in portrait/landscape).
+ * All styles are wrapped in a media query targeting:
+ * - max-width: 480px (typical phone width in CSS pixels)
+ * - pointer: coarse (touch screen, not mouse)
+ *
+ * To add mobile styles, place them inside the media query block below.
+ * Use higher specificity or !important sparingly to override component styles.
+ */
+
+@media (max-width: 480px) and (pointer: coarse) {
+  /* ===========================================
+     GLOBAL / LAYOUT
+     =========================================== */
+
+  .page-container {
+    padding: 0.5rem 1rem;
+  }
+
+  /* ===========================================
+     NAVIGATION
+     =========================================== */
+
+  /* Compact nav links */
+  nav {
+    gap: 0;
+    font-size: 14px;
+  }
+
+  nav a {
+    padding: 0.5rem 0.6rem;
+  }
+
+  /* Hide username text, show icon */
+  .user-menu .username-text {
+    display: none;
+  }
+
+  .user-menu .user-icon {
+    display: inline-block;
+  }
+
+  .user-menu {
+    padding: 0.5rem 0.6rem;
+  }
+
+  /* Adjust dropdown position for mobile */
+  .dropdown {
+    right: -8px;
+    min-width: 140px;
+  }
+
+  /* ===========================================
+     COMPONENTS
+     =========================================== */
+
+  /* Add component mobile styles here */
+
+  /* ===========================================
+     PAGES
+     =========================================== */
+
+  /* Add page-specific mobile styles here */
+}

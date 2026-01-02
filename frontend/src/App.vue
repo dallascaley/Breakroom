@@ -131,7 +131,10 @@ setInterval(() => {
           <RouterLink v-if="isAdmin" to="/admin">Admin</RouterLink>
           <div class="user-menu">
             <div @click="toggleMenu">
-              {{ user.username }}
+              <span class="username-text">{{ user.username }}</span>
+              <svg class="user-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/>
+              </svg>
             </div>
             <div
               v-if="showMenu"
@@ -275,5 +278,13 @@ nav a:first-of-type {
   background-color: #f5f5f5;
   color: #42b983;
   text-decoration: none;
+}
+
+/* User icon - hidden on desktop, shown on mobile */
+.user-icon {
+  display: none;
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
 }
 </style>
