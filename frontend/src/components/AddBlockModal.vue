@@ -185,8 +185,8 @@ const handleSubmit = async () => {
           <p class="widget-desc">{{ widgetTypes.find(w => w.value === selectedWidget)?.desc }}</p>
         </div>
 
-        <!-- Size Options -->
-        <div class="form-row">
+        <!-- Size Options (hidden on mobile) -->
+        <div class="form-row size-options">
           <div class="form-group">
             <label for="width">Width</label>
             <select id="width" v-model="blockWidth">

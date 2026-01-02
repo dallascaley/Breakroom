@@ -71,6 +71,11 @@
     cursor: pointer;
   }
 
+  /* Hide size options in Add Block modal on mobile */
+  .size-options {
+    display: none !important;
+  }
+
   /* ===========================================
      PAGES
      =========================================== */
