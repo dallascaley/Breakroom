@@ -63,6 +63,7 @@ const companyRoutes = require('./routes/company');
 const positionsRoutes = require('./routes/positions');
 const notificationRoutes = require('./routes/notification');
 const systemEmailRoutes = require('./routes/system-emails');
+const commentsRoutes = require('./routes/comments');
 const { getS3Url } = require('./utilities/aws-s3');
 
 
@@ -87,6 +88,7 @@ app.use('/api/company', companyRoutes);
 app.use('/api/positions', positionsRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/system-emails', systemEmailRoutes);
+app.use('/api/comments', commentsRoutes);
 
 // Redirect uploaded file requests to S3
 const handleS3Redirect = (req, res) => {

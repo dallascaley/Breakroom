@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { authFetch } from '../utilities/authFetch'
+import BlogComments from '../components/BlogComments.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -108,6 +109,9 @@ onMounted(() => {
         </div>
         <div class="post-content" v-html="post.content"></div>
       </article>
+
+      <!-- Comments section -->
+      <BlogComments :postId="post.id" />
 
       <button @click="goBack" class="back-btn">Back</button>
     </template>

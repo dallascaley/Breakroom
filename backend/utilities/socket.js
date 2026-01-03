@@ -178,6 +178,18 @@ const initializeSocket = (io) => {
       });
     });
 
+    // Join a blog post room for real-time comments
+    socket.on('join_post', (postId) => {
+      socket.join(`post_${postId}`);
+      console.log(`${socket.user.handle} joined post ${postId} comments`);
+    });
+
+    // Leave a blog post room
+    socket.on('leave_post', (postId) => {
+      socket.leave(`post_${postId}`);
+      console.log(`${socket.user.handle} left post ${postId} comments`);
+    });
+
     // Handle disconnect
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.user.handle}`);

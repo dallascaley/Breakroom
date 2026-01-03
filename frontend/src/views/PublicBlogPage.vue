@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import BlogComments from '../components/BlogComments.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,6 +162,9 @@ function goToAuthorProfile() {
             {{ formatDate(currentPost.updated_at) }}
           </p>
           <div class="post-body" v-html="currentPost.content"></div>
+
+          <!-- Comments section -->
+          <BlogComments :postId="currentPost.id" />
         </article>
 
         <div v-else class="no-post-selected">
