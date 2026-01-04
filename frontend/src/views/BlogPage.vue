@@ -173,9 +173,9 @@ const formatDate = (dateStr) => {
 }
 
 .blog-container {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   min-height: calc(100vh - 140px);
 }
 
@@ -184,7 +184,7 @@ const formatDate = (dateStr) => {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .blog-header-left {
@@ -195,12 +195,12 @@ const formatDate = (dateStr) => {
 
 .blog-header h1 {
   margin: 0;
-  color: #333;
+  color: var(--color-text);
   font-size: 1.5rem;
 }
 
 .public-blog-link {
-  color: #42b983;
+  color: var(--color-accent);
   text-decoration: none;
   font-size: 0.9rem;
 }
@@ -215,8 +215,8 @@ const formatDate = (dateStr) => {
 }
 
 .btn-secondary {
-  background: #e0e0e0;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -226,11 +226,11 @@ const formatDate = (dateStr) => {
 }
 
 .btn-secondary:hover {
-  background: #d0d0d0;
+  background: var(--color-button-secondary-hover);
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -241,7 +241,7 @@ const formatDate = (dateStr) => {
 }
 
 .btn-primary:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .loading,
@@ -249,18 +249,18 @@ const formatDate = (dateStr) => {
 .empty-state {
   padding: 60px 20px;
   text-align: center;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .error {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .error button {
   margin-top: 10px;
   background: none;
-  border: 1px solid #c00;
-  color: #c00;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -280,15 +280,15 @@ const formatDate = (dateStr) => {
   align-items: center;
   padding: 15px 20px;
   margin-bottom: 10px;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
 }
 
 .post-card:hover {
-  background: #f0f0f0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: var(--color-background-hover);
+  box-shadow: var(--shadow-sm);
 }
 
 .post-card:last-child {
@@ -303,7 +303,7 @@ const formatDate = (dateStr) => {
 .post-title {
   margin: 0 0 6px;
   font-size: 1.1rem;
-  color: #333;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -319,18 +319,18 @@ const formatDate = (dateStr) => {
 .post-status {
   padding: 2px 8px;
   border-radius: 4px;
-  background: #ffeb99;
-  color: #996600;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   font-weight: 500;
 }
 
 .post-status.published {
-  background: #c8f7c5;
-  color: #2e7d32;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .post-date {
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .post-actions {
@@ -342,23 +342,23 @@ const formatDate = (dateStr) => {
 
 .btn-icon {
   padding: 6px 12px;
-  background: #e0e0e0;
+  background: var(--color-button-secondary);
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--color-text-secondary);
 }
 
 .btn-icon:hover {
-  background: #d0d0d0;
+  background: var(--color-button-secondary-hover);
 }
 
 .btn-danger {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .btn-danger:hover {
-  background: #ffdddd;
+  background: var(--color-error-bg);
 }
 </style>

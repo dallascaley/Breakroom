@@ -175,12 +175,12 @@ onMounted(() => {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error-box {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -206,7 +206,7 @@ onMounted(() => {
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #42b983;
+  border: 3px solid var(--color-accent);
 }
 
 .profile-photo {
@@ -218,7 +218,7 @@ onMounted(() => {
 .photo-placeholder {
   width: 100%;
   height: 100%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -231,30 +231,30 @@ onMounted(() => {
 .user-info h1 {
   margin: 0 0 5px 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .handle {
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 1rem;
   margin: 0 0 8px 0;
 }
 
 .member-since {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.85rem;
   margin: 0 0 5px 0;
 }
 
 .friend-count {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   margin: 0;
   font-weight: 500;
 }
 
 .profile-card {
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 8px;
   padding: 20px;
 }
@@ -278,21 +278,21 @@ onMounted(() => {
 .skills-section h2,
 .jobs-section h2 {
   font-size: 1.1rem;
-  color: #333;
+  color: var(--color-text);
   margin: 0 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .bio-text {
-  color: #555;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   white-space: pre-wrap;
   margin: 0;
 }
 
 .bio-empty {
-  color: #999;
+  color: var(--color-text-light);
   font-style: italic;
   margin: 0;
 }
@@ -305,8 +305,8 @@ onMounted(() => {
 
 .skill-tag {
   display: inline-block;
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--color-success-bg);
+  color: var(--color-success);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.9rem;
@@ -321,8 +321,8 @@ onMounted(() => {
 }
 
 .job-card {
-  background: white;
-  border: 1px solid #eee;
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 15px;
 }
@@ -330,11 +330,11 @@ onMounted(() => {
 .job-header h3 {
   margin: 0 0 4px 0;
   font-size: 1rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .company-name {
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 500;
   font-size: 0.95rem;
 }
@@ -343,7 +343,7 @@ onMounted(() => {
   display: flex;
   gap: 15px;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin: 8px 0;
 }
 
@@ -352,7 +352,7 @@ onMounted(() => {
 }
 
 .job-location {
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .job-location::before {
@@ -362,7 +362,7 @@ onMounted(() => {
 .job-description {
   margin: 0;
   font-size: 0.9rem;
-  color: #555;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   white-space: pre-wrap;
 }

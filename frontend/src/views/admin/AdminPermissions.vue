@@ -165,24 +165,67 @@ function cancelEdit() {
 </script>
 
 <style scoped>
+h1 {
+  color: var(--color-text);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background: var(--color-background-card);
 }
 
 th, td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   padding: 10px;
   text-align: left;
+  color: var(--color-text);
 }
 
 thead {
-  background-color: #f4f4f4;
+  background-color: var(--color-background-soft);
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+form input {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  margin-right: 8px;
+  background: var(--color-background-input);
+  color: var(--color-text);
+}
+
+form label {
+  color: var(--color-text);
+  margin-right: 8px;
 }
 
 button {
   margin-right: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--color-accent);
+  color: white;
+}
+
+button:hover {
+  background: var(--color-accent-hover);
+}
+
+button[type="button"] {
+  background: var(--color-button-secondary);
+  color: var(--color-text);
+}
+
+button[type="button"]:hover {
+  background: var(--color-button-secondary-hover);
 }
 
 .modal-overlay {
@@ -191,17 +234,44 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 20px;
   border-radius: 8px;
   width: 400px;
   max-width: 90%;
+}
+
+.modal h2 {
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.modal input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background-input);
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+.modal label {
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.modal input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  margin-bottom: 0;
 }
 </style>

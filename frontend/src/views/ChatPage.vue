@@ -249,12 +249,12 @@ onUnmounted(() => {
   min-height: 500px;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .chat-container {
   flex: 1;
-  background: white;
+  background: var(--color-background-card);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -265,30 +265,30 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .chat-header h2 {
   margin: 0;
-  color: #333;
+  color: var(--color-text);
 }
 
 .room-description {
   margin: 4px 0 0 0;
   font-size: 0.85em;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .connection-status {
   font-size: 0.8em;
   padding: 4px 10px;
   border-radius: 12px;
-  background: #ff6b6b;
+  background: var(--color-error);
   color: white;
 }
 
 .connection-status.connected {
-  background: #51cf66;
+  background: var(--color-success);
 }
 
 .messages-container {
@@ -302,7 +302,7 @@ onUnmounted(() => {
 
 .no-messages {
   text-align: center;
-  color: #999;
+  color: var(--color-text-light);
   margin-top: 40px;
 }
 
@@ -310,12 +310,13 @@ onUnmounted(() => {
   max-width: 70%;
   padding: 10px 15px;
   border-radius: 15px;
-  background: #f0f0f0;
+  background: var(--color-background-soft);
   align-self: flex-start;
+  color: var(--color-text);
 }
 
 .message.own {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   align-self: flex-end;
 }
@@ -360,37 +361,39 @@ onUnmounted(() => {
 .typing-indicator {
   padding: 5px 20px;
   font-size: 0.85em;
-  color: #888;
+  color: var(--color-text-light);
   font-style: italic;
 }
 
 .message-input-container {
   display: flex;
   padding: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
   gap: 10px;
 }
 
 .message-input-container input {
   flex: 1;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 25px;
   font-size: 1em;
   outline: none;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .message-input-container input:focus {
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .message-input-container input:disabled {
-  background: #f5f5f5;
+  background: var(--color-background-soft);
 }
 
 .message-input-container button {
   padding: 12px 25px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 25px;
@@ -399,11 +402,11 @@ onUnmounted(() => {
 }
 
 .message-input-container button:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .message-input-container button:disabled {
-  background: #ccc;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
@@ -413,8 +416,8 @@ onUnmounted(() => {
 
 .image-btn {
   padding: 12px 15px;
-  background: #6c757d;
-  color: white;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   border-radius: 25px;
   cursor: pointer;
@@ -423,18 +426,18 @@ onUnmounted(() => {
 }
 
 .image-btn:hover:not(:disabled) {
-  background: #5a6268;
+  background: var(--color-button-secondary-hover);
 }
 
 .image-btn:disabled {
-  background: #adb5bd;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
 .error-message {
   padding: 10px 20px;
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -444,7 +447,7 @@ onUnmounted(() => {
 .dismiss-btn {
   background: none;
   border: none;
-  color: #c00;
+  color: var(--color-error);
   cursor: pointer;
   text-decoration: underline;
 }

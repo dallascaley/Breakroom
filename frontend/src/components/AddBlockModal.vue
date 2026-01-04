@@ -242,7 +242,7 @@ const handleSubmit = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +250,7 @@ const handleSubmit = async () => {
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 25px;
   border-radius: 10px;
   width: 450px;
@@ -261,7 +261,7 @@ const handleSubmit = async () => {
 
 .modal h2 {
   margin: 0 0 20px;
-  color: #333;
+  color: var(--color-text);
 }
 
 .form-group {
@@ -272,7 +272,7 @@ const handleSubmit = async () => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .form-row {
@@ -294,19 +294,19 @@ const handleSubmit = async () => {
   display: flex;
   flex-direction: column;
   padding: 12px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .type-option:hover {
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .type-option.selected {
-  border-color: #42b983;
-  background: #f0fff8;
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 
 .type-option input {
@@ -315,33 +315,35 @@ const handleSubmit = async () => {
 
 .type-label {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   margin-bottom: 4px;
 }
 
 .type-desc {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 select,
 input[type="text"] {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 select:focus,
 input[type="text"]:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .error {
-  color: #c00;
+  color: var(--color-error);
   margin: 0 0 15px;
   font-size: 0.9rem;
 }
@@ -354,7 +356,7 @@ input[type="text"]:focus {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -364,17 +366,17 @@ input[type="text"]:focus {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: #ddd;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -383,12 +385,12 @@ input[type="text"]:focus {
 }
 
 .btn-secondary:hover {
-  background: #ccc;
+  background: var(--color-button-secondary-hover);
 }
 
 .widget-desc {
   margin: 8px 0 0;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 </style>

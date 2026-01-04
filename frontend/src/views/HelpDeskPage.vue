@@ -368,13 +368,13 @@ onMounted(() => {
 }
 
 .company-name {
-  color: #666;
+  color: var(--color-text-muted);
   margin: 0.25rem 0 0;
   font-size: 0.95rem;
 }
 
 .new-ticket-btn {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -385,7 +385,7 @@ onMounted(() => {
 }
 
 .new-ticket-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 /* Modal styles */
@@ -395,7 +395,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,7 +403,7 @@ onMounted(() => {
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 25px;
   border-radius: 12px;
   width: 500px;
@@ -414,7 +414,7 @@ onMounted(() => {
 
 .modal h2 {
   margin: 0 0 20px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .form-group {
@@ -425,7 +425,7 @@ onMounted(() => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
@@ -433,10 +433,12 @@ onMounted(() => {
 .form-group select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group textarea {
@@ -451,7 +453,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -461,16 +463,16 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--color-button-secondary);
 }
 
 .btn-secondary {
-  background: #eee;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -479,7 +481,7 @@ onMounted(() => {
 }
 
 .btn-secondary:hover {
-  background: #ddd;
+  background: var(--color-button-secondary-hover);
 }
 
 /* Ticket Detail Modal */
@@ -505,12 +507,12 @@ onMounted(() => {
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
-  color: #999;
+  color: var(--color-text-light);
   line-height: 1;
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--color-text);
 }
 
 .detail-meta {
@@ -520,7 +522,7 @@ onMounted(() => {
 }
 
 .detail-info {
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -528,7 +530,7 @@ onMounted(() => {
 
 .detail-info p {
   margin: 0 0 8px;
-  color: #555;
+  color: var(--color-text-secondary);
 }
 
 .detail-info p:last-child {
@@ -541,19 +543,19 @@ onMounted(() => {
 
 .detail-description h3 {
   margin: 0 0 10px;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1rem;
 }
 
 .detail-description p {
-  color: #444;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   white-space: pre-wrap;
 }
 
 .detail-actions h3 {
   margin: 0 0 10px;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1rem;
 }
 
@@ -593,11 +595,11 @@ onMounted(() => {
 }
 
 .ticket-section h2 {
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.2rem;
   margin: 0 0 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #42b983;
+  border-bottom: 2px solid var(--color-accent);
 }
 
 .closed-section h2 {
@@ -611,18 +613,18 @@ onMounted(() => {
 }
 
 .ticket-card {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 8px;
   padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
-  border-left: 4px solid #42b983;
+  border-left: 4px solid var(--color-accent);
 }
 
 .ticket-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .ticket-card.closed {
@@ -638,7 +640,7 @@ onMounted(() => {
 }
 
 .ticket-id {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -646,7 +648,7 @@ onMounted(() => {
 .ticket-title {
   margin: 0 0 10px;
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--color-text);
   line-height: 1.3;
 }
 
@@ -670,24 +672,24 @@ onMounted(() => {
 
 .ticket-date {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .ticket-creator {
   margin: 0;
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error-box {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -696,7 +698,7 @@ onMounted(() => {
 .error-box button {
   margin-top: 10px;
   padding: 8px 16px;
-  background: #c00;
+  background: var(--color-error);
   color: white;
   border: none;
   border-radius: 4px;
@@ -706,8 +708,8 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 30px;
-  color: #888;
-  background: #f8f9fa;
+  color: var(--color-text-light);
+  background: var(--color-background-soft);
   border-radius: 8px;
 }
 </style>

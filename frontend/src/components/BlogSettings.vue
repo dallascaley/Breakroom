@@ -196,7 +196,7 @@ function close() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,9 +204,9 @@ function close() {
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   max-width: 500px;
   width: 95%;
   max-height: 90vh;
@@ -218,27 +218,27 @@ function close() {
   justify-content: space-between;
   align-items: center;
   padding: 20px 25px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 1.3rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.8rem;
-  color: #888;
+  color: var(--color-text-light);
   cursor: pointer;
   line-height: 1;
   padding: 0;
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--color-text);
 }
 
 .modal-body {
@@ -248,7 +248,7 @@ function close() {
 .loading {
   padding: 40px;
   text-align: center;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .form-group {
@@ -259,38 +259,40 @@ function close() {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text);
 }
 
 .form-group input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .url-input-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .url-prefix {
-  background: #f5f5f5;
+  background: var(--color-background-soft);
   padding: 10px 12px;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   white-space: nowrap;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--color-border);
 }
 
 .url-input {
@@ -309,19 +311,19 @@ function close() {
 }
 
 .url-status.checking {
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .url-status.available {
-  color: #2e7d32;
+  color: var(--color-success);
 }
 
 .url-status.taken {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .public-url-preview {
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   padding: 15px;
   border-radius: 6px;
   margin-bottom: 20px;
@@ -331,21 +333,21 @@ function close() {
   display: block;
   margin-bottom: 6px;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .public-url-link {
-  color: #42b983;
+  color: var(--color-accent);
   word-break: break-all;
 }
 
 .error {
-  color: #c00;
+  color: var(--color-error);
   margin: 15px 0;
 }
 
 .success {
-  color: #2e7d32;
+  color: var(--color-success);
   margin: 15px 0;
 }
 
@@ -355,7 +357,7 @@ function close() {
   gap: 12px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-primary,
@@ -368,12 +370,12 @@ function close() {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-primary:disabled {
@@ -382,11 +384,11 @@ function close() {
 }
 
 .btn-secondary {
-  background: #e0e0e0;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
 }
 
 .btn-secondary:hover {
-  background: #d0d0d0;
+  background: var(--color-button-secondary-hover);
 }
 </style>

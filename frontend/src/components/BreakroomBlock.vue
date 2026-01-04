@@ -97,9 +97,9 @@ const blockTitle = computed(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
@@ -107,8 +107,8 @@ const blockTitle = computed(() => {
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  background: #2c3e50;
-  color: white;
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
   cursor: move;
   flex-shrink: 0;
   gap: 8px;
@@ -117,7 +117,7 @@ const blockTitle = computed(() => {
 .remove-btn {
   background: none;
   border: none;
-  color: white;
+  color: var(--color-header-text);
   font-size: 1.2rem;
   cursor: pointer;
   padding: 0 4px;
@@ -128,7 +128,7 @@ const blockTitle = computed(() => {
 
 .remove-btn:hover {
   opacity: 1;
-  color: #ff6b6b;
+  color: var(--color-error);
 }
 
 .block-title {
@@ -151,7 +151,7 @@ const blockTitle = computed(() => {
   display: none;
   background: none;
   border: none;
-  color: white;
+  color: var(--color-header-text);
   cursor: pointer;
   padding: 0;
   opacity: 0.7;
@@ -182,8 +182,8 @@ const blockTitle = computed(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #f9f9f9;
-  color: #888;
+  background: var(--color-background-soft);
+  color: var(--color-text-light);
   text-align: center;
   padding: 20px;
 }
@@ -196,6 +196,6 @@ const blockTitle = computed(() => {
 .placeholder-content .hint {
   font-size: 0.85rem;
   margin-top: 8px;
-  color: #aaa;
+  color: var(--color-text-light);
 }
 </style>

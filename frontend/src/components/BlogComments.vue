@@ -362,17 +362,17 @@ watch(() => props.postId, async (newId, oldId) => {
 .blog-comments {
   margin-top: 30px;
   padding-top: 25px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .comments-header {
   margin: 0 0 20px;
   font-size: 1.2rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .comments-header span {
-  color: #888;
+  color: var(--color-text-light);
   font-weight: normal;
 }
 
@@ -385,25 +385,27 @@ watch(() => props.postId, async (newId, oldId) => {
 .edit-form textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border-medium);
   border-radius: 8px;
   resize: vertical;
   font-family: inherit;
   font-size: 0.95rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .add-comment-form textarea:focus,
 .reply-form textarea:focus,
 .edit-form textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .submit-btn {
   margin-top: 10px;
   padding: 10px 20px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 6px;
@@ -413,22 +415,22 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .submit-btn:disabled {
-  background: #ccc;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
 .login-prompt {
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.95rem;
   margin-bottom: 20px;
 }
 
 .login-prompt a {
-  color: #42b983;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -437,8 +439,8 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .error-message {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 12px 15px;
   border-radius: 6px;
   margin-bottom: 15px;
@@ -450,13 +452,13 @@ watch(() => props.postId, async (newId, oldId) => {
 .dismiss-btn {
   background: none;
   border: none;
-  color: #c00;
+  color: var(--color-error);
   cursor: pointer;
   font-size: 0.85rem;
 }
 
 .loading {
-  color: #888;
+  color: var(--color-text-light);
   padding: 20px 0;
 }
 
@@ -467,7 +469,7 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .comment-thread {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
   padding-bottom: 20px;
 }
 
@@ -495,7 +497,7 @@ watch(() => props.postId, async (newId, oldId) => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -519,29 +521,29 @@ watch(() => props.postId, async (newId, oldId) => {
 
 .author-name {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .author-handle {
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 0.85rem;
 }
 
 .comment-date {
-  color: #999;
+  color: var(--color-text-placeholder);
   font-size: 0.8rem;
 }
 
 .edited-label {
-  color: #999;
+  color: var(--color-text-placeholder);
   font-size: 0.8rem;
   font-style: italic;
 }
 
 .comment-content {
   margin: 0 0 8px;
-  color: #444;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -555,18 +557,18 @@ watch(() => props.postId, async (newId, oldId) => {
 .action-btn {
   background: none;
   border: none;
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
 }
 
 .action-btn:hover {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .action-btn.delete-btn:hover {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .reply-form,
@@ -583,7 +585,7 @@ watch(() => props.postId, async (newId, oldId) => {
 
 .save-btn {
   padding: 6px 14px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -592,17 +594,17 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .save-btn:disabled {
-  background: #ccc;
+  background: var(--color-button-disabled);
 }
 
 .cancel-btn {
   padding: 6px 14px;
-  background: #eee;
-  color: #666;
+  background: var(--color-button-secondary-bg);
+  color: var(--color-button-secondary-text);
   border: none;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -610,14 +612,14 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .cancel-btn:hover {
-  background: #ddd;
+  background: var(--color-background-hover);
 }
 
 .replies {
   margin-left: 52px;
   margin-top: 15px;
   padding-left: 15px;
-  border-left: 2px solid #e8f5e9;
+  border-left: 2px solid var(--color-accent-light);
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -631,7 +633,7 @@ watch(() => props.postId, async (newId, oldId) => {
 }
 
 .no-comments {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.95rem;
   padding: 20px 0;
 }

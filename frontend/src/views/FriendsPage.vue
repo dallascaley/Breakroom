@@ -311,13 +311,13 @@ function goToProfile(handle) {
 
 h1 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: var(--color-text);
 }
 
 .tabs {
   display: flex;
   gap: 5px;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--color-border);
   margin-bottom: 20px;
 }
 
@@ -326,7 +326,7 @@ h1 {
   border: none;
   padding: 10px 20px;
   font-size: 0.95rem;
-  color: #666;
+  color: var(--color-text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
@@ -336,16 +336,16 @@ h1 {
 }
 
 .tab:hover {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .tab.active {
-  color: #42b983;
-  border-bottom-color: #42b983;
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
 }
 
 .badge {
-  background: #e74c3c;
+  background: var(--color-error);
   color: white;
   font-size: 0.75rem;
   padding: 2px 6px;
@@ -357,19 +357,19 @@ h1 {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error {
   text-align: center;
   padding: 20px;
-  color: #c00;
+  color: var(--color-error);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: var(--color-text-light);
   font-style: italic;
 }
 
@@ -382,15 +382,17 @@ h1 {
 .search-box input {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .search-box input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .user-list {
@@ -404,7 +406,7 @@ h1 {
   align-items: center;
   gap: 15px;
   padding: 15px;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 8px;
 }
 
@@ -425,7 +427,7 @@ h1 {
 .avatar-placeholder {
   width: 100%;
   height: 100%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -444,7 +446,7 @@ h1 {
 
 .user-handle {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
 }
 
 .clickable {
@@ -452,7 +454,7 @@ h1 {
 }
 
 .user-handle.clickable:hover {
-  color: #42b983;
+  color: var(--color-accent);
   text-decoration: underline;
 }
 
@@ -462,12 +464,12 @@ h1 {
 
 .user-name {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .user-meta {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .user-actions {
@@ -476,7 +478,7 @@ h1 {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 8px 16px;
@@ -486,12 +488,12 @@ h1 {
 }
 
 .btn-primary:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-secondary {
-  background: #ddd;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 8px 16px;
   border-radius: 5px;
@@ -500,11 +502,11 @@ h1 {
 }
 
 .btn-secondary:hover {
-  background: #ccc;
+  background: var(--color-button-secondary-hover);
 }
 
 .btn-danger {
-  background: #e74c3c;
+  background: var(--color-error);
   color: white;
   border: none;
   padding: 8px 16px;

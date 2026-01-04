@@ -154,17 +154,18 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
   form {
     max-width: 420px;
     margin: 30px auto;
-    background: white;
+    background: var(--color-background-card);
     text-align: left;
     padding: 40px;
     border-radius: 10px;
+    box-shadow: var(--shadow-md);
   }
   label {
-    color: #aaa;
+    color: var(--color-text-light);
     display: inline-block;
     margin: 25px 0 15px;
     font-size: 0.6em;
@@ -178,11 +179,12 @@ export default {
     width: 100%;
     box-sizing: border-box;
     border: none;
-    border-bottom: 1px solid #ddd;
-    color: #555;
+    border-bottom: 1px solid var(--color-border-medium);
+    color: var(--color-text);
+    background: var(--color-background-input);
   }
   .error {
-    color: #ff0062;
+    color: var(--color-error);
     margin-top: 10px;
     font-size: 0.8em;
     font-weight: bold;

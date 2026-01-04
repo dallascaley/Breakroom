@@ -375,7 +375,7 @@ onMounted(() => {
   display: flex;
   gap: 0;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .tabs button {
@@ -383,18 +383,18 @@ onMounted(() => {
   background: none;
   border: none;
   font-size: 1rem;
-  color: #666;
+  color: var(--color-text-muted);
   cursor: pointer;
   position: relative;
   transition: color 0.2s;
 }
 
 .tabs button:hover {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .tabs button.active {
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
@@ -405,15 +405,15 @@ onMounted(() => {
   left: 0;
   right: 0;
   height: 2px;
-  background: #42b983;
+  background: var(--color-accent);
 }
 
 /* Tab Content */
 .tab-content {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Search */
@@ -426,14 +426,16 @@ onMounted(() => {
   width: 100%;
   padding: 14px 16px;
   font-size: 1rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--color-border);
   border-radius: 8px;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .search-box input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .searching-indicator {
@@ -441,14 +443,14 @@ onMounted(() => {
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
 }
 
 .no-results {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 /* Company Cards */
@@ -461,39 +463,40 @@ onMounted(() => {
 
 .company-card {
   padding: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--color-background-soft);
 }
 
 .company-card:hover {
-  border-color: #42b983;
+  border-color: var(--color-accent);
   box-shadow: 0 2px 8px rgba(66, 185, 131, 0.15);
 }
 
 .company-card h3 {
   margin: 0 0 6px;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.1rem;
 }
 
 .company-card .location {
   margin: 0 0 6px;
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 0.9rem;
 }
 
 .company-card .description {
   margin: 0;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   line-height: 1.4;
 }
 
 .company-card .title {
   margin: 0 0 4px;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -517,7 +520,7 @@ onMounted(() => {
 }
 
 .badge.owner {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
 }
 
@@ -529,13 +532,13 @@ onMounted(() => {
 /* Create Form */
 .create-form h2 {
   margin: 0 0 24px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .form-section {
   margin-bottom: 28px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .form-section:last-of-type {
@@ -544,12 +547,12 @@ onMounted(() => {
 
 .form-section h3 {
   margin: 0 0 16px;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.1rem;
 }
 
 .section-hint {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
   margin: -8px 0 16px;
 }
@@ -562,17 +565,19 @@ onMounted(() => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group textarea {
@@ -582,7 +587,7 @@ onMounted(() => {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .form-row {
@@ -592,16 +597,16 @@ onMounted(() => {
 }
 
 .error-message {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
 }
 
 .success-message {
-  background: #e0ffe0;
-  color: #080;
+  background: var(--color-success-bg);
+  color: var(--color-success);
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
@@ -613,7 +618,7 @@ onMounted(() => {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 12px 28px;
@@ -624,11 +629,11 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--color-button-secondary);
   cursor: not-allowed;
 }
 
@@ -636,13 +641,13 @@ onMounted(() => {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .empty-state p {

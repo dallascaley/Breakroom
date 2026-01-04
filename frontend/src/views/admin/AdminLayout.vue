@@ -28,7 +28,7 @@
 
 .sidebar {
   width: 220px;
-  background-color: #2e86de;
+  background-color: var(--color-header-bg);
   color: white;
   padding: 20px;
 }
@@ -53,9 +53,13 @@
   text-decoration: none;
 }
 
+.sidebar a:hover {
+  opacity: 0.8;
+}
+
 .main-content {
   flex-grow: 1;
   padding: 30px;
-  background-color: #f9f9f9;
+  background-color: var(--color-background);
 }
 </style>

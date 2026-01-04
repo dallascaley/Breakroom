@@ -313,8 +313,8 @@ const openInviteModal = (room) => {
 <style scoped>
 .chat-sidebar {
   width: 220px;
-  background: #2c3e50;
-  color: white;
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -325,7 +325,7 @@ const openInviteModal = (room) => {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid #34495e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-header h3 {
@@ -334,7 +334,7 @@ const openInviteModal = (room) => {
 }
 
 .create-btn {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 6px 12px;
@@ -344,7 +344,7 @@ const openInviteModal = (room) => {
 }
 
 .create-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .room-list {
@@ -365,12 +365,12 @@ const openInviteModal = (room) => {
 }
 
 .room-list li:hover {
-  background: #34495e;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .room-list li.active {
-  background: #34495e;
-  border-left-color: #42b983;
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: var(--color-accent);
 }
 
 .room-name {
@@ -404,7 +404,7 @@ const openInviteModal = (room) => {
 }
 
 .icon-btn.delete:hover {
-  background: #c0392b;
+  background: var(--color-error);
 }
 
 /* Modal styles */
@@ -414,7 +414,7 @@ const openInviteModal = (room) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -422,8 +422,8 @@ const openInviteModal = (room) => {
 }
 
 .modal {
-  background: white;
-  color: #333;
+  background: var(--color-background-card);
+  color: var(--color-text);
   padding: 25px;
   border-radius: 10px;
   width: 400px;
@@ -440,10 +440,12 @@ const openInviteModal = (room) => {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
   font-size: 1em;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .modal textarea {
@@ -452,7 +454,7 @@ const openInviteModal = (room) => {
 }
 
 .error {
-  color: #c0392b;
+  color: var(--color-error);
   font-size: 0.9em;
   margin: 0 0 10px;
 }
@@ -465,7 +467,7 @@ const openInviteModal = (room) => {
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -474,12 +476,12 @@ const openInviteModal = (room) => {
 }
 
 .btn-primary:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-secondary {
-  background: #ddd;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -487,19 +489,19 @@ const openInviteModal = (room) => {
 }
 
 .btn-secondary:hover {
-  background: #ccc;
+  background: var(--color-button-secondary-hover);
 }
 
 /* Invites section */
 .invites-section {
-  border-bottom: 1px solid #34495e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 10px;
 }
 
 .section-header {
   padding: 10px 15px 5px;
   font-size: 0.85em;
-  color: #95a5a6;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
 }
 
@@ -515,7 +517,7 @@ const openInviteModal = (room) => {
   justify-content: space-between;
   align-items: center;
   background: rgba(66, 185, 131, 0.1);
-  border-left: 3px solid #42b983;
+  border-left: 3px solid var(--color-accent);
 }
 
 .invite-info {
@@ -526,7 +528,7 @@ const openInviteModal = (room) => {
 
 .invited-by {
   font-size: 0.75em;
-  color: #95a5a6;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .invite-actions {
@@ -535,19 +537,19 @@ const openInviteModal = (room) => {
 }
 
 .icon-btn.accept {
-  background: #42b983;
+  background: var(--color-accent);
 }
 
 .icon-btn.accept:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .icon-btn.decline {
-  background: #95a5a6;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .icon-btn.decline:hover {
-  background: #7f8c8d;
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* Invite section in Create Room modal */
@@ -558,7 +560,7 @@ const openInviteModal = (room) => {
 .invite-section label {
   display: block;
   font-size: 0.9em;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 5px;
 }
 
@@ -569,7 +571,7 @@ const openInviteModal = (room) => {
 .invite-search {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
   font-size: 1em;
   box-sizing: border-box;
@@ -580,8 +582,8 @@ const openInviteModal = (room) => {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
   border-top: none;
   border-radius: 0 0 5px 5px;
   max-height: 150px;
@@ -590,7 +592,7 @@ const openInviteModal = (room) => {
   margin: 0;
   padding: 0;
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .invite-dropdown li {
@@ -602,7 +604,7 @@ const openInviteModal = (room) => {
 }
 
 .invite-dropdown li:hover {
-  background: #f0f0f0;
+  background: var(--color-background-hover);
 }
 
 .dropdown-handle {
@@ -612,7 +614,7 @@ const openInviteModal = (room) => {
 
 .dropdown-name {
   font-size: 0.8em;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .selected-users {
@@ -623,7 +625,7 @@ const openInviteModal = (room) => {
 }
 
 .selected-user-tag {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   padding: 4px 8px;
   border-radius: 15px;

@@ -256,7 +256,7 @@ const saveAndPublish = () => savePost(true)
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +265,7 @@ const saveAndPublish = () => savePost(true)
 }
 
 .editor-container {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
   width: 100%;
   max-width: 1000px;
@@ -273,14 +273,14 @@ const saveAndPublish = () => savePost(true)
   max-height: 800px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .editor-header {
   display: flex;
   align-items: center;
   padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   gap: 15px;
 }
 
@@ -290,33 +290,34 @@ const saveAndPublish = () => savePost(true)
   font-weight: 600;
   border: none;
   outline: none;
-  color: #333;
+  color: var(--color-text);
+  background: transparent;
 }
 
 .title-input::placeholder {
-  color: #aaa;
+  color: var(--color-text-light);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 2rem;
-  color: #888;
+  color: var(--color-text-light);
   cursor: pointer;
   line-height: 1;
   padding: 0 8px;
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--color-text);
 }
 
 .toolbar {
   display: flex;
   align-items: center;
   padding: 10px 15px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
+  background: var(--color-background-soft);
+  border-bottom: 1px solid var(--color-border);
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -330,16 +331,17 @@ const saveAndPublish = () => savePost(true)
 .toolbar-divider {
   width: 1px;
   height: 24px;
-  background: #ddd;
+  background: var(--color-border);
   margin: 0 8px;
 }
 
 .font-select,
 .size-select {
   padding: 6px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border-medium);
   border-radius: 4px;
-  background: white;
+  background: var(--color-background-input);
+  color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
 }
@@ -354,16 +356,17 @@ const saveAndPublish = () => savePost(true)
 
 .toolbar-btn {
   padding: 6px 12px;
-  background: white;
-  border: 1px solid #ccc;
+  background: var(--color-background-input);
+  border: 1px solid var(--color-border-medium);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
   min-width: 36px;
+  color: var(--color-text);
 }
 
 .toolbar-btn:hover:not(:disabled) {
-  background: #e8e8e8;
+  background: var(--color-background-hover);
 }
 
 .toolbar-btn:disabled {
@@ -381,13 +384,14 @@ const saveAndPublish = () => savePost(true)
   overflow-y: auto;
   font-size: 1rem;
   line-height: 1.6;
-  color: #333;
+  color: var(--color-text);
+  background: var(--color-background-card);
   outline: none;
 }
 
 .editor-content:empty::before {
   content: 'Start writing your post...';
-  color: #aaa;
+  color: var(--color-text-light);
 }
 
 .editor-content :deep(img) {
@@ -398,15 +402,15 @@ const saveAndPublish = () => savePost(true)
 }
 
 .editor-content :deep(a) {
-  color: #2e86de;
+  color: var(--color-link);
   text-decoration: underline;
 }
 
 .error-message {
   margin: 0;
   padding: 10px 20px;
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   font-size: 0.9rem;
 }
 
@@ -415,8 +419,8 @@ const saveAndPublish = () => savePost(true)
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  border-top: 1px solid #eee;
-  background: #fafafa;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-background-soft);
   border-radius: 0 0 10px 10px;
 }
 
@@ -425,7 +429,7 @@ const saveAndPublish = () => savePost(true)
   align-items: center;
   gap: 8px;
   font-size: 0.95rem;
-  color: #555;
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
@@ -452,30 +456,30 @@ const saveAndPublish = () => savePost(true)
 }
 
 .btn-secondary {
-  background: #e0e0e0;
-  color: #555;
+  background: var(--color-button-secondary);
+  color: var(--color-text-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #d0d0d0;
+  background: var(--color-button-secondary-hover);
 }
 
 .btn-draft {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .btn-draft:hover:not(:disabled) {
-  background: #ffe69c;
+  background: var(--color-warning-bg-hover);
 }
 
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-secondary:disabled,

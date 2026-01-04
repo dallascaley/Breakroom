@@ -328,7 +328,7 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
 }
 
 .loading,
@@ -337,13 +337,13 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
   padding: 20px;
 }
 
 .error {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .messages {
@@ -360,16 +360,16 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
+  color: var(--color-text-light);
   font-size: 0.85rem;
   text-align: center;
 }
 
 .message {
-  background: white;
+  background: var(--color-background-card);
   padding: 8px 10px;
   border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .message-header {
@@ -382,17 +382,17 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
 .username {
   font-weight: 600;
   font-size: 0.8rem;
-  color: #2e86de;
+  color: var(--color-link);
 }
 
 .time {
   font-size: 0.7rem;
-  color: #aaa;
+  color: var(--color-text-light);
 }
 
 .message-content {
   font-size: 0.85rem;
-  color: #333;
+  color: var(--color-text);
   word-wrap: break-word;
 }
 
@@ -418,35 +418,37 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
 .typing-indicator {
   padding: 4px 10px;
   font-size: 0.75rem;
-  color: #888;
+  color: var(--color-text-light);
   font-style: italic;
-  background: #f0f0f0;
+  background: var(--color-background-hover);
 }
 
 .input-area {
   display: flex;
   gap: 6px;
   padding: 8px;
-  background: white;
-  border-top: 1px solid #eee;
+  background: var(--color-background-card);
+  border-top: 1px solid var(--color-border);
 }
 
 .input-area input {
   flex: 1;
   padding: 8px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 0.85rem;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .input-area input:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .input-area button {
   padding: 8px 14px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -456,18 +458,18 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
 }
 
 .input-area button:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .input-area button:disabled {
-  background: #ccc;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
 .image-btn {
   padding: 8px 10px;
-  background: #6c757d;
-  color: white;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -476,11 +478,11 @@ watch(() => props.roomId, (newRoomId, oldRoomId) => {
 }
 
 .image-btn:hover:not(:disabled) {
-  background: #5a6268;
+  background: var(--color-button-secondary-hover);
 }
 
 .image-btn:disabled {
-  background: #adb5bd;
+  background: var(--color-button-disabled);
   cursor: not-allowed;
 }
 </style>

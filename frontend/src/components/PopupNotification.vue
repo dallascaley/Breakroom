@@ -30,7 +30,7 @@ function acknowledge() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,23 +38,23 @@ function acknowledge() {
 }
 
 .popup-modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 30px 40px;
   border-radius: 12px;
   max-width: 500px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .popup-title {
   margin: 0 0 15px 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.5rem;
 }
 
 .popup-description {
-  color: #555;
+  color: var(--color-text-secondary);
   margin-bottom: 25px;
   line-height: 1.6;
   text-align: left;

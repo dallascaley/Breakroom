@@ -137,7 +137,7 @@ onMounted(() => {
 .blog-posts-widget {
   height: 100%;
   overflow-y: auto;
-  background: #f8f9fa;
+  background: var(--color-background-soft);
 }
 
 .loading-state {
@@ -146,15 +146,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #888;
+  color: var(--color-text-light);
   gap: 12px;
 }
 
 .spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #42b983;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -171,14 +171,14 @@ onMounted(() => {
   height: 100%;
   padding: 20px;
   text-align: center;
-  color: #c00;
+  color: var(--color-error);
 }
 
 .error-icon {
   width: 32px;
   height: 32px;
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -190,7 +190,7 @@ onMounted(() => {
 .error-state button {
   margin-top: 12px;
   padding: 6px 16px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -198,7 +198,7 @@ onMounted(() => {
 }
 
 .error-state button:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .posts-list {
@@ -211,13 +211,13 @@ onMounted(() => {
 }
 
 .post-item {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 6px;
   padding: 10px 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.1s;
-  border-left: 3px solid #42b983;
+  border-left: 3px solid var(--color-accent);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -246,7 +246,7 @@ onMounted(() => {
 }
 
 .post-item:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
@@ -261,12 +261,12 @@ onMounted(() => {
 .post-author {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .post-date {
   font-size: 0.7rem;
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .post-title {
@@ -274,14 +274,14 @@ onMounted(() => {
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.3;
-  color: #222;
+  color: var(--color-text);
   flex-shrink: 0;
 }
 
 .post-preview {
   margin: 0;
   font-size: 0.75rem;
-  color: #666;
+  color: var(--color-text-muted);
   line-height: 1.4;
   overflow: hidden;
   display: -webkit-box;
@@ -295,7 +295,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #888;
+  color: var(--color-text-light);
   text-align: center;
   padding: 20px;
 }
@@ -306,7 +306,7 @@ onMounted(() => {
 
 .create-btn {
   padding: 8px 16px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -315,6 +315,6 @@ onMounted(() => {
 }
 
 .create-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 </style>

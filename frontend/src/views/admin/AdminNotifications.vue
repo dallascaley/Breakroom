@@ -393,6 +393,10 @@ async function deleteNotificationType(id) {
 </script>
 
 <style scoped>
+h1 {
+  color: var(--color-text);
+}
+
 .create-form {
   margin-bottom: 20px;
 }
@@ -408,17 +412,26 @@ async function deleteNotificationType(id) {
 .form-row input,
 .form-row select {
   padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-row textarea {
   width: 100%;
   min-height: 60px;
   padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .group-label {
   font-weight: bold;
   margin-right: 10px;
+  color: var(--color-text);
 }
 
 .checkbox-label {
@@ -426,6 +439,7 @@ async function deleteNotificationType(id) {
   align-items: center;
   gap: 4px;
   margin-right: 15px;
+  color: var(--color-text);
 }
 
 .checkbox-label.inline {
@@ -436,6 +450,7 @@ async function deleteNotificationType(id) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  color: var(--color-text);
 }
 
 .repeat-input {
@@ -452,27 +467,48 @@ async function deleteNotificationType(id) {
 }
 
 .error {
-  color: red;
+  color: var(--color-error);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background: var(--color-background-card);
 }
 
 th, td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   padding: 10px;
   text-align: left;
+  color: var(--color-text);
 }
 
 thead {
-  background-color: #f4f4f4;
+  background-color: var(--color-background-soft);
 }
 
 button {
   margin-right: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: var(--color-accent);
+  color: white;
+}
+
+button:hover {
+  background: var(--color-accent-hover);
+}
+
+button[type="button"] {
+  background: var(--color-button-secondary);
+  color: var(--color-text);
+}
+
+button[type="button"]:hover {
+  background: var(--color-button-secondary-hover);
 }
 
 .modal-overlay {
@@ -481,7 +517,7 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,13 +525,18 @@ button {
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 20px;
   border-radius: 8px;
   width: 500px;
   max-width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+.modal h2 {
+  color: var(--color-text);
+  margin-bottom: 12px;
 }
 
 .modal input,
@@ -505,6 +546,10 @@ button {
   padding: 8px;
   margin-bottom: 10px;
   box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .modal .repeat-input {
@@ -514,17 +559,19 @@ button {
 .modal label {
   display: block;
   margin-bottom: 10px;
+  color: var(--color-text);
 }
 
 .group-section {
   margin: 15px 0;
   padding: 10px;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 4px;
 }
 
 .group-section h4 {
   margin: 0 0 10px 0;
+  color: var(--color-text);
 }
 
 .modal-buttons {

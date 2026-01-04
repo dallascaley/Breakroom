@@ -513,13 +513,13 @@ onMounted(() => {
 }
 
 .your-role {
-  color: #666;
+  color: var(--color-text-muted);
   margin: 0;
   font-size: 0.95rem;
 }
 
 .your-role strong {
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .content-grid {
@@ -537,19 +537,19 @@ onMounted(() => {
 
 .info-card,
 .employees-card {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .info-card h2,
 .employees-card h2 {
   margin: 0 0 20px;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.2rem;
   padding-bottom: 12px;
-  border-bottom: 2px solid #42b983;
+  border-bottom: 2px solid var(--color-accent);
 }
 
 .info-row {
@@ -559,17 +559,17 @@ onMounted(() => {
 .info-row label {
   display: block;
   font-size: 0.85rem;
-  color: #888;
+  color: var(--color-text-light);
   margin-bottom: 4px;
 }
 
 .info-row p {
   margin: 0;
-  color: #333;
+  color: var(--color-text);
 }
 
 .info-row a {
-  color: #42b983;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -588,7 +588,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   border-radius: 8px;
 }
 
@@ -614,12 +614,12 @@ onMounted(() => {
 
 .employee-name {
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .employee-title {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .employee-badges {
@@ -636,7 +636,7 @@ onMounted(() => {
 }
 
 .badge.owner {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
 }
 
@@ -647,10 +647,10 @@ onMounted(() => {
 
 /* Positions Section */
 .positions-section {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .positions-header {
@@ -659,12 +659,12 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #42b983;
+  border-bottom: 2px solid var(--color-accent);
 }
 
 .positions-header h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.2rem;
 }
 
@@ -675,14 +675,14 @@ onMounted(() => {
 }
 
 .position-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px;
+  background: var(--color-background-soft);
 }
 
 .position-card.closed {
   opacity: 0.6;
-  background: #f5f5f5;
 }
 
 .position-header {
@@ -694,7 +694,7 @@ onMounted(() => {
 
 .position-header h3 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--color-text);
   font-size: 1.1rem;
 }
 
@@ -707,13 +707,13 @@ onMounted(() => {
 }
 
 .position-status.open {
-  background: #e0ffe0;
-  color: #080;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .position-status.closed {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .position-status.filled {
@@ -730,17 +730,17 @@ onMounted(() => {
 
 .meta-item {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .meta-item.pay {
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 .position-description {
   margin: 8px 0 0;
-  color: #555;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -750,34 +750,35 @@ onMounted(() => {
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-small {
   padding: 6px 12px;
   font-size: 0.85rem;
-  border: 1px solid #ddd;
-  background: white;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-card);
+  color: var(--color-text);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-small:hover {
-  background: #f5f5f5;
+  background: var(--color-background-soft);
 }
 
 .btn-small.danger {
-  color: #c00;
-  border-color: #fcc;
+  color: var(--color-error);
+  border-color: var(--color-error-bg);
 }
 
 .btn-small.danger:hover {
-  background: #ffe0e0;
+  background: var(--color-error-bg);
 }
 
 /* Buttons */
 .btn-primary {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -787,17 +788,17 @@ onMounted(() => {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--color-button-secondary);
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: #eee;
-  color: #333;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -806,7 +807,7 @@ onMounted(() => {
 }
 
 .btn-secondary:hover {
-  background: #ddd;
+  background: var(--color-button-secondary-hover);
 }
 
 /* Modal */
@@ -816,7 +817,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -825,7 +826,7 @@ onMounted(() => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 12px;
   padding: 24px;
   max-width: 600px;
@@ -836,7 +837,7 @@ onMounted(() => {
 
 .modal-content h2 {
   margin: 0 0 20px;
-  color: #2c3e50;
+  color: var(--color-text);
 }
 
 .form-group {
@@ -847,7 +848,7 @@ onMounted(() => {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
@@ -855,10 +856,12 @@ onMounted(() => {
 .form-group select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group textarea {
@@ -869,7 +872,7 @@ onMounted(() => {
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .form-row {
@@ -879,8 +882,8 @@ onMounted(() => {
 }
 
 .error-message {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
@@ -896,12 +899,12 @@ onMounted(() => {
 .loading {
   text-align: center;
   padding: 60px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error-box {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 30px;
   border-radius: 12px;
   text-align: center;
@@ -914,6 +917,6 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: 30px;
-  color: #888;
+  color: var(--color-text-light);
 }
 </style>

@@ -164,11 +164,7 @@ setInterval(() => {
 /* Main body styles */
 body {
   margin: 0;
-  background:
-    linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%),
-    radial-gradient(ellipse at top left, rgba(66, 185, 131, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(46, 134, 222, 0.08) 0%, transparent 50%),
-    #f5f7fa;
+  background: var(--color-background-page);
   min-height: 100vh;
 }
 
@@ -195,13 +191,13 @@ nav {
 }
 
 nav a.router-link-exact-active {
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 500;
 }
 
 nav a.router-link-exact-active:hover {
   background-color: transparent;
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 nav a {
@@ -209,12 +205,12 @@ nav a {
   padding: 0.5rem 1rem;
   border-left: 1px solid var(--color-border);
   text-decoration: none;
-  color: #555;
+  color: var(--color-text-secondary);
   transition: color 0.2s;
 }
 
 nav a:hover {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 nav a:first-of-type {
@@ -228,26 +224,26 @@ nav a:first-of-type {
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-left: 1px solid var(--color-border);
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 500;
   transition: background-color 0.2s;
   border-radius: 4px;
 }
 
 .user-menu:hover {
-  background-color: rgba(66, 185, 131, 0.1);
+  background-color: var(--color-accent-light);
 }
 
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
-  border: none;
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 8px 0;
   min-width: 160px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -260,23 +256,24 @@ nav a:first-of-type {
   right: 16px;
   width: 12px;
   height: 12px;
-  background: white;
+  background: var(--color-background-card);
   transform: rotate(45deg);
-  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
 }
 
 .dropdown a {
   padding: 10px 16px;
   text-decoration: none;
-  color: #333;
+  color: var(--color-text);
   border: none;
   transition: background-color 0.15s, color 0.15s;
   font-size: 14px;
 }
 
 .dropdown a:hover {
-  background-color: #f5f5f5;
-  color: #42b983;
+  background-color: var(--color-background-hover);
+  color: var(--color-accent);
   text-decoration: none;
 }
 

@@ -107,7 +107,7 @@ onMounted(() => {
 .updates-widget {
   height: 100%;
   overflow-y: auto;
-  background: #fafafa;
+  background: var(--color-background-soft);
 }
 
 .loading-state {
@@ -116,15 +116,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #888;
+  color: var(--color-text-light);
   gap: 12px;
 }
 
 .spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #42b983;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -141,14 +141,14 @@ onMounted(() => {
   height: 100%;
   padding: 20px;
   text-align: center;
-  color: #c00;
+  color: var(--color-error);
 }
 
 .error-icon {
   width: 32px;
   height: 32px;
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -160,7 +160,7 @@ onMounted(() => {
 .error-state button {
   margin-top: 12px;
   padding: 6px 16px;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -168,7 +168,7 @@ onMounted(() => {
 }
 
 .error-state button:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .updates-list {
@@ -176,12 +176,12 @@ onMounted(() => {
 }
 
 .update-item {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 6px;
   padding: 12px;
   margin-bottom: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border-left: 3px solid #42b983;
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--color-accent);
 }
 
 .update-item:last-child {
@@ -196,19 +196,19 @@ onMounted(() => {
 }
 
 .update-time .date {
-  color: #42b983;
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 .update-time .time {
-  color: #999;
+  color: var(--color-text-light);
 }
 
 .update-content p {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.4;
-  color: #444;
+  color: var(--color-text-secondary);
 }
 
 .empty-state {
@@ -216,7 +216,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .empty-state p {

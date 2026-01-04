@@ -305,12 +305,12 @@ onMounted(() => {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error-box {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -321,7 +321,7 @@ onMounted(() => {
   gap: 30px;
   align-items: flex-start;
   padding-bottom: 30px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 30px;
 }
 
@@ -339,7 +339,7 @@ onMounted(() => {
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 3px solid #42b983;
+  border: 3px solid var(--color-accent);
 }
 
 .profile-photo {
@@ -351,7 +351,7 @@ onMounted(() => {
 .photo-placeholder {
   width: 100%;
   height: 100%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -367,7 +367,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   color: white;
   display: flex;
   align-items: center;
@@ -387,7 +387,7 @@ onMounted(() => {
 .delete-photo-btn {
   background: none;
   border: none;
-  color: #c00;
+  color: var(--color-error);
   cursor: pointer;
   font-size: 0.85em;
   text-decoration: underline;
@@ -396,42 +396,42 @@ onMounted(() => {
 .user-info h1 {
   margin: 0 0 5px 0;
   font-size: 1.8rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .handle {
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 1.1rem;
   margin: 0 0 10px 0;
 }
 
 .member-since {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
   margin: 0;
 }
 
 .success-message {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success-bg);
+  color: var(--color-success);
   padding: 12px 20px;
   border-radius: 6px;
   margin-bottom: 20px;
 }
 
 .error-message {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 12px 20px;
   border-radius: 6px;
   margin-bottom: 20px;
 }
 
 .profile-content {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
   padding: 25px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .bio-section,
@@ -442,27 +442,27 @@ onMounted(() => {
 .bio-section h2,
 .details-section h2 {
   font-size: 1.2rem;
-  color: #333;
+  color: var(--color-text);
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .bio-text {
-  color: #555;
+  color: var(--color-text-secondary);
   line-height: 1.6;
   white-space: pre-wrap;
 }
 
 .bio-empty {
-  color: #999;
+  color: var(--color-text-light);
   font-style: italic;
 }
 
 .detail-row {
   display: flex;
   padding: 8px 0;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--color-background-soft);
 }
 
 .detail-row:last-child {
@@ -471,17 +471,17 @@ onMounted(() => {
 
 .label {
   font-weight: 600;
-  color: #666;
+  color: var(--color-text-muted);
   width: 120px;
   flex-shrink: 0;
 }
 
 .value {
-  color: #333;
+  color: var(--color-text);
 }
 
 .edit-btn {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -492,7 +492,7 @@ onMounted(() => {
 }
 
 .edit-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .edit-form {
@@ -509,22 +509,24 @@ onMounted(() => {
 
 .form-group label {
   font-weight: 600;
-  color: #555;
+  color: var(--color-text-secondary);
 }
 
 .form-group input,
 .form-group textarea {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #42b983;
+  border-color: var(--color-accent);
 }
 
 .form-group textarea {
@@ -534,7 +536,7 @@ onMounted(() => {
 
 .char-count {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--color-text-light);
   text-align: right;
 }
 
@@ -545,7 +547,7 @@ onMounted(() => {
 }
 
 .save-btn {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -555,17 +557,17 @@ onMounted(() => {
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .save-btn:disabled {
-  background: #ccc;
+  background: var(--color-button-secondary);
   cursor: not-allowed;
 }
 
 .cancel-btn {
-  background: #eee;
-  color: #666;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
   padding: 12px 30px;
   border-radius: 6px;
@@ -574,7 +576,7 @@ onMounted(() => {
 }
 
 .cancel-btn:hover {
-  background: #ddd;
+  background: var(--color-button-secondary-hover);
 }
 
 @media (max-width: 600px) {

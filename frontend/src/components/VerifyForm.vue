@@ -93,9 +93,9 @@ export default {
 .verify-card {
   max-width: 480px;
   width: 100%;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 
@@ -133,25 +133,25 @@ h2 {
   margin: 0 0 12px;
   font-size: 28px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
 }
 
 .subtitle {
   font-size: 16px;
-  color: #666;
+  color: var(--color-text-muted);
   margin: 0 0 20px;
 }
 
 .message {
   font-size: 15px;
-  color: #888;
+  color: var(--color-text-light);
   margin: 0 0 32px;
 }
 
 .error-message {
   font-size: 14px;
-  color: #e74c3c;
-  background: #fdf2f2;
+  color: var(--color-error);
+  background: var(--color-error-bg);
   padding: 12px 16px;
   border-radius: 8px;
   margin: 0 0 32px;
@@ -177,8 +177,8 @@ h2 {
 
 .btn-secondary {
   display: inline-block;
-  background: #f5f5f5;
-  color: #666;
+  background: var(--color-button-secondary);
+  color: var(--color-text-muted);
   text-decoration: none;
   padding: 14px 32px;
   border-radius: 50px;
@@ -188,14 +188,14 @@ h2 {
 }
 
 .btn-secondary:hover {
-  background: #eee;
+  background: var(--color-button-secondary-hover);
 }
 
 /* Loading Spinner */
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f3f3f3;
+  border: 4px solid var(--color-border);
   border-top: 4px solid #667eea;
   border-radius: 50%;
   margin: 0 auto 24px;

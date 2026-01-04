@@ -342,39 +342,47 @@ async function sendEmail() {
 </script>
 
 <style scoped>
+h1 {
+  color: var(--color-text);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background: var(--color-background-card);
 }
 
 th, td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   padding: 10px;
   text-align: left;
+  color: var(--color-text);
 }
 
 thead {
-  background-color: #f4f4f4;
+  background-color: var(--color-background-soft);
 }
 
 code {
-  background: #e9ecef;
+  background: var(--color-background-soft);
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 0.9em;
+  color: var(--color-text);
 }
 
 button {
   padding: 6px 12px;
   cursor: pointer;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: #fff;
+  background: var(--color-background-card);
+  color: var(--color-text);
 }
 
 button:hover {
-  background: #f0f0f0;
+  background: var(--color-background-soft);
 }
 
 button:disabled {
@@ -388,7 +396,7 @@ button:disabled {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -396,7 +404,7 @@ button:disabled {
 }
 
 .modal {
-  background: white;
+  background: var(--color-background-card);
   padding: 25px;
   border-radius: 8px;
   max-width: 800px;
@@ -408,6 +416,7 @@ button:disabled {
 .configure-modal h2 {
   margin-top: 0;
   margin-bottom: 20px;
+  color: var(--color-text);
 }
 
 .form-group {
@@ -418,17 +427,20 @@ button:disabled {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
+  color: var(--color-text);
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-family: inherit;
   font-size: 14px;
   box-sizing: border-box;
+  background: var(--color-background-input);
+  color: var(--color-text);
 }
 
 .form-group textarea {
@@ -448,7 +460,7 @@ button:disabled {
 .preview-section {
   margin: 20px 0;
   padding: 15px;
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   border-radius: 4px;
 }
 
@@ -457,12 +469,13 @@ button:disabled {
 }
 
 .preview-content {
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 15px;
-  background: #fff;
+  background: var(--color-background);
   max-height: 300px;
   overflow-y: auto;
+  color: var(--color-text);
 }
 
 .save-section {
@@ -488,17 +501,17 @@ button:disabled {
 }
 
 .save-new-btn {
-  background: #28a745;
+  background: var(--color-success);
 }
 
 .save-new-btn:hover {
-  background: #218838;
+  background: var(--color-accent);
 }
 
 hr {
   margin: 25px 0;
   border: none;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--color-border);
 }
 
 .send-section {
@@ -508,6 +521,7 @@ hr {
 .send-section h3 {
   margin-top: 0;
   margin-bottom: 15px;
+  color: var(--color-text);
 }
 
 .send-btn {
@@ -526,39 +540,40 @@ hr {
   justify-content: flex-end;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 
 .close-btn {
-  background: #6c757d;
-  color: white;
+  background: var(--color-button-secondary);
+  color: var(--color-text);
   border: none;
 }
 
 .close-btn:hover {
-  background: #5a6268;
+  background: var(--color-button-secondary-hover);
 }
 
 .error {
-  color: #dc3545;
+  color: var(--color-error);
   margin: 10px 0;
 }
 
 .success {
-  color: #28a745;
+  color: var(--color-success);
   margin: 10px 0;
 }
 
 .send-results {
   margin-top: 15px;
   padding: 10px;
-  background: #f8f9fa;
+  background: var(--color-background-soft);
   border-radius: 4px;
 }
 
 .send-results h4 {
   margin: 0 0 10px 0;
   font-size: 0.9em;
+  color: var(--color-text);
 }
 
 .send-results ul {

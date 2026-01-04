@@ -42,27 +42,27 @@
 .hero h1 {
   font-size: 2.5rem;
   margin-bottom: 10px;
-  color: #333;
+  color: var(--color-text);
 }
 
 .tagline {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin-bottom: 20px;
 }
 
 .cta-button {
-  background-color: #2e86de;
+  background-color: var(--color-link);
   color: white;
   padding: 12px 24px;
   text-decoration: none;
   border-radius: 6px;
   font-weight: bold;
-  transition: background 0.2s;
+  transition: opacity 0.2s;
 }
 
 .cta-button:hover {
-  background-color: #1e5fa3;
+  opacity: 0.9;
 }
 
 .features {
@@ -73,12 +73,12 @@
 
 .feature h2 {
   font-size: 1.4rem;
-  color: #444;
+  color: var(--color-text);
   margin-bottom: 10px;
 }
 
 .feature p {
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 @media (min-width: 768px) {

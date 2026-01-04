@@ -178,7 +178,7 @@ function goToAuthorProfile() {
 <style scoped>
 .public-blog-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--color-background-page);
 }
 
 .loading,
@@ -188,16 +188,16 @@ function goToAuthorProfile() {
   align-items: center;
   justify-content: center;
   min-height: 50vh;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error {
-  color: #c00;
+  color: var(--color-error);
   margin-bottom: 20px;
 }
 
 .back-link {
-  color: #42b983;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -216,16 +216,16 @@ function goToAuthorProfile() {
   align-items: flex-start;
   gap: 20px;
   padding: 30px;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 20px;
   cursor: pointer;
   transition: box-shadow 0.2s;
 }
 
 .blog-header:hover {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
 }
 
 .author-photo {
@@ -243,7 +243,7 @@ function goToAuthorProfile() {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -259,18 +259,18 @@ function goToAuthorProfile() {
 .blog-title {
   margin: 0 0 5px;
   font-size: 1.8rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .author-name {
   margin: 0 0 8px;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 1rem;
 }
 
 .author-bio {
   margin: 0;
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -283,9 +283,9 @@ function goToAuthorProfile() {
 .posts-sidebar {
   width: 280px;
   flex-shrink: 0;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: 20px;
   height: fit-content;
   position: sticky;
@@ -294,14 +294,14 @@ function goToAuthorProfile() {
 
 .posts-sidebar h3 {
   margin: 0 0 15px;
-  color: #333;
+  color: var(--color-text);
   font-size: 1.1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 10px;
 }
 
 .no-posts {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
 }
 
@@ -320,17 +320,17 @@ function goToAuthorProfile() {
 }
 
 .posts-list li:hover {
-  background: #f0f0f0;
+  background: var(--color-background-hover);
 }
 
 .posts-list li.active {
-  background: #e8f5e9;
+  background: var(--color-accent-light);
 }
 
 .posts-list .post-title {
   display: block;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text);
   margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -340,14 +340,14 @@ function goToAuthorProfile() {
 .posts-list .post-date {
   display: block;
   font-size: 0.8rem;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .post-content {
   flex: 1;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: 30px;
   min-width: 0;
 }
@@ -355,20 +355,20 @@ function goToAuthorProfile() {
 .post-content .post-title {
   margin: 0 0 10px;
   font-size: 2rem;
-  color: #333;
+  color: var(--color-text);
 }
 
 .post-meta {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
   margin: 0 0 25px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .post-body {
   line-height: 1.8;
-  color: #444;
+  color: var(--color-text-secondary);
   font-size: 1.05rem;
 }
 
@@ -377,7 +377,7 @@ function goToAuthorProfile() {
 .post-body :deep(h3) {
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  color: #333;
+  color: var(--color-text);
 }
 
 .post-body :deep(p) {
@@ -392,27 +392,27 @@ function goToAuthorProfile() {
 }
 
 .post-body :deep(a) {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .post-body :deep(blockquote) {
-  border-left: 4px solid #42b983;
+  border-left: 4px solid var(--color-accent);
   margin: 1em 0;
   padding: 0.5em 1em;
-  background: #f9f9f9;
-  color: #666;
+  background: var(--color-background-soft);
+  color: var(--color-text-muted);
 }
 
 .post-body :deep(code) {
-  background: #f4f4f4;
+  background: var(--color-background-soft);
   padding: 2px 6px;
   border-radius: 4px;
   font-family: monospace;
 }
 
 .post-body :deep(pre) {
-  background: #2d2d2d;
-  color: #f8f8f2;
+  background: var(--color-code-bg, #2d2d2d);
+  color: var(--color-code-text, #f8f8f2);
   padding: 1em;
   border-radius: 8px;
   overflow-x: auto;
@@ -428,11 +428,11 @@ function goToAuthorProfile() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--color-background-card);
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: 60px;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 /* Responsive */

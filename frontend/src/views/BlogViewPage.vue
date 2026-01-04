@@ -128,12 +128,12 @@ onMounted(() => {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .error-box {
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -148,7 +148,7 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   padding: 15px;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 8px;
   margin-bottom: 25px;
   cursor: pointer;
@@ -156,7 +156,7 @@ onMounted(() => {
 }
 
 .author-header:hover {
-  background: #f0f0f0;
+  background: var(--color-background-hover);
 }
 
 .author-photo-container {
@@ -176,7 +176,7 @@ onMounted(() => {
 .author-photo-placeholder {
   width: 100%;
   height: 100%;
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   display: flex;
   align-items: center;
@@ -195,49 +195,49 @@ onMounted(() => {
 
 .author-name {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   font-size: 1rem;
 }
 
 .author-handle {
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 0.85rem;
 }
 
 .view-profile-link {
-  color: #42b983;
+  color: var(--color-accent);
   font-size: 0.85rem;
   font-weight: 500;
 }
 
 .blog-post {
-  background: white;
+  background: var(--color-background-card);
   border-radius: 8px;
   padding: 25px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
 }
 
 .post-title {
   margin: 0 0 10px;
   font-size: 1.8rem;
-  color: #222;
+  color: var(--color-text);
   line-height: 1.3;
 }
 
 .post-meta {
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .post-date {
-  color: #888;
+  color: var(--color-text-light);
   font-size: 0.9rem;
 }
 
 .post-content {
-  color: #333;
+  color: var(--color-text);
   line-height: 1.7;
   font-size: 1.05rem;
 }
@@ -254,25 +254,25 @@ onMounted(() => {
 }
 
 .post-content :deep(a) {
-  color: #42b983;
+  color: var(--color-accent);
 }
 
 .post-content :deep(blockquote) {
-  border-left: 3px solid #42b983;
+  border-left: 3px solid var(--color-accent);
   margin: 1em 0;
   padding-left: 1em;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .post-content :deep(pre) {
-  background: #f5f5f5;
+  background: var(--color-background-soft);
   padding: 1em;
   border-radius: 4px;
   overflow-x: auto;
 }
 
 .post-content :deep(code) {
-  background: #f5f5f5;
+  background: var(--color-background-soft);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
@@ -285,8 +285,8 @@ onMounted(() => {
 }
 
 .back-btn {
-  background: #eee;
-  color: #666;
+  background: var(--color-button-secondary);
+  color: var(--color-text-muted);
   border: none;
   padding: 10px 20px;
   border-radius: 6px;
@@ -295,6 +295,6 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background: #ddd;
+  background: var(--color-button-secondary-hover);
 }
 </style>

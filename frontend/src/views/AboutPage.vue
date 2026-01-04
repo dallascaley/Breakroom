@@ -40,7 +40,7 @@
   margin: 50px auto;
   padding: 0 20px;
   font-family: system-ui, sans-serif;
-  color: #333;
+  color: var(--color-text);
   line-height: 1.6;
 }
 
@@ -48,32 +48,32 @@ h1 {
   font-size: 2.5rem;
   margin-bottom: 0.3em;
   text-align: center;
-  color: #2e86de;
+  color: var(--color-link);
 }
 
 .intro {
   font-size: 1.2rem;
   text-align: center;
   margin-bottom: 2rem;
-  color: #555;
+  color: var(--color-text-secondary);
 }
 
 .content h2 {
   margin-top: 1.8rem;
   font-size: 1.5rem;
-  color: #444;
+  color: var(--color-text);
 }
 
 .content p {
   margin-top: 0.8rem;
-  color: #555;
+  color: var(--color-text-secondary);
 }
 
 .cta-button {
   display: block;
   width: max-content;
   margin: 3rem auto 0;
-  background-color: #2e86de;
+  background-color: var(--color-link);
   color: white;
   padding: 14px 28px;
   font-weight: 600;
@@ -84,7 +84,7 @@ h1 {
 }
 
 .cta-button:hover {
-  background-color: #1e5fa3;
+  opacity: 0.9;
 }
 </style>
 

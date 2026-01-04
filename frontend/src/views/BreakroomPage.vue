@@ -224,7 +224,7 @@ onUnmounted(() => {
   margin: 0;
   font-size: 2.8rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #42b983 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, var(--color-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -232,7 +232,7 @@ onUnmounted(() => {
 }
 
 .add-block-btn {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -243,22 +243,22 @@ onUnmounted(() => {
 }
 
 .add-block-btn:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 
 .loading {
   text-align: center;
   padding: 60px 20px;
-  color: #666;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
 }
 
 .empty-state {
   text-align: center;
   padding: 80px 20px;
-  background: #f9f9f9;
+  background: var(--color-background-soft);
   border-radius: 10px;
-  color: #666;
+  color: var(--color-text-muted);
 }
 
 .empty-state p {
@@ -268,7 +268,7 @@ onUnmounted(() => {
 
 .empty-state .hint {
   font-size: 1rem;
-  color: #888;
+  color: var(--color-text-light);
 }
 
 .grid-container {
@@ -278,8 +278,8 @@ onUnmounted(() => {
 .error-message {
   margin-top: 20px;
   padding: 10px 20px;
-  background: #ffe0e0;
-  color: #c00;
+  background: var(--color-error-bg);
+  color: var(--color-error);
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
@@ -289,7 +289,7 @@ onUnmounted(() => {
 .dismiss-btn {
   background: none;
   border: none;
-  color: #c00;
+  color: var(--color-error);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -301,7 +301,7 @@ onUnmounted(() => {
 }
 
 :deep(.vue-grid-item.vue-grid-placeholder) {
-  background: #42b983;
+  background: var(--color-accent);
   opacity: 0.2;
   border-radius: 8px;
 }
@@ -313,28 +313,30 @@ onUnmounted(() => {
   gap: 2rem;
   padding: 1rem 2rem;
   margin-top: 1.5rem;
-  background: #2c3e50;
+  background: var(--color-header-bg);
   border-radius: 8px;
 }
 
 .bottom-menu a {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-header-text);
+  opacity: 0.85;
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.2s, color 0.2s;
+  transition: background-color 0.2s, color 0.2s, opacity 0.2s;
 }
 
 .bottom-menu a:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  opacity: 1;
 }
 
 .bottom-menu a.router-link-exact-active {
-  background: rgba(66, 185, 131, 0.3);
-  color: #42b983;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  opacity: 1;
 }
 
 /* Mobile accordion layout */

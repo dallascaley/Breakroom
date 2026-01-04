@@ -23,25 +23,26 @@ const goToChat = () => {
 .welcome {
   max-width: 600px;
   margin: 60px auto;
-  background: white;
+  background: var(--color-background-card);
   text-align: center;
   padding: 40px;
   border-radius: 10px;
+  box-shadow: var(--shadow-md);
 }
 
 h1 {
-  color: #333;
+  color: var(--color-text);
   margin-bottom: 20px;
 }
 
 p {
-  color: #666;
+  color: var(--color-text-muted);
   line-height: 1.6;
   margin-bottom: 30px;
 }
 
 button {
-  background: #42b983;
+  background: var(--color-accent);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -51,6 +52,6 @@ button {
 }
 
 button:hover {
-  background: #3aa876;
+  background: var(--color-accent-hover);
 }
 </style>
