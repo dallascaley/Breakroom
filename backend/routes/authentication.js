@@ -133,6 +133,58 @@ router.post('/verify', async (req, res) => {
   }
 });
 
+router.post('/resend-verification', async (req, res) => {
+  const client = await getClient();
+
+  // Find user by token (even if expired)
+  const user = await client.query('SELECT * FROM "users" WHERE verification_token = $1', [req.body.token]);
+
+  if (user.rowCount === 0) {
+    client.release();
+    return res.status(400).json({
+      message: 'Invalid verification token'
+    });
+  }
+
+  const userData = user.rows[0];
+
+  // Check if already verified
+  if (userData.email_verified) {
+    client.release();
+    return res.status(400).json({
+      message: 'Email is already verified'
+    });
+  }
+
+  // Generate new token and expiration
+  const newToken = uuidv4();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 1);
+
+  await client.query(
+    'UPDATE "users" SET verification_token = $1, verification_expires_at = $2 WHERE id = $3',
+    [newToken, expiresAt, userData.id]
+  );
+
+  // Fetch email template and send
+  const emailTemplate = await client.query(
+    'SELECT from_address, subject, html_content FROM system_emails WHERE email_key = $1 AND is_active = true',
+    ['signup_verification']
+  );
+
+  if (emailTemplate.rowCount > 0) {
+    const { from_address, subject, html_content } = emailTemplate.rows[0];
+    const processedContent = html_content.replace(/\{\{verification_token\}\}/g, newToken);
+    sendMail(userData.email, from_address, subject, processedContent);
+  }
+
+  client.release();
+
+  res.status(200).json({
+    message: 'Verification email sent'
+  });
+});
+
 function hashPasswordWithSalt(password, salt) {
   return new Promise((resolve, reject) => {
     const encoder = new TextEncoder();

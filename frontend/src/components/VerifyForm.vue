@@ -32,7 +32,21 @@
         <h2>Verification Failed</h2>
         <p class="subtitle">We couldn't verify your email address.</p>
         <p class="error-message">{{ error }}</p>
-        <router-link to="/signup" class="btn-secondary">Try Again</router-link>
+        <button v-if="token && !resending" @click="resendVerification" class="btn-secondary">Resend Verification Email</button>
+        <button v-else-if="resending" class="btn-secondary" disabled>Sending...</button>
+        <router-link v-else to="/signup" class="btn-secondary">Back to Signup</router-link>
+      </div>
+
+      <!-- Resend Success State -->
+      <div v-else-if="resendSuccess" class="verify-content">
+        <div class="icon-circle success">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2>Email Sent!</h2>
+        <p class="subtitle">A new verification email has been sent.</p>
+        <p class="message">Please check your inbox and click the verification link.</p>
       </div>
     </div>
   </div>
@@ -47,14 +61,17 @@ export default {
       isLoading: true,
       message: '',
       error: '',
+      token: '',
+      resending: false,
+      resendSuccess: false,
     };
   },
   created() {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    this.token = urlParams.get('token') || '';
 
-    if (token) {
-      this.verifyEmail(token);
+    if (this.token) {
+      this.verifyEmail(this.token);
     } else {
       this.isLoading = false;
       this.error = 'No verification token provided.';
@@ -75,6 +92,24 @@ export default {
         }
       } finally {
         this.isLoading = false;
+      }
+    },
+    async resendVerification() {
+      this.resending = true;
+      try {
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/resend-verification`, {
+          token: this.token
+        });
+        this.error = '';
+        this.resendSuccess = true;
+      } catch (err) {
+        if (err.response && err.response.data && err.response.data.message) {
+          this.error = err.response.data.message;
+        } else {
+          this.error = 'Unable to resend verification email. Please try again.';
+        }
+      } finally {
+        this.resending = false;
       }
     },
   },
@@ -185,10 +220,17 @@ h2 {
   font-size: 16px;
   font-weight: 600;
   transition: background 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-secondary:hover {
   background: var(--color-button-secondary-hover);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Loading Spinner */
