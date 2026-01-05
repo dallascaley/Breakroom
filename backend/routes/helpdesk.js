@@ -170,6 +170,15 @@ router.post('/tickets', authenticate, async (req, res) => {
       [req.user.id]
     );
 
+    const ticketId = result.rows[0].id;
+
+    // Associate ticket with the company's default project
+    await client.query(
+      `INSERT INTO ticket_projects (ticket_id, project_id)
+       SELECT $1, id FROM projects WHERE company_id = $2 AND is_default = TRUE`,
+      [ticketId, company_id]
+    );
+
     res.status(201).json({ ticket: result.rows[0] });
   } catch (err) {
     console.error('Error creating ticket:', err);

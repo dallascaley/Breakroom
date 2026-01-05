@@ -139,6 +139,13 @@ router.post('/', authenticate, async (req, res) => {
       [req.user.id, companyId, employee_title || 'Owner']
     );
 
+    // Create default Help Desk project for the company
+    await client.query(
+      `INSERT INTO projects (company_id, title, description, is_default)
+       VALUES ($1, 'Help Desk', 'Default help desk project for support tickets', TRUE)`,
+      [companyId]
+    );
+
     // Get full company data
     const fullCompanyResult = await client.query(
       'SELECT * FROM companies WHERE id = $1',
