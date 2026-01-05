@@ -293,6 +293,6 @@ scp -i ~/.ssh/Hostgator-Key-1.pem -r frontend/dist/* ec2-user@44.225.148.34:/var
 - Docker containers need host.docker.internal or 172.17.0.1 to reach host services
 
 ## Git
-- Repository: https://github.com/dallascaley/Breakroom
+- Repository: git@github.com:Cherry-Blossom-Development/Breakroom.git
 - Branch: main
 - `.env.local` removed from repo and added to `.gitignore`
