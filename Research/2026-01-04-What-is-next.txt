@@ -1,0 +1,60 @@
+1) Obvious stuff
+
+   A) get that dumb email validation thing working correctly, it's still broken
+
+   B) Does it make sense to add unit/functional tests?
+
+   C) Same question for load testing
+
+2) What is sellable?
+
+   A) There is no network yet, and there won't be a decent sized network for quite a while
+
+     Also
+
+   B) It costs money to run this thing.  In reality if we got enough users to say we had a real
+      network, it would cost too much money for us to operate it.
+
+     And
+
+   C) I don't want venture capital funding, because that would mean we are beholden to their
+      interests and would likely lead to advertising, which is something we want to avoid
+
+     Therefore:
+
+   D) The site needs to have features that would be valuable for an individual user.  In my mind
+      the most obvious thing that would be valuable for an individual user would be:
+
+      A blog: one that is really good/really easy to use, relatively cheap
+
+	      The concept of owning your own content.  posting long messages (in a blog or otherwise) and
+	      then being able to reference this on other sites like Facebook or whatever could be valuable
+
+      An art gallery: Many wordpress sites have galleries for art.
+
+	      The ability to sell stuff from your art gallery?
+
+	      usage statistics from your blog
+
+	      the ability to export your entire blog to your own site to cut down on costs and also maintain
+	      complete ownership of your work.
+
+      A store: 
+
+      	  just straight up sell stuff
+
+      	  Inventory
+
+      	  Customer service
+
+      A musician/band page
+
+          Expose people to your music
+
+          sell stuff (CDs, T-shirts, whatnot)
+
+          Share practice recordings
+
+      Small company communications platform
+
+          ticket management
