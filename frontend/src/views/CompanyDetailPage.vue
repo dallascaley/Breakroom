@@ -9,9 +9,19 @@ const router = useRouter()
 const company = ref(null)
 const employees = ref([])
 const positions = ref([])
+const projects = ref([])
 const userRole = ref(null)
 const loading = ref(true)
 const error = ref(null)
+
+// Sidebar navigation
+const activeSection = ref('info')
+const menuItems = [
+  { id: 'info', label: 'Company Info', icon: 'building' },
+  { id: 'employees', label: 'Employees', icon: 'users' },
+  { id: 'positions', label: 'Open Positions', icon: 'briefcase' },
+  { id: 'projects', label: 'Projects', icon: 'folder' }
+]
 
 // Position management
 const showPositionModal = ref(false)
@@ -38,6 +48,20 @@ const canManagePositions = computed(() => {
   return userRole.value && (userRole.value.is_owner || userRole.value.is_admin)
 })
 
+// Project management
+const showProjectModal = ref(false)
+const editingProject = ref(null)
+const projectForm = ref({
+  title: '',
+  description: ''
+})
+const savingProject = ref(false)
+const projectError = ref('')
+
+const canManageProjects = computed(() => {
+  return userRole.value && (userRole.value.is_owner || userRole.value.is_admin)
+})
+
 async function fetchCompany() {
   loading.value = true
   error.value = null
@@ -57,8 +81,8 @@ async function fetchCompany() {
     employees.value = data.employees
     userRole.value = data.userRole
 
-    // Fetch positions
-    await fetchPositions()
+    // Fetch positions and projects
+    await Promise.all([fetchPositions(), fetchProjects()])
   } catch (err) {
     error.value = err.message
   } finally {
@@ -75,6 +99,18 @@ async function fetchPositions() {
     }
   } catch (err) {
     console.error('Error fetching positions:', err)
+  }
+}
+
+async function fetchProjects() {
+  try {
+    const res = await authFetch(`/api/projects/company/${route.params.id}`)
+    if (res.ok) {
+      const data = await res.json()
+      projects.value = data.projects
+    }
+  } catch (err) {
+    console.error('Error fetching projects:', err)
   }
 }
 
@@ -263,6 +299,125 @@ function formatEmploymentType(type) {
   return type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-')
 }
 
+// Project management functions
+function openProjectModal(project = null) {
+  editingProject.value = project
+  if (project) {
+    projectForm.value = {
+      title: project.title || '',
+      description: project.description || ''
+    }
+  } else {
+    projectForm.value = {
+      title: '',
+      description: ''
+    }
+  }
+  projectError.value = ''
+  showProjectModal.value = true
+}
+
+function closeProjectModal() {
+  showProjectModal.value = false
+  editingProject.value = null
+  projectError.value = ''
+}
+
+async function saveProject() {
+  if (!projectForm.value.title.trim()) {
+    projectError.value = 'Project title is required'
+    return
+  }
+
+  savingProject.value = true
+  projectError.value = ''
+
+  try {
+    const payload = {
+      title: projectForm.value.title,
+      description: projectForm.value.description || null,
+      company_id: route.params.id
+    }
+
+    let res
+    if (editingProject.value) {
+      res = await authFetch(`/api/projects/${editingProject.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    } else {
+      res = await authFetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    }
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to save project')
+    }
+
+    await fetchProjects()
+    closeProjectModal()
+  } catch (err) {
+    projectError.value = err.message
+  } finally {
+    savingProject.value = false
+  }
+}
+
+async function deleteProject(project) {
+  if (project.is_default) {
+    alert('Cannot delete the default project')
+    return
+  }
+
+  if (!confirm(`Delete the project "${project.title}"? This will remove all ticket associations.`)) {
+    return
+  }
+
+  try {
+    const res = await authFetch(`/api/projects/${project.id}`, {
+      method: 'DELETE'
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to delete project')
+    }
+
+    await fetchProjects()
+  } catch (err) {
+    alert(err.message)
+  }
+}
+
+async function toggleProjectStatus(project) {
+  if (project.is_default && project.is_active) {
+    alert('Cannot deactivate the default project')
+    return
+  }
+
+  try {
+    const res = await authFetch(`/api/projects/${project.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !project.is_active })
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to update project')
+    }
+
+    await fetchProjects()
+  } catch (err) {
+    alert(err.message)
+  }
+}
+
 onMounted(() => {
   fetchCompany()
 })
@@ -290,101 +445,173 @@ onMounted(() => {
         <button @click="goBack" class="btn-secondary">Back</button>
       </header>
 
-      <div class="content-grid">
-        <!-- Company Info -->
-        <section class="info-card">
-          <h2>Company Information</h2>
+      <div class="company-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+          <nav class="sidebar-nav">
+            <button
+              v-for="item in menuItems"
+              :key="item.id"
+              @click="activeSection = item.id"
+              class="nav-item"
+              :class="{ active: activeSection === item.id }"
+            >
+              <span class="nav-icon">
+                <template v-if="item.icon === 'building'">🏢</template>
+                <template v-else-if="item.icon === 'users'">👥</template>
+                <template v-else-if="item.icon === 'briefcase'">💼</template>
+                <template v-else-if="item.icon === 'folder'">📁</template>
+              </span>
+              <span class="nav-label">{{ item.label }}</span>
+              <span v-if="item.id === 'employees'" class="nav-count">{{ employees.length }}</span>
+              <span v-else-if="item.id === 'positions'" class="nav-count">{{ positions.filter(p => p.status === 'open').length }}</span>
+              <span v-else-if="item.id === 'projects'" class="nav-count">{{ projects.filter(p => p.is_active).length }}</span>
+            </button>
+          </nav>
+        </aside>
 
-          <div v-if="company.description" class="info-row">
-            <label>Description</label>
-            <p>{{ company.description }}</p>
-          </div>
+        <!-- Main Content -->
+        <main class="content-panel">
+          <!-- Company Info Section -->
+          <section v-if="activeSection === 'info'" class="section-card">
+            <h2>Company Information</h2>
 
-          <div v-if="getLocationString()" class="info-row">
-            <label>Location</label>
-            <p>{{ getLocationString() }}</p>
-          </div>
+            <div v-if="company.description" class="info-row">
+              <label>Description</label>
+              <p>{{ company.description }}</p>
+            </div>
 
-          <div v-if="company.phone" class="info-row">
-            <label>Phone</label>
-            <p>{{ company.phone }}</p>
-          </div>
+            <div v-if="getLocationString()" class="info-row">
+              <label>Location</label>
+              <p>{{ getLocationString() }}</p>
+            </div>
 
-          <div v-if="company.email" class="info-row">
-            <label>Email</label>
-            <p><a :href="'mailto:' + company.email">{{ company.email }}</a></p>
-          </div>
+            <div v-if="company.phone" class="info-row">
+              <label>Phone</label>
+              <p>{{ company.phone }}</p>
+            </div>
 
-          <div v-if="company.website" class="info-row">
-            <label>Website</label>
-            <p><a :href="company.website" target="_blank">{{ company.website }}</a></p>
-          </div>
-        </section>
+            <div v-if="company.email" class="info-row">
+              <label>Email</label>
+              <p><a :href="'mailto:' + company.email">{{ company.email }}</a></p>
+            </div>
 
-        <!-- Employees -->
-        <section class="employees-card">
-          <h2>Employees ({{ employees.length }})</h2>
+            <div v-if="company.website" class="info-row">
+              <label>Website</label>
+              <p><a :href="company.website" target="_blank">{{ company.website }}</a></p>
+            </div>
 
-          <div v-if="employees.length === 0" class="empty-state">
-            No employees listed
-          </div>
+            <div v-if="!company.description && !getLocationString() && !company.phone && !company.email && !company.website" class="empty-state">
+              No company information available
+            </div>
+          </section>
 
-          <div v-else class="employee-list">
-            <div v-for="emp in employees" :key="emp.id" class="employee-item">
-              <div class="employee-avatar">
-                {{ (emp.first_name || emp.handle || '?').charAt(0).toUpperCase() }}
-              </div>
-              <div class="employee-info">
-                <span class="employee-name">{{ getEmployeeName(emp) }}</span>
-                <span class="employee-title">{{ emp.title || 'Employee' }}</span>
-              </div>
-              <div class="employee-badges">
-                <span v-if="emp.is_owner" class="badge owner">Owner</span>
-                <span v-else-if="emp.is_admin" class="badge admin">Admin</span>
+          <!-- Employees Section -->
+          <section v-if="activeSection === 'employees'" class="section-card">
+            <h2>Employees ({{ employees.length }})</h2>
+
+            <div v-if="employees.length === 0" class="empty-state">
+              No employees listed
+            </div>
+
+            <div v-else class="employee-list">
+              <div v-for="emp in employees" :key="emp.id" class="employee-item">
+                <div class="employee-avatar">
+                  {{ (emp.first_name || emp.handle || '?').charAt(0).toUpperCase() }}
+                </div>
+                <div class="employee-info">
+                  <span class="employee-name">{{ getEmployeeName(emp) }}</span>
+                  <span class="employee-title">{{ emp.title || 'Employee' }}</span>
+                </div>
+                <div class="employee-badges">
+                  <span v-if="emp.is_owner" class="badge owner">Owner</span>
+                  <span v-else-if="emp.is_admin" class="badge admin">Admin</span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
 
-      <!-- Open Positions -->
-      <section class="positions-section">
-        <div class="positions-header">
-          <h2>Open Positions ({{ positions.filter(p => p.status === 'open').length }})</h2>
-          <button v-if="canManagePositions" @click="openPositionModal()" class="btn-primary">
-            + Add Position
-          </button>
-        </div>
-
-        <div v-if="positions.length === 0" class="empty-state">
-          No positions listed
-        </div>
-
-        <div v-else class="positions-list">
-          <div v-for="pos in positions" :key="pos.id" class="position-card" :class="{ closed: pos.status !== 'open' }">
-            <div class="position-main">
-              <div class="position-header">
-                <h3>{{ pos.title }}</h3>
-                <span class="position-status" :class="pos.status">{{ pos.status }}</span>
-              </div>
-              <div class="position-meta">
-                <span class="meta-item">{{ formatEmploymentType(pos.employment_type) }}</span>
-                <span class="meta-item">{{ formatLocationType(pos.location_type) }}</span>
-                <span v-if="pos.city || pos.state" class="meta-item">{{ [pos.city, pos.state].filter(Boolean).join(', ') }}</span>
-                <span class="meta-item pay">{{ formatPay(pos) }}</span>
-              </div>
-              <p v-if="pos.description" class="position-description">{{ pos.description }}</p>
-            </div>
-            <div v-if="canManagePositions" class="position-actions">
-              <button @click="openPositionModal(pos)" class="btn-small">Edit</button>
-              <button @click="togglePositionStatus(pos)" class="btn-small">
-                {{ pos.status === 'open' ? 'Close' : 'Reopen' }}
+          <!-- Open Positions Section -->
+          <section v-if="activeSection === 'positions'" class="section-card">
+            <div class="section-header">
+              <h2>Open Positions ({{ positions.filter(p => p.status === 'open').length }})</h2>
+              <button v-if="canManagePositions" @click="openPositionModal()" class="btn-primary">
+                + Add Position
               </button>
-              <button @click="deletePosition(pos)" class="btn-small danger">Delete</button>
             </div>
-          </div>
-        </div>
-      </section>
+
+            <div v-if="positions.length === 0" class="empty-state">
+              No positions listed
+            </div>
+
+            <div v-else class="positions-list">
+              <div v-for="pos in positions" :key="pos.id" class="position-card" :class="{ closed: pos.status !== 'open' }">
+                <div class="position-main">
+                  <div class="position-header">
+                    <h3>{{ pos.title }}</h3>
+                    <span class="position-status" :class="pos.status">{{ pos.status }}</span>
+                  </div>
+                  <div class="position-meta">
+                    <span class="meta-item">{{ formatEmploymentType(pos.employment_type) }}</span>
+                    <span class="meta-item">{{ formatLocationType(pos.location_type) }}</span>
+                    <span v-if="pos.city || pos.state" class="meta-item">{{ [pos.city, pos.state].filter(Boolean).join(', ') }}</span>
+                    <span class="meta-item pay">{{ formatPay(pos) }}</span>
+                  </div>
+                  <p v-if="pos.description" class="position-description">{{ pos.description }}</p>
+                </div>
+                <div v-if="canManagePositions" class="position-actions">
+                  <button @click="openPositionModal(pos)" class="btn-small">Edit</button>
+                  <button @click="togglePositionStatus(pos)" class="btn-small">
+                    {{ pos.status === 'open' ? 'Close' : 'Reopen' }}
+                  </button>
+                  <button @click="deletePosition(pos)" class="btn-small danger">Delete</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Projects Section -->
+          <section v-if="activeSection === 'projects'" class="section-card">
+            <div class="section-header">
+              <h2>Projects ({{ projects.filter(p => p.is_active).length }})</h2>
+              <button v-if="canManageProjects" @click="openProjectModal()" class="btn-primary">
+                + Add Project
+              </button>
+            </div>
+
+            <div v-if="projects.length === 0" class="empty-state">
+              No projects yet
+            </div>
+
+            <div v-else class="projects-list">
+              <div v-for="proj in projects" :key="proj.id" class="project-card" :class="{ inactive: !proj.is_active }">
+                <div class="project-main">
+                  <div class="project-header">
+                    <h3>{{ proj.title }}</h3>
+                    <div class="project-badges">
+                      <span v-if="proj.is_default" class="badge default">Default</span>
+                      <span class="status-badge" :class="proj.is_active ? 'active' : 'inactive'">
+                        {{ proj.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                  </div>
+                  <p v-if="proj.description" class="project-description">{{ proj.description }}</p>
+                  <div class="project-meta">
+                    <span class="meta-item">{{ proj.ticket_count || 0 }} ticket{{ proj.ticket_count == 1 ? '' : 's' }}</span>
+                  </div>
+                </div>
+                <div v-if="canManageProjects" class="project-actions">
+                  <button @click="openProjectModal(proj)" class="btn-small">Edit</button>
+                  <button v-if="!proj.is_default" @click="toggleProjectStatus(proj)" class="btn-small">
+                    {{ proj.is_active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button v-if="!proj.is_default" @click="deleteProject(proj)" class="btn-small danger">Delete</button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
     </template>
 
     <!-- Position Modal -->
@@ -487,6 +714,34 @@ onMounted(() => {
         </form>
       </div>
     </div>
+
+    <!-- Project Modal -->
+    <div v-if="showProjectModal" class="modal-overlay" @click.self="closeProjectModal">
+      <div class="modal-content modal-small">
+        <h2>{{ editingProject ? 'Edit Project' : 'Add New Project' }}</h2>
+
+        <form @submit.prevent="saveProject">
+          <div class="form-group">
+            <label for="proj-title">Project Title *</label>
+            <input id="proj-title" v-model="projectForm.title" type="text" required placeholder="e.g., Mobile App Development" />
+          </div>
+
+          <div class="form-group">
+            <label for="proj-description">Description</label>
+            <textarea id="proj-description" v-model="projectForm.description" rows="4" placeholder="Project description..."></textarea>
+          </div>
+
+          <div v-if="projectError" class="error-message">{{ projectError }}</div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeProjectModal" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary" :disabled="savingProject">
+              {{ savingProject ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -522,34 +777,118 @@ onMounted(() => {
   color: var(--color-text);
 }
 
-.content-grid {
+/* Sidebar Layout */
+.company-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 220px 1fr;
   gap: 24px;
-  margin-bottom: 24px;
+  min-height: 500px;
 }
 
 @media (max-width: 768px) {
-  .content-grid {
+  .company-layout {
     grid-template-columns: 1fr;
   }
 }
 
-.info-card,
-.employees-card {
+.sidebar {
+  background: var(--color-background-card);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.nav-item:hover {
+  background: var(--color-background-soft);
+}
+
+.nav-item.active {
+  background: var(--color-accent);
+  color: white;
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+}
+
+.nav-label {
+  flex: 1;
+  font-weight: 500;
+}
+
+.nav-count {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--color-background-soft);
+  color: var(--color-text-muted);
+}
+
+.nav-item.active .nav-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Content Panel */
+.content-panel {
+  flex: 1;
+}
+
+.section-card {
   background: var(--color-background-card);
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
 }
 
-.info-card h2,
-.employees-card h2 {
+.section-card h2 {
   margin: 0 0 20px;
   color: var(--color-text);
   font-size: 1.2rem;
   padding-bottom: 12px;
   border-bottom: 2px solid var(--color-accent);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.section-header h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .info-row {
@@ -645,29 +984,7 @@ onMounted(() => {
   color: white;
 }
 
-/* Positions Section */
-.positions-section {
-  background: var(--color-background-card);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-}
-
-.positions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--color-accent);
-}
-
-.positions-header h2 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 1.2rem;
-}
-
+/* Positions List */
 .positions-list {
   display: flex;
   flex-direction: column;
@@ -918,5 +1235,91 @@ onMounted(() => {
   text-align: center;
   padding: 30px;
   color: var(--color-text-light);
+}
+
+/* Projects List */
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.project-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--color-background-soft);
+}
+
+.project-card.inactive {
+  opacity: 0.6;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.project-header h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.1rem;
+}
+
+.project-badges {
+  display: flex;
+  gap: 6px;
+}
+
+.badge.default {
+  background: #764ba2;
+  color: white;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.status-badge.inactive {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.project-description {
+  margin: 8px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.project-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Modal sizes */
+.modal-small {
+  max-width: 450px;
 }
 </style>
