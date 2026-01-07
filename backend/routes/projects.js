@@ -41,7 +41,7 @@ router.get('/company/:companyId', authenticate, async (req, res) => {
 
   try {
     const result = await client.query(
-      `SELECT p.id, p.title, p.description, p.is_default, p.is_active,
+      `SELECT p.id, p.title, p.description, p.is_default, p.is_active, p.is_public,
               p.created_at, p.updated_at,
               (SELECT COUNT(*) FROM ticket_projects tp WHERE tp.project_id = p.id) as ticket_count
        FROM projects p
@@ -66,7 +66,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
   try {
     const projectResult = await client.query(
-      `SELECT p.id, p.title, p.description, p.is_default, p.is_active,
+      `SELECT p.id, p.title, p.description, p.is_default, p.is_active, p.is_public,
               p.company_id, p.created_at, p.updated_at,
               c.name as company_name
        FROM projects p
@@ -146,14 +146,14 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     await client.query(
-      `INSERT INTO projects (company_id, title, description)
-       VALUES ($1, $2, $3)`,
+      `INSERT INTO projects (company_id, title, description, is_public)
+       VALUES ($1, $2, $3, FALSE)`,
       [company_id, title.trim(), description || null]
     );
 
     // Get the inserted project
     const result = await client.query(
-      `SELECT id, title, description, is_default, is_active, created_at
+      `SELECT id, title, description, is_default, is_active, is_public, created_at
        FROM projects
        WHERE company_id = $1
        ORDER BY id DESC LIMIT 1`,
@@ -172,7 +172,7 @@ router.post('/', authenticate, async (req, res) => {
 // Update a project
 router.put('/:id', authenticate, async (req, res) => {
   const { id } = req.params;
-  const { title, description, is_active } = req.body;
+  const { title, description, is_active, is_public } = req.body;
   const client = await getClient();
 
   try {
@@ -223,6 +223,10 @@ router.put('/:id', authenticate, async (req, res) => {
       updates.push(`is_active = $${paramCount++}`);
       values.push(is_active);
     }
+    if (is_public !== undefined) {
+      updates.push(`is_public = $${paramCount++}`);
+      values.push(is_public);
+    }
 
     if (updates.length === 0) {
       return res.status(400).json({ message: 'No updates provided' });
@@ -236,7 +240,7 @@ router.put('/:id', authenticate, async (req, res) => {
 
     // Get updated project
     const result = await client.query(
-      `SELECT id, title, description, is_default, is_active, created_at, updated_at
+      `SELECT id, title, description, is_default, is_active, is_public, created_at, updated_at
        FROM projects WHERE id = $1`,
       [id]
     );
@@ -402,7 +406,7 @@ router.get('/ticket/:ticketId', authenticate, async (req, res) => {
 
   try {
     const result = await client.query(
-      `SELECT p.id, p.title, p.description, p.is_default, p.is_active
+      `SELECT p.id, p.title, p.description, p.is_default, p.is_active, p.is_public
        FROM projects p
        JOIN ticket_projects tp ON p.id = tp.project_id
        WHERE tp.ticket_id = $1

@@ -53,7 +53,8 @@ const showProjectModal = ref(false)
 const editingProject = ref(null)
 const projectForm = ref({
   title: '',
-  description: ''
+  description: '',
+  is_public: false
 })
 const savingProject = ref(false)
 const projectError = ref('')
@@ -544,12 +545,14 @@ function openProjectModal(project = null) {
   if (project) {
     projectForm.value = {
       title: project.title || '',
-      description: project.description || ''
+      description: project.description || '',
+      is_public: project.is_public || false
     }
   } else {
     projectForm.value = {
       title: '',
-      description: ''
+      description: '',
+      is_public: false
     }
   }
   projectError.value = ''
@@ -575,6 +578,7 @@ async function saveProject() {
     const payload = {
       title: projectForm.value.title,
       description: projectForm.value.description || null,
+      is_public: projectForm.value.is_public,
       company_id: route.params.id
     }
 
@@ -918,6 +922,9 @@ onMounted(() => {
                     <h3>{{ proj.title }}</h3>
                     <div class="project-badges">
                       <span v-if="proj.is_default" class="badge default">Default</span>
+                      <span class="visibility-badge" :class="proj.is_public ? 'public' : 'private'">
+                        {{ proj.is_public ? 'Public' : 'Private' }}
+                      </span>
                       <span class="status-badge" :class="proj.is_active ? 'active' : 'inactive'">
                         {{ proj.is_active ? 'Active' : 'Inactive' }}
                       </span>
@@ -1057,6 +1064,14 @@ onMounted(() => {
           <div class="form-group">
             <label for="proj-description">Description</label>
             <textarea id="proj-description" v-model="projectForm.description" rows="4" placeholder="Project description..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="projectForm.is_public" />
+              <span>Public project</span>
+            </label>
+            <p class="field-hint">Public projects are visible to all employees. Private projects are only visible to assigned members.</p>
           </div>
 
           <div v-if="projectError" class="error-message">{{ projectError }}</div>
@@ -1755,6 +1770,30 @@ onMounted(() => {
 .status-badge.inactive {
   background: var(--color-error-bg);
   color: var(--color-error);
+}
+
+.visibility-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.visibility-badge.public {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.visibility-badge.private {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.field-hint {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .project-description {

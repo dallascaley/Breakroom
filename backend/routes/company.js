@@ -139,10 +139,10 @@ router.post('/', authenticate, async (req, res) => {
       [req.user.id, companyId, employee_title || 'Owner']
     );
 
-    // Create default Help Desk project for the company
+    // Create default Help Desk project for the company (public by default)
     await client.query(
-      `INSERT INTO projects (company_id, title, description, is_default)
-       VALUES ($1, 'Help Desk', 'Default help desk project for support tickets', TRUE)`,
+      `INSERT INTO projects (company_id, title, description, is_default, is_public)
+       VALUES ($1, 'Help Desk', 'Default help desk project for support tickets', TRUE, TRUE)`,
       [companyId]
     );
 
