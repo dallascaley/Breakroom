@@ -423,4 +423,69 @@ router.get('/ticket/:ticketId', authenticate, async (req, res) => {
   }
 });
 
+// Create a ticket for a specific project
+router.post('/:id/tickets', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, priority } = req.body;
+  const client = await getClient();
+
+  try {
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // Get project and verify it exists
+    const projectResult = await client.query(
+      'SELECT company_id, is_active FROM projects WHERE id = $1',
+      [id]
+    );
+
+    if (projectResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    const project = projectResult.rows[0];
+
+    if (!project.is_active) {
+      return res.status(400).json({ message: 'Cannot create tickets for inactive projects' });
+    }
+
+    // Insert the ticket
+    await client.query(
+      `INSERT INTO tickets (company_id, creator_id, title, description, priority)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [project.company_id, req.user.id, title.trim(), description || '', priority || 'medium']
+    );
+
+    // Get the inserted ticket
+    const result = await client.query(
+      `SELECT t.id, t.title, t.description, t.status, t.priority,
+              t.created_at, t.updated_at,
+              creator.handle as creator_handle,
+              creator.first_name as creator_first_name,
+              creator.last_name as creator_last_name
+       FROM tickets t
+       JOIN users creator ON t.creator_id = creator.id
+       WHERE t.creator_id = $1
+       ORDER BY t.id DESC LIMIT 1`,
+      [req.user.id]
+    );
+
+    const ticketId = result.rows[0].id;
+
+    // Associate ticket ONLY with this specific project
+    await client.query(
+      'INSERT INTO ticket_projects (ticket_id, project_id) VALUES ($1, $2)',
+      [ticketId, id]
+    );
+
+    res.status(201).json({ ticket: result.rows[0] });
+  } catch (err) {
+    console.error('Error creating project ticket:', err);
+    res.status(500).json({ message: 'Failed to create ticket' });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

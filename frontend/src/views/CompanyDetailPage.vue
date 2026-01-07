@@ -661,6 +661,15 @@ async function toggleProjectStatus(project) {
   }
 }
 
+function getProjectHomepageLink(project) {
+  // Default Help Desk project goes to /help-desk
+  if (project.is_default) {
+    return '/help-desk'
+  }
+  // Other projects go to /project/:id
+  return `/project/${project.id}`
+}
+
 onMounted(() => {
   fetchCompany()
 })
@@ -935,12 +944,19 @@ onMounted(() => {
                     <span class="meta-item">{{ proj.ticket_count || 0 }} ticket{{ proj.ticket_count == 1 ? '' : 's' }}</span>
                   </div>
                 </div>
-                <div v-if="canManageProjects" class="project-actions">
-                  <button @click="openProjectModal(proj)" class="btn-small">Edit</button>
-                  <button v-if="!proj.is_default" @click="toggleProjectStatus(proj)" class="btn-small">
+                <div class="project-actions">
+                  <router-link
+                    v-if="proj.is_active"
+                    :to="getProjectHomepageLink(proj)"
+                    class="btn-small btn-homepage"
+                  >
+                    View Tickets
+                  </router-link>
+                  <button v-if="canManageProjects" @click="openProjectModal(proj)" class="btn-small">Edit</button>
+                  <button v-if="canManageProjects && !proj.is_default" @click="toggleProjectStatus(proj)" class="btn-small">
                     {{ proj.is_active ? 'Deactivate' : 'Activate' }}
                   </button>
-                  <button v-if="!proj.is_default" @click="deleteProject(proj)" class="btn-small danger">Delete</button>
+                  <button v-if="canManageProjects && !proj.is_default" @click="deleteProject(proj)" class="btn-small danger">Delete</button>
                 </div>
               </div>
             </div>
@@ -1541,6 +1557,20 @@ onMounted(() => {
 
 .btn-small.danger:hover {
   background: var(--color-error-bg);
+}
+
+.btn-small.btn-homepage {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-small.btn-homepage:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 /* Buttons */
