@@ -75,9 +75,9 @@ router.post('/signup', async (req, res) => {
 
     // Auto-login: set JWT cookie
     const payload = { username: req.body.handle };
-    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '8h' });
     res.cookie('jwtToken', token, {
-      maxAge: 3600000, // 1 hour
+      maxAge: 28800000, // 8 hours
       domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
     });
 
@@ -219,12 +219,12 @@ router.post('/login', async (req, res) => {
       if (hash === user.rows[0].hash) {
 
         const payload = { username: req.body.handle };
-        const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+        const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '8h' });
 
         client.release();
 
         res.cookie('jwtToken', token, {
-          maxAge: 3600000, // 1 hour
+          maxAge: 28800000, // 8 hours
           domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
         });
         res.json({ message: 'Logged in successfully' });
