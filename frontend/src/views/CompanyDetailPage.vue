@@ -136,6 +136,171 @@ async function saveCompany() {
   }
 }
 
+// Employee management
+const showEmployeeModal = ref(false)
+const editingEmployee = ref(null)
+const employeeForm = ref({
+  user_id: null,
+  title: '',
+  department: '',
+  is_admin: false,
+  hire_date: ''
+})
+const savingEmployee = ref(false)
+const employeeError = ref('')
+const userSearchQuery = ref('')
+const userSearchResults = ref([])
+const searchingUsers = ref(false)
+
+const canManageEmployees = computed(() => {
+  return userRole.value && (userRole.value.is_owner || userRole.value.is_admin)
+})
+
+async function searchUsers() {
+  if (userSearchQuery.value.length < 2) {
+    userSearchResults.value = []
+    return
+  }
+
+  searchingUsers.value = true
+  try {
+    const res = await authFetch(`/api/company/${route.params.id}/employees/search?q=${encodeURIComponent(userSearchQuery.value)}`)
+    if (res.ok) {
+      const data = await res.json()
+      userSearchResults.value = data.users
+    }
+  } catch (err) {
+    console.error('Error searching users:', err)
+  } finally {
+    searchingUsers.value = false
+  }
+}
+
+function selectUserForEmployee(user) {
+  employeeForm.value.user_id = user.id
+  employeeForm.value.selectedUser = user
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+}
+
+function openEmployeeModal(employee = null) {
+  editingEmployee.value = employee
+  if (employee) {
+    employeeForm.value = {
+      user_id: employee.user_id,
+      title: employee.title || '',
+      department: employee.department || '',
+      is_admin: employee.is_admin || false,
+      hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
+      selectedUser: {
+        id: employee.user_id,
+        handle: employee.handle,
+        first_name: employee.first_name,
+        last_name: employee.last_name
+      }
+    }
+  } else {
+    employeeForm.value = {
+      user_id: null,
+      title: '',
+      department: '',
+      is_admin: false,
+      hire_date: new Date().toISOString().split('T')[0],
+      selectedUser: null
+    }
+  }
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+  employeeError.value = ''
+  showEmployeeModal.value = true
+}
+
+function closeEmployeeModal() {
+  showEmployeeModal.value = false
+  editingEmployee.value = null
+  employeeError.value = ''
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+}
+
+async function saveEmployee() {
+  if (!editingEmployee.value && !employeeForm.value.user_id) {
+    employeeError.value = 'Please select a user'
+    return
+  }
+
+  if (!employeeForm.value.title.trim()) {
+    employeeError.value = 'Job title is required'
+    return
+  }
+
+  savingEmployee.value = true
+  employeeError.value = ''
+
+  try {
+    const payload = {
+      title: employeeForm.value.title,
+      department: employeeForm.value.department || null,
+      is_admin: employeeForm.value.is_admin,
+      hire_date: employeeForm.value.hire_date || null
+    }
+
+    let res
+    if (editingEmployee.value) {
+      res = await authFetch(`/api/company/${route.params.id}/employees/${editingEmployee.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    } else {
+      payload.user_id = employeeForm.value.user_id
+      res = await authFetch(`/api/company/${route.params.id}/employees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    }
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to save employee')
+    }
+
+    await fetchCompany()
+    closeEmployeeModal()
+  } catch (err) {
+    employeeError.value = err.message
+  } finally {
+    savingEmployee.value = false
+  }
+}
+
+async function removeEmployee(employee) {
+  if (employee.is_owner) {
+    alert('Cannot remove the company owner')
+    return
+  }
+
+  if (!confirm(`Remove ${employee.first_name || employee.handle} from this company?`)) {
+    return
+  }
+
+  try {
+    const res = await authFetch(`/api/company/${route.params.id}/employees/${employee.id}`, {
+      method: 'DELETE'
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to remove employee')
+    }
+
+    await fetchCompany()
+  } catch (err) {
+    alert(err.message)
+  }
+}
+
 async function fetchCompany() {
   loading.value = true
   error.value = null
@@ -659,24 +824,36 @@ onMounted(() => {
 
           <!-- Employees Section -->
           <section v-if="activeSection === 'employees'" class="section-card">
-            <h2>Employees ({{ employees.length }})</h2>
+            <div class="section-header">
+              <h2>Employees ({{ employees.length }})</h2>
+              <button v-if="canManageEmployees" @click="openEmployeeModal()" class="btn-primary">
+                + Add Employee
+              </button>
+            </div>
 
             <div v-if="employees.length === 0" class="empty-state">
               No employees listed
             </div>
 
             <div v-else class="employee-list">
-              <div v-for="emp in employees" :key="emp.id" class="employee-item">
-                <div class="employee-avatar">
-                  {{ (emp.first_name || emp.handle || '?').charAt(0).toUpperCase() }}
+              <div v-for="emp in employees" :key="emp.id" class="employee-item-card">
+                <div class="employee-main">
+                  <div class="employee-avatar">
+                    {{ (emp.first_name || emp.handle || '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="employee-info">
+                    <span class="employee-name">{{ getEmployeeName(emp) }}</span>
+                    <span class="employee-title">{{ emp.title || 'Employee' }}</span>
+                    <span v-if="emp.department" class="employee-department">{{ emp.department }}</span>
+                  </div>
+                  <div class="employee-badges">
+                    <span v-if="emp.is_owner" class="badge owner">Owner</span>
+                    <span v-else-if="emp.is_admin" class="badge admin">Admin</span>
+                  </div>
                 </div>
-                <div class="employee-info">
-                  <span class="employee-name">{{ getEmployeeName(emp) }}</span>
-                  <span class="employee-title">{{ emp.title || 'Employee' }}</span>
-                </div>
-                <div class="employee-badges">
-                  <span v-if="emp.is_owner" class="badge owner">Owner</span>
-                  <span v-else-if="emp.is_admin" class="badge admin">Admin</span>
+                <div v-if="canManageEmployees" class="employee-actions">
+                  <button @click="openEmployeeModal(emp)" class="btn-small">Edit</button>
+                  <button v-if="!emp.is_owner" @click="removeEmployee(emp)" class="btn-small danger">Remove</button>
                 </div>
               </div>
             </div>
@@ -888,6 +1065,113 @@ onMounted(() => {
             <button type="button" @click="closeProjectModal" class="btn-secondary">Cancel</button>
             <button type="submit" class="btn-primary" :disabled="savingProject">
               {{ savingProject ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Employee Modal -->
+    <div v-if="showEmployeeModal" class="modal-overlay" @click.self="closeEmployeeModal">
+      <div class="modal-content">
+        <h2>{{ editingEmployee ? 'Edit Employee' : 'Add New Employee' }}</h2>
+
+        <form @submit.prevent="saveEmployee">
+          <!-- User Selection (only for new employees) -->
+          <div v-if="!editingEmployee" class="form-group">
+            <label>Select User *</label>
+            <div v-if="employeeForm.selectedUser" class="selected-user">
+              <div class="selected-user-info">
+                <span class="selected-user-name">
+                  {{ employeeForm.selectedUser.first_name || '' }} {{ employeeForm.selectedUser.last_name || '' }}
+                  <span v-if="!employeeForm.selectedUser.first_name && !employeeForm.selectedUser.last_name">
+                    @{{ employeeForm.selectedUser.handle }}
+                  </span>
+                </span>
+                <span class="selected-user-handle">@{{ employeeForm.selectedUser.handle }}</span>
+              </div>
+              <button type="button" @click="employeeForm.selectedUser = null; employeeForm.user_id = null" class="btn-small">
+                Change
+              </button>
+            </div>
+            <div v-else class="user-search">
+              <input
+                v-model="userSearchQuery"
+                @input="searchUsers"
+                type="text"
+                placeholder="Search by name, handle, or email..."
+              />
+              <div v-if="searchingUsers" class="search-status">Searching...</div>
+              <div v-if="userSearchResults.length > 0" class="user-search-results">
+                <div
+                  v-for="user in userSearchResults"
+                  :key="user.id"
+                  @click="selectUserForEmployee(user)"
+                  class="user-search-item"
+                >
+                  <div class="user-avatar">
+                    {{ (user.first_name || user.handle || '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name">
+                      {{ user.first_name || '' }} {{ user.last_name || '' }}
+                      <span v-if="!user.first_name && !user.last_name">@{{ user.handle }}</span>
+                    </span>
+                    <span class="user-handle">@{{ user.handle }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="userSearchQuery.length >= 2 && !searchingUsers" class="search-status">
+                No users found
+              </div>
+            </div>
+          </div>
+
+          <!-- Show selected user for editing -->
+          <div v-else class="form-group">
+            <label>Employee</label>
+            <div class="selected-user readonly">
+              <div class="selected-user-info">
+                <span class="selected-user-name">
+                  {{ employeeForm.selectedUser?.first_name || '' }} {{ employeeForm.selectedUser?.last_name || '' }}
+                  <span v-if="!employeeForm.selectedUser?.first_name && !employeeForm.selectedUser?.last_name">
+                    @{{ employeeForm.selectedUser?.handle }}
+                  </span>
+                </span>
+                <span class="selected-user-handle">@{{ employeeForm.selectedUser?.handle }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="emp-title">Job Title *</label>
+            <input id="emp-title" v-model="employeeForm.title" type="text" required placeholder="e.g., Software Engineer" />
+          </div>
+
+          <div class="form-group">
+            <label for="emp-department">Department</label>
+            <input id="emp-department" v-model="employeeForm.department" type="text" placeholder="e.g., Engineering" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emp-hire-date">Hire Date</label>
+              <input id="emp-hire-date" v-model="employeeForm.hire_date" type="date" />
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="employeeForm.is_admin" :disabled="editingEmployee?.is_owner" />
+                <span>Admin privileges</span>
+              </label>
+            </div>
+          </div>
+
+          <div v-if="employeeError" class="error-message">{{ employeeError }}</div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeEmployeeModal" class="btn-secondary">Cancel</button>
+            <button type="submit" class="btn-primary" :disabled="savingEmployee">
+              {{ savingEmployee ? 'Saving...' : (editingEmployee ? 'Update Employee' : 'Add Employee') }}
             </button>
           </div>
         </form>
@@ -1498,5 +1782,163 @@ onMounted(() => {
 /* Modal sizes */
 .modal-small {
   max-width: 450px;
+}
+
+/* Employee Card Styles */
+.employee-item-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--color-background-soft);
+}
+
+.employee-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employee-department {
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+.employee-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* User Search Styles */
+.user-search {
+  position: relative;
+}
+
+.user-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: var(--color-background-input);
+  color: var(--color-text);
+}
+
+.user-search input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.search-status {
+  padding: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.user-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-background-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+
+.user-search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.user-search-item:hover {
+  background: var(--color-background-soft);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #42b983);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.user-handle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.selected-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--color-background-soft);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+}
+
+.selected-user.readonly {
+  background: var(--color-background-soft);
+  opacity: 0.8;
+}
+
+.selected-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.selected-user-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.selected-user-handle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Checkbox label */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding-top: 24px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.checkbox-label span {
+  color: var(--color-text);
 }
 </style>

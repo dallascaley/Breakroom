@@ -227,6 +227,277 @@ router.post('/:id/join', authenticate, async (req, res) => {
   }
 });
 
+// Get all employees for a company (including pending) - owner/admin only
+router.get('/:id/employees', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const client = await getClient();
+
+  try {
+    // Check if user is owner or admin
+    const authResult = await client.query(
+      'SELECT is_owner, is_admin FROM employees WHERE user_id = $1 AND company_id = $2 AND status = $3',
+      [req.user.id, id, 'active']
+    );
+
+    if (authResult.rowCount === 0 || (!authResult.rows[0].is_owner && !authResult.rows[0].is_admin)) {
+      return res.status(403).json({ message: 'Not authorized to view all employees' });
+    }
+
+    const result = await client.query(
+      `SELECT e.id, e.user_id, e.title, e.department, e.hire_date, e.is_owner, e.is_admin, e.status,
+              u.handle, u.first_name, u.last_name, u.email, u.photo_path
+       FROM employees e
+       JOIN users u ON e.user_id = u.id
+       WHERE e.company_id = $1
+       ORDER BY e.status, e.is_owner DESC, e.is_admin DESC, u.first_name, u.last_name`,
+      [id]
+    );
+
+    res.json({ employees: result.rows });
+  } catch (err) {
+    console.error('Error fetching employees:', err);
+    res.status(500).json({ message: 'Failed to fetch employees' });
+  } finally {
+    client.release();
+  }
+});
+
+// Search users to add as employees
+router.get('/:id/employees/search', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { q } = req.query;
+  const client = await getClient();
+
+  try {
+    // Check if user is owner or admin
+    const authResult = await client.query(
+      'SELECT is_owner, is_admin FROM employees WHERE user_id = $1 AND company_id = $2 AND status = $3',
+      [req.user.id, id, 'active']
+    );
+
+    if (authResult.rowCount === 0 || (!authResult.rows[0].is_owner && !authResult.rows[0].is_admin)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    if (!q || q.trim().length < 2) {
+      return res.json({ users: [] });
+    }
+
+    // Search users not already in this company
+    const result = await client.query(
+      `SELECT u.id, u.handle, u.first_name, u.last_name, u.email, u.photo_path
+       FROM users u
+       WHERE (u.handle LIKE $1 OR u.first_name LIKE $1 OR u.last_name LIKE $1 OR u.email LIKE $1)
+         AND u.id NOT IN (SELECT user_id FROM employees WHERE company_id = $2)
+       ORDER BY u.first_name, u.last_name
+       LIMIT 10`,
+      [`%${q.trim()}%`, id]
+    );
+
+    res.json({ users: result.rows });
+  } catch (err) {
+    console.error('Error searching users:', err);
+    res.status(500).json({ message: 'Failed to search users' });
+  } finally {
+    client.release();
+  }
+});
+
+// Add employee to company (owner/admin only)
+router.post('/:id/employees', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { user_id, title, department, is_admin, hire_date } = req.body;
+  const client = await getClient();
+
+  try {
+    // Check if user is owner or admin
+    const authResult = await client.query(
+      'SELECT is_owner, is_admin FROM employees WHERE user_id = $1 AND company_id = $2 AND status = $3',
+      [req.user.id, id, 'active']
+    );
+
+    if (authResult.rowCount === 0 || (!authResult.rows[0].is_owner && !authResult.rows[0].is_admin)) {
+      return res.status(403).json({ message: 'Not authorized to add employees' });
+    }
+
+    if (!user_id) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Check if user exists
+    const userResult = await client.query('SELECT id FROM users WHERE id = $1', [user_id]);
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already an employee
+    const existingResult = await client.query(
+      'SELECT id FROM employees WHERE user_id = $1 AND company_id = $2',
+      [user_id, id]
+    );
+
+    if (existingResult.rowCount > 0) {
+      return res.status(400).json({ message: 'User is already an employee of this company' });
+    }
+
+    // Add employee
+    await client.query(
+      `INSERT INTO employees (user_id, company_id, title, department, is_admin, hire_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'active')`,
+      [user_id, id, title || 'Employee', department || null, is_admin || false, hire_date || new Date().toISOString().split('T')[0]]
+    );
+
+    // Get the new employee with user info
+    const result = await client.query(
+      `SELECT e.id, e.user_id, e.title, e.department, e.hire_date, e.is_owner, e.is_admin, e.status,
+              u.handle, u.first_name, u.last_name, u.email, u.photo_path
+       FROM employees e
+       JOIN users u ON e.user_id = u.id
+       WHERE e.user_id = $1 AND e.company_id = $2`,
+      [user_id, id]
+    );
+
+    res.status(201).json({ employee: result.rows[0], message: 'Employee added successfully' });
+  } catch (err) {
+    console.error('Error adding employee:', err);
+    res.status(500).json({ message: 'Failed to add employee' });
+  } finally {
+    client.release();
+  }
+});
+
+// Update employee (owner/admin only)
+router.put('/:id/employees/:employeeId', authenticate, async (req, res) => {
+  const { id, employeeId } = req.params;
+  const { title, department, is_admin, status, hire_date } = req.body;
+  const client = await getClient();
+
+  try {
+    // Check if user is owner or admin
+    const authResult = await client.query(
+      'SELECT is_owner, is_admin FROM employees WHERE user_id = $1 AND company_id = $2 AND status = $3',
+      [req.user.id, id, 'active']
+    );
+
+    if (authResult.rowCount === 0 || (!authResult.rows[0].is_owner && !authResult.rows[0].is_admin)) {
+      return res.status(403).json({ message: 'Not authorized to update employees' });
+    }
+
+    // Get the employee being updated
+    const empResult = await client.query(
+      'SELECT is_owner, user_id FROM employees WHERE id = $1 AND company_id = $2',
+      [employeeId, id]
+    );
+
+    if (empResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Cannot modify owner status (only one owner per company)
+    if (empResult.rows[0].is_owner) {
+      // Owner can only update their own title/department, not admin status
+      if (empResult.rows[0].user_id !== req.user.id) {
+        return res.status(403).json({ message: 'Cannot modify company owner' });
+      }
+    }
+
+    // Build update query
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (title !== undefined) {
+      updates.push(`title = $${paramCount++}`);
+      values.push(title);
+    }
+    if (department !== undefined) {
+      updates.push(`department = $${paramCount++}`);
+      values.push(department);
+    }
+    if (is_admin !== undefined && !empResult.rows[0].is_owner) {
+      updates.push(`is_admin = $${paramCount++}`);
+      values.push(is_admin);
+    }
+    if (status !== undefined && !empResult.rows[0].is_owner) {
+      updates.push(`status = $${paramCount++}`);
+      values.push(status);
+    }
+    if (hire_date !== undefined) {
+      updates.push(`hire_date = $${paramCount++}`);
+      values.push(hire_date);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No updates provided' });
+    }
+
+    values.push(employeeId);
+    await client.query(
+      `UPDATE employees SET ${updates.join(', ')} WHERE id = $${paramCount}`,
+      values
+    );
+
+    // Get updated employee
+    const result = await client.query(
+      `SELECT e.id, e.user_id, e.title, e.department, e.hire_date, e.is_owner, e.is_admin, e.status,
+              u.handle, u.first_name, u.last_name, u.email, u.photo_path
+       FROM employees e
+       JOIN users u ON e.user_id = u.id
+       WHERE e.id = $1`,
+      [employeeId]
+    );
+
+    res.json({ employee: result.rows[0] });
+  } catch (err) {
+    console.error('Error updating employee:', err);
+    res.status(500).json({ message: 'Failed to update employee' });
+  } finally {
+    client.release();
+  }
+});
+
+// Remove employee (owner/admin only)
+router.delete('/:id/employees/:employeeId', authenticate, async (req, res) => {
+  const { id, employeeId } = req.params;
+  const client = await getClient();
+
+  try {
+    // Check if user is owner or admin
+    const authResult = await client.query(
+      'SELECT is_owner, is_admin FROM employees WHERE user_id = $1 AND company_id = $2 AND status = $3',
+      [req.user.id, id, 'active']
+    );
+
+    if (authResult.rowCount === 0 || (!authResult.rows[0].is_owner && !authResult.rows[0].is_admin)) {
+      return res.status(403).json({ message: 'Not authorized to remove employees' });
+    }
+
+    // Get the employee being removed
+    const empResult = await client.query(
+      'SELECT is_owner FROM employees WHERE id = $1 AND company_id = $2',
+      [employeeId, id]
+    );
+
+    if (empResult.rowCount === 0) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // Cannot remove owner
+    if (empResult.rows[0].is_owner) {
+      return res.status(403).json({ message: 'Cannot remove company owner' });
+    }
+
+    await client.query('DELETE FROM employees WHERE id = $1', [employeeId]);
+
+    res.json({ message: 'Employee removed successfully' });
+  } catch (err) {
+    console.error('Error removing employee:', err);
+    res.status(500).json({ message: 'Failed to remove employee' });
+  } finally {
+    client.release();
+  }
+});
+
 // Update company (owner/admin only)
 router.put('/:id', authenticate, async (req, res) => {
   const { id } = req.params;
