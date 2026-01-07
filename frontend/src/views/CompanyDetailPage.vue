@@ -62,6 +62,80 @@ const canManageProjects = computed(() => {
   return userRole.value && (userRole.value.is_owner || userRole.value.is_admin)
 })
 
+// Company info editing
+const editingCompanyInfo = ref(false)
+const companyForm = ref({
+  name: '',
+  description: '',
+  address: '',
+  city: '',
+  state: '',
+  country: '',
+  postal_code: '',
+  phone: '',
+  email: '',
+  website: ''
+})
+const savingCompany = ref(false)
+const companyError = ref('')
+
+const canEditCompany = computed(() => {
+  return userRole.value && (userRole.value.is_owner || userRole.value.is_admin)
+})
+
+function startEditingCompany() {
+  companyForm.value = {
+    name: company.value.name || '',
+    description: company.value.description || '',
+    address: company.value.address || '',
+    city: company.value.city || '',
+    state: company.value.state || '',
+    country: company.value.country || '',
+    postal_code: company.value.postal_code || '',
+    phone: company.value.phone || '',
+    email: company.value.email || '',
+    website: company.value.website || ''
+  }
+  companyError.value = ''
+  editingCompanyInfo.value = true
+}
+
+function cancelEditingCompany() {
+  editingCompanyInfo.value = false
+  companyError.value = ''
+}
+
+async function saveCompany() {
+  if (!companyForm.value.name.trim()) {
+    companyError.value = 'Company name is required'
+    return
+  }
+
+  savingCompany.value = true
+  companyError.value = ''
+
+  try {
+    const res = await authFetch(`/api/company/${route.params.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(companyForm.value)
+    })
+
+    if (!res.ok) {
+      const data = await res.json()
+      throw new Error(data.message || 'Failed to update company')
+    }
+
+    const data = await res.json()
+    company.value = data.company
+    editingCompanyInfo.value = false
+  } catch (err) {
+    companyError.value = err.message
+  } finally {
+    savingCompany.value = false
+  }
+}
+
 async function fetchCompany() {
   loading.value = true
   error.value = null
@@ -474,36 +548,113 @@ onMounted(() => {
         <main class="content-panel">
           <!-- Company Info Section -->
           <section v-if="activeSection === 'info'" class="section-card">
-            <h2>Company Information</h2>
-
-            <div v-if="company.description" class="info-row">
-              <label>Description</label>
-              <p>{{ company.description }}</p>
+            <div class="section-header">
+              <h2>Company Information</h2>
+              <button v-if="canEditCompany && !editingCompanyInfo" @click="startEditingCompany" class="btn-primary">
+                Edit
+              </button>
             </div>
 
-            <div v-if="getLocationString()" class="info-row">
-              <label>Location</label>
-              <p>{{ getLocationString() }}</p>
-            </div>
+            <!-- View Mode -->
+            <template v-if="!editingCompanyInfo">
+              <div v-if="company.description" class="info-row">
+                <label>Description</label>
+                <p>{{ company.description }}</p>
+              </div>
 
-            <div v-if="company.phone" class="info-row">
-              <label>Phone</label>
-              <p>{{ company.phone }}</p>
-            </div>
+              <div v-if="getLocationString()" class="info-row">
+                <label>Location</label>
+                <p>{{ getLocationString() }}</p>
+              </div>
 
-            <div v-if="company.email" class="info-row">
-              <label>Email</label>
-              <p><a :href="'mailto:' + company.email">{{ company.email }}</a></p>
-            </div>
+              <div v-if="company.phone" class="info-row">
+                <label>Phone</label>
+                <p>{{ company.phone }}</p>
+              </div>
 
-            <div v-if="company.website" class="info-row">
-              <label>Website</label>
-              <p><a :href="company.website" target="_blank">{{ company.website }}</a></p>
-            </div>
+              <div v-if="company.email" class="info-row">
+                <label>Email</label>
+                <p><a :href="'mailto:' + company.email">{{ company.email }}</a></p>
+              </div>
 
-            <div v-if="!company.description && !getLocationString() && !company.phone && !company.email && !company.website" class="empty-state">
-              No company information available
-            </div>
+              <div v-if="company.website" class="info-row">
+                <label>Website</label>
+                <p><a :href="company.website" target="_blank">{{ company.website }}</a></p>
+              </div>
+
+              <div v-if="!company.description && !getLocationString() && !company.phone && !company.email && !company.website" class="empty-state">
+                No company information available
+              </div>
+            </template>
+
+            <!-- Edit Mode -->
+            <form v-else @submit.prevent="saveCompany" class="company-edit-form">
+              <div class="form-group">
+                <label for="company-name">Company Name *</label>
+                <input id="company-name" v-model="companyForm.name" type="text" required placeholder="Company name" />
+              </div>
+
+              <div class="form-group">
+                <label for="company-description">Description</label>
+                <textarea id="company-description" v-model="companyForm.description" rows="4" placeholder="Tell people about your company..."></textarea>
+              </div>
+
+              <h3 class="form-section-title">Location</h3>
+
+              <div class="form-group">
+                <label for="company-address">Address</label>
+                <input id="company-address" v-model="companyForm.address" type="text" placeholder="Street address" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="company-city">City</label>
+                  <input id="company-city" v-model="companyForm.city" type="text" placeholder="City" />
+                </div>
+                <div class="form-group">
+                  <label for="company-state">State</label>
+                  <input id="company-state" v-model="companyForm.state" type="text" placeholder="State" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="company-postal">Postal Code</label>
+                  <input id="company-postal" v-model="companyForm.postal_code" type="text" placeholder="Postal code" />
+                </div>
+                <div class="form-group">
+                  <label for="company-country">Country</label>
+                  <input id="company-country" v-model="companyForm.country" type="text" placeholder="Country" />
+                </div>
+              </div>
+
+              <h3 class="form-section-title">Contact</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="company-phone">Phone</label>
+                  <input id="company-phone" v-model="companyForm.phone" type="tel" placeholder="Phone number" />
+                </div>
+                <div class="form-group">
+                  <label for="company-email">Email</label>
+                  <input id="company-email" v-model="companyForm.email" type="email" placeholder="contact@company.com" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="company-website">Website</label>
+                <input id="company-website" v-model="companyForm.website" type="url" placeholder="https://www.company.com" />
+              </div>
+
+              <div v-if="companyError" class="error-message">{{ companyError }}</div>
+
+              <div class="form-actions">
+                <button type="button" @click="cancelEditingCompany" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary" :disabled="savingCompany">
+                  {{ savingCompany ? 'Saving...' : 'Save Changes' }}
+                </button>
+              </div>
+            </form>
           </section>
 
           <!-- Employees Section -->
@@ -1196,6 +1347,32 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
+}
+
+.form-section-title {
+  margin: 24px 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.form-section-title:first-of-type {
+  margin-top: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.company-edit-form {
+  margin-top: -8px;
 }
 
 .error-message {
