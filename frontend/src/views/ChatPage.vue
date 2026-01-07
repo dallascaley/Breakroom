@@ -70,10 +70,24 @@ const handleTyping = () => {
   }, 2000)
 }
 
-// Format timestamp
+// Format timestamp - show date if not today
 const formatTime = (timestamp) => {
   const date = new Date(timestamp)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const today = new Date()
+  const isToday = date.getFullYear() === today.getFullYear() &&
+                  date.getMonth() === today.getMonth() &&
+                  date.getDate() === today.getDate()
+
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  if (isToday) {
+    return time
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${month}/${day}/${year} - ${time}`
 }
 
 // Check if message is from current user
