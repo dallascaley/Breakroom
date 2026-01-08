@@ -93,10 +93,12 @@ router.get('/:id', authenticate, async (req, res) => {
        WHERE tp.project_id = $1
        ORDER BY
          CASE t.status
-           WHEN 'open' THEN 1
-           WHEN 'in_progress' THEN 2
-           WHEN 'resolved' THEN 3
-           WHEN 'closed' THEN 4
+           WHEN 'backlog' THEN 1
+           WHEN 'on-deck' THEN 2
+           WHEN 'in_progress' THEN 3
+           WHEN 'resolved' THEN 4
+           WHEN 'closed' THEN 5
+           ELSE 6
          END,
          CASE t.priority
            WHEN 'urgent' THEN 1
@@ -450,10 +452,10 @@ router.post('/:id/tickets', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'Cannot create tickets for inactive projects' });
     }
 
-    // Insert the ticket
+    // Insert the ticket with 'backlog' status for project tickets
     await client.query(
-      `INSERT INTO tickets (company_id, creator_id, title, description, priority)
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO tickets (company_id, creator_id, title, description, priority, status)
+       VALUES ($1, $2, $3, $4, $5, 'backlog')`,
       [project.company_id, req.user.id, title.trim(), description || '', priority || 'medium']
     );
 

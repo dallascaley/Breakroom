@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { authFetch } from '../utilities/authFetch'
+import draggable from 'vuedraggable'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,20 +32,37 @@ const priorityColors = {
 }
 
 const statusColors = {
-  open: '#28a745',
+  backlog: '#6c757d',
+  'on-deck': '#17a2b8',
   in_progress: '#ffc107',
-  resolved: '#17a2b8',
-  closed: '#6c757d'
+  resolved: '#28a745',
+  closed: '#343a40'
 }
+
+const statusLabels = {
+  backlog: 'Backlog',
+  'on-deck': 'On Deck',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed'
+}
+
+const kanbanStatuses = ['backlog', 'on-deck', 'in_progress', 'resolved', 'closed']
+
+// Group tickets by status for Kanban columns
+const ticketsByStatus = computed(() => {
+  const grouped = {}
+  kanbanStatuses.forEach(status => {
+    grouped[status] = tickets.value.filter(t => t.status === status)
+  })
+  return grouped
+})
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
     month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   })
 }
 
@@ -54,9 +72,6 @@ const getCreatorName = (ticket) => {
   }
   return ticket.creator_handle
 }
-
-const openTickets = computed(() => tickets.value.filter(t => t.status === 'open' || t.status === 'in_progress'))
-const closedTickets = computed(() => tickets.value.filter(t => t.status === 'resolved' || t.status === 'closed'))
 
 async function fetchProject() {
   loading.value = true
@@ -122,7 +137,11 @@ async function updateTicketStatus(ticketId, newStatus) {
     })
 
     if (res.ok) {
-      await fetchProject()
+      // Update local state
+      const ticket = tickets.value.find(t => t.id === ticketId)
+      if (ticket) {
+        ticket.status = newStatus
+      }
       if (selectedTicket.value?.id === ticketId) {
         selectedTicket.value.status = newStatus
       }
@@ -132,8 +151,33 @@ async function updateTicketStatus(ticketId, newStatus) {
   }
 }
 
+// Handle drag end - update ticket status
+async function onDragEnd(event, toStatus) {
+  const ticketId = parseInt(event.item.dataset.ticketId)
+  const ticket = tickets.value.find(t => t.id === ticketId)
+  if (!ticket || ticket.status === toStatus) return
+
+  const oldStatus = ticket.status
+  ticket.status = toStatus  // Optimistic update
+
+  try {
+    const res = await authFetch(`/api/helpdesk/ticket/${ticketId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: toStatus })
+    })
+
+    if (!res.ok) {
+      ticket.status = oldStatus  // Rollback on failure
+    }
+  } catch (err) {
+    ticket.status = oldStatus  // Rollback on failure
+    console.error('Error updating ticket status:', err)
+  }
+}
+
 function selectTicket(ticket) {
-  selectedTicket.value = ticket
+  selectedTicket.value = { ...ticket }
 }
 
 function closeDetail() {
@@ -146,6 +190,18 @@ function goBack() {
   } else {
     router.push('/company-portal')
   }
+}
+
+// Status transitions for detail modal
+function getAvailableTransitions(currentStatus) {
+  const transitions = {
+    backlog: ['on-deck', 'in_progress'],
+    'on-deck': ['backlog', 'in_progress'],
+    in_progress: ['on-deck', 'resolved'],
+    resolved: ['in_progress', 'closed'],
+    closed: ['resolved']
+  }
+  return transitions[currentStatus] || []
 }
 
 // Watch for route changes (if navigating between projects)
@@ -233,7 +289,7 @@ onMounted(() => {
 
         <div class="detail-meta">
           <span class="status-badge" :style="{ background: statusColors[selectedTicket.status] }">
-            {{ selectedTicket.status.replace('_', ' ') }}
+            {{ statusLabels[selectedTicket.status] || selectedTicket.status }}
           </span>
           <span class="priority-badge" :style="{ background: priorityColors[selectedTicket.priority] }">
             {{ selectedTicket.priority }}
@@ -251,29 +307,17 @@ onMounted(() => {
           <p>{{ selectedTicket.description || 'No description provided.' }}</p>
         </div>
 
-        <div class="detail-actions" v-if="selectedTicket.status !== 'closed'">
-          <h3>Update Status</h3>
+        <div class="detail-actions" v-if="getAvailableTransitions(selectedTicket.status).length > 0">
+          <h3>Move to</h3>
           <div class="status-buttons">
             <button
-              v-if="selectedTicket.status === 'open'"
-              @click="updateTicketStatus(selectedTicket.id, 'in_progress')"
-              class="btn-status in-progress"
+              v-for="nextStatus in getAvailableTransitions(selectedTicket.status)"
+              :key="nextStatus"
+              @click="updateTicketStatus(selectedTicket.id, nextStatus)"
+              class="btn-status"
+              :style="{ background: statusColors[nextStatus] }"
             >
-              Mark In Progress
-            </button>
-            <button
-              v-if="selectedTicket.status === 'open' || selectedTicket.status === 'in_progress'"
-              @click="updateTicketStatus(selectedTicket.id, 'resolved')"
-              class="btn-status resolved"
-            >
-              Mark Resolved
-            </button>
-            <button
-              v-if="selectedTicket.status === 'resolved'"
-              @click="updateTicketStatus(selectedTicket.id, 'closed')"
-              class="btn-status closed"
-            >
-              Close Ticket
+              {{ statusLabels[nextStatus] }}
             </button>
           </div>
         </div>
@@ -289,75 +333,60 @@ onMounted(() => {
       <button @click="fetchProject">Retry</button>
     </div>
 
-    <!-- Tickets List -->
-    <div v-else class="tickets-container">
-      <!-- Open Tickets -->
-      <section class="ticket-section">
-        <h2>Open Tickets ({{ openTickets.length }})</h2>
-        <div v-if="openTickets.length === 0" class="empty-state">
-          No open tickets
+    <!-- Kanban Board -->
+    <div v-else class="kanban-board">
+      <div
+        v-for="status in kanbanStatuses"
+        :key="status"
+        class="kanban-column"
+      >
+        <div class="column-header" :style="{ borderTopColor: statusColors[status] }">
+          <h3>{{ statusLabels[status] }}</h3>
+          <span class="ticket-count">{{ ticketsByStatus[status].length }}</span>
         </div>
-        <div v-else class="ticket-list">
-          <div
-            v-for="ticket in openTickets"
-            :key="ticket.id"
-            class="ticket-card"
-            @click="selectTicket(ticket)"
-          >
-            <div class="ticket-header">
-              <span class="ticket-id">#{{ ticket.id }}</span>
-              <span class="priority-badge" :style="{ background: priorityColors[ticket.priority] }">
-                {{ ticket.priority }}
-              </span>
-            </div>
-            <h3 class="ticket-title">{{ ticket.title }}</h3>
-            <div class="ticket-meta">
-              <span class="status-badge" :style="{ background: statusColors[ticket.status] }">
-                {{ ticket.status.replace('_', ' ') }}
-              </span>
-              <span class="ticket-date">{{ formatDate(ticket.created_at) }}</span>
-            </div>
-            <p class="ticket-creator">by {{ getCreatorName(ticket) }}</p>
-          </div>
-        </div>
-      </section>
 
-      <!-- Closed Tickets -->
-      <section class="ticket-section closed-section">
-        <h2>Resolved/Closed ({{ closedTickets.length }})</h2>
-        <div v-if="closedTickets.length === 0" class="empty-state">
-          No resolved tickets
-        </div>
-        <div v-else class="ticket-list">
-          <div
-            v-for="ticket in closedTickets"
-            :key="ticket.id"
-            class="ticket-card closed"
-            @click="selectTicket(ticket)"
-          >
-            <div class="ticket-header">
-              <span class="ticket-id">#{{ ticket.id }}</span>
-              <span class="priority-badge" :style="{ background: priorityColors[ticket.priority] }">
-                {{ ticket.priority }}
-              </span>
+        <draggable
+          :list="ticketsByStatus[status]"
+          group="tickets"
+          item-key="id"
+          class="ticket-list"
+          :data-status="status"
+          @end="(e) => onDragEnd(e, status)"
+        >
+          <template #item="{ element: ticket }">
+            <div
+              class="ticket-card"
+              :data-ticket-id="ticket.id"
+              @click="selectTicket(ticket)"
+            >
+              <div class="ticket-header">
+                <span class="ticket-id">#{{ ticket.id }}</span>
+                <span
+                  class="priority-badge"
+                  :style="{ background: priorityColors[ticket.priority] }"
+                >
+                  {{ ticket.priority }}
+                </span>
+              </div>
+              <h4 class="ticket-title">{{ ticket.title }}</h4>
+              <div class="ticket-footer">
+                <span class="ticket-creator">{{ getCreatorName(ticket) }}</span>
+              </div>
             </div>
-            <h3 class="ticket-title">{{ ticket.title }}</h3>
-            <div class="ticket-meta">
-              <span class="status-badge" :style="{ background: statusColors[ticket.status] }">
-                {{ ticket.status }}
-              </span>
-              <span class="ticket-date">{{ formatDate(ticket.resolved_at || ticket.updated_at) }}</span>
-            </div>
-          </div>
+          </template>
+        </draggable>
+
+        <div v-if="ticketsByStatus[status].length === 0" class="empty-column">
+          No tickets
         </div>
-      </section>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .project-page {
-  max-width: 1000px;
+  max-width: 1400px;
 }
 
 .project-header {
@@ -594,52 +623,76 @@ onMounted(() => {
   color: white;
 }
 
-.btn-status.in-progress {
-  background: #ffc107;
-  color: #333;
+.btn-status:hover {
+  opacity: 0.9;
 }
 
-.btn-status.resolved {
-  background: #17a2b8;
+/* Kanban Board */
+.kanban-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  min-height: 500px;
 }
 
-.btn-status.closed {
-  background: #6c757d;
-}
-
-/* Tickets Container */
-.tickets-container {
+.kanban-column {
+  flex: 0 0 260px;
+  min-width: 260px;
+  background: var(--color-background-soft);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  max-height: calc(100vh - 200px);
 }
 
-.ticket-section h2 {
+.column-header {
+  padding: 12px 16px;
+  border-top: 4px solid;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-background-card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.column-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--color-text);
-  font-size: 1.2rem;
-  margin: 0 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--color-accent);
 }
 
-.closed-section h2 {
-  border-bottom-color: #6c757d;
+.ticket-count {
+  background: var(--color-background-soft);
+  color: var(--color-text-muted);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .ticket-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100px;
 }
 
 .ticket-card {
   background: var(--color-background-card);
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: 6px;
+  padding: 12px;
   box-shadow: var(--shadow-sm);
-  cursor: pointer;
+  cursor: grab;
   transition: transform 0.15s, box-shadow 0.15s;
-  border-left: 4px solid var(--color-accent);
+  border-left: 3px solid var(--color-accent);
 }
 
 .ticket-card:hover {
@@ -647,9 +700,8 @@ onMounted(() => {
   box-shadow: var(--shadow-md);
 }
 
-.ticket-card.closed {
-  border-left-color: #6c757d;
-  opacity: 0.8;
+.ticket-card:active {
+  cursor: grabbing;
 }
 
 .ticket-header {
@@ -661,22 +713,27 @@ onMounted(() => {
 
 .ticket-id {
   color: var(--color-text-light);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
 .ticket-title {
-  margin: 0 0 10px;
-  font-size: 1rem;
+  margin: 0 0 8px;
+  font-size: 0.9rem;
   color: var(--color-text);
   line-height: 1.3;
+  font-weight: 500;
 }
 
-.ticket-meta {
+.ticket-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+}
+
+.ticket-creator {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 .status-badge,
@@ -684,21 +741,34 @@ onMounted(() => {
   display: inline-block;
   padding: 3px 8px;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: white;
   text-transform: capitalize;
 }
 
-.ticket-date {
-  font-size: 0.8rem;
-  color: var(--color-text-light);
+/* Drag states */
+.sortable-ghost {
+  opacity: 0.4;
+  background: var(--color-accent);
 }
 
-.ticket-creator {
-  margin: 0;
+.sortable-drag {
+  opacity: 1;
+  box-shadow: var(--shadow-lg);
+}
+
+.sortable-chosen {
+  box-shadow: var(--shadow-md);
+}
+
+/* Empty column state */
+.empty-column {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--color-text-light);
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .loading {
@@ -725,11 +795,20 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 30px;
-  color: var(--color-text-light);
-  background: var(--color-background-soft);
-  border-radius: 8px;
+/* Responsive: Stack columns on mobile */
+@media (max-width: 768px) {
+  .kanban-board {
+    flex-direction: column;
+  }
+
+  .kanban-column {
+    flex: 0 0 auto;
+    min-width: 100%;
+    max-height: none;
+  }
+
+  .ticket-list {
+    max-height: 300px;
+  }
 }
 </style>

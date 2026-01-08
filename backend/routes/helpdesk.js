@@ -217,6 +217,10 @@ router.put('/ticket/:id', authenticate, async (req, res) => {
       values.push(description);
     }
     if (status !== undefined) {
+      const validStatuses = ['open', 'backlog', 'on-deck', 'in_progress', 'resolved', 'closed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: 'Invalid status' });
+      }
       updates.push(`status = $${paramCount++}`);
       values.push(status);
       if (status === 'resolved' || status === 'closed') {
