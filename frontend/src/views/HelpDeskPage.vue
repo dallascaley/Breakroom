@@ -246,14 +246,14 @@ onMounted(() => {
           <h3>Update Status</h3>
           <div class="status-buttons">
             <button
-              v-if="selectedTicket.status === 'open'"
+              v-if="selectedTicket.status === 'open' || selectedTicket.status === 'backlog'"
               @click="updateTicketStatus(selectedTicket.id, 'in_progress')"
               class="btn-status in-progress"
             >
               Mark In Progress
             </button>
             <button
-              v-if="selectedTicket.status === 'open' || selectedTicket.status === 'in_progress'"
+              v-if="selectedTicket.status === 'open' || selectedTicket.status === 'backlog' || selectedTicket.status === 'in_progress'"
               @click="updateTicketStatus(selectedTicket.id, 'resolved')"
               class="btn-status resolved"
             >
