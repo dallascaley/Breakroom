@@ -30,6 +30,7 @@ const priorityColors = {
 
 const statusColors = {
   open: '#28a745',
+  backlog: '#6f42c1',
   in_progress: '#ffc107',
   resolved: '#17a2b8',
   closed: '#6c757d'
@@ -53,7 +54,7 @@ const getCreatorName = (ticket) => {
   return ticket.creator_handle
 }
 
-const openTickets = computed(() => tickets.value.filter(t => t.status === 'open' || t.status === 'in_progress'))
+const openTickets = computed(() => tickets.value.filter(t => t.status === 'open' || t.status === 'in_progress' || t.status === 'backlog'))
 const closedTickets = computed(() => tickets.value.filter(t => t.status === 'resolved' || t.status === 'closed'))
 
 async function fetchCompany() {
