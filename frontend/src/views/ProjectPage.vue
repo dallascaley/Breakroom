@@ -9,6 +9,7 @@ const router = useRouter()
 
 const project = ref(null)
 const tickets = ref([])
+const employees = ref([])
 const loading = ref(true)
 const error = ref(null)
 
@@ -73,6 +74,13 @@ const getCreatorName = (ticket) => {
   return ticket.creator_handle
 }
 
+const getAssigneeName = (ticket) => {
+  if (ticket.assignee_first_name || ticket.assignee_last_name) {
+    return `${ticket.assignee_first_name || ''} ${ticket.assignee_last_name || ''}`.trim()
+  }
+  return ticket.assignee_handle || 'Unassigned'
+}
+
 async function fetchProject() {
   loading.value = true
   error.value = null
@@ -92,6 +100,43 @@ async function fetchProject() {
     error.value = err.message
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchEmployees() {
+  if (!project.value?.company_id) return
+
+  try {
+    const res = await authFetch(`/api/company/${project.value.company_id}/employees`)
+    if (res.ok) {
+      const data = await res.json()
+      employees.value = data.employees.filter(e => e.status === 'active')
+    }
+  } catch (err) {
+    console.error('Error fetching employees:', err)
+  }
+}
+
+async function assignTicket(ticketId, userId) {
+  try {
+    const res = await authFetch(`/api/helpdesk/ticket/${ticketId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assigned_to: userId || null })
+    })
+
+    if (res.ok) {
+      await fetchProject()
+      // Update selected ticket if open
+      if (selectedTicket.value?.id === ticketId) {
+        const updated = tickets.value.find(t => t.id === ticketId)
+        if (updated) {
+          selectedTicket.value = { ...updated }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error assigning ticket:', err)
   }
 }
 
@@ -215,8 +260,9 @@ watch(() => route.params.id, () => {
   }
 })
 
-onMounted(() => {
-  fetchProject()
+onMounted(async () => {
+  await fetchProject()
+  await fetchEmployees()
 })
 </script>
 
@@ -304,6 +350,21 @@ onMounted(() => {
           <p><strong>Created by:</strong> {{ getCreatorName(selectedTicket) }}</p>
           <p><strong>Created:</strong> {{ formatDate(selectedTicket.created_at) }}</p>
           <p v-if="selectedTicket.resolved_at"><strong>Resolved:</strong> {{ formatDate(selectedTicket.resolved_at) }}</p>
+          <p><strong>Assigned to:</strong> {{ getAssigneeName(selectedTicket) }}</p>
+        </div>
+
+        <div class="detail-assign">
+          <label for="assign-select"><strong>Assign to:</strong></label>
+          <select
+            id="assign-select"
+            :value="selectedTicket.assignee_id || ''"
+            @change="(e) => assignTicket(selectedTicket.id, e.target.value ? parseInt(e.target.value) : null)"
+          >
+            <option value="">Unassigned</option>
+            <option v-for="emp in employees" :key="emp.user_id" :value="emp.user_id">
+              {{ emp.first_name }} {{ emp.last_name }} ({{ emp.handle }})
+            </option>
+          </select>
         </div>
 
         <div class="detail-description">
@@ -375,6 +436,7 @@ onMounted(() => {
               <h4 class="ticket-title">{{ ticket.title }}</h4>
               <div class="ticket-footer">
                 <span class="ticket-creator">{{ getCreatorName(ticket) }}</span>
+                <span v-if="ticket.assignee_handle" class="ticket-assignee">{{ getAssigneeName(ticket) }}</span>
               </div>
             </div>
           </template>
@@ -590,6 +652,33 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
+.detail-assign {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-assign label {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.detail-assign select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--color-background-input);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.detail-assign select:hover {
+  border-color: var(--color-accent);
+}
+
 .detail-description {
   margin-bottom: 20px;
 }
@@ -738,6 +827,14 @@ onMounted(() => {
 .ticket-creator {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.ticket-assignee {
+  font-size: 0.7rem;
+  color: white;
+  background: var(--color-accent);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .status-badge,
