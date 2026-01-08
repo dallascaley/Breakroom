@@ -151,17 +151,19 @@ async function updateTicketStatus(ticketId, newStatus) {
   }
 }
 
-// Handle drag end - update ticket status
-async function onDragEnd(event, toStatus) {
-  const ticketId = parseInt(event.item.dataset.ticketId)
-  const ticket = tickets.value.find(t => t.id === ticketId)
+// Handle drag change - update ticket status when dropped in new column
+async function onDragChange(event, toStatus) {
+  // Only handle when an item is added to this column
+  if (!event.added) return
+
+  const ticket = event.added.element
   if (!ticket || ticket.status === toStatus) return
 
   const oldStatus = ticket.status
-  ticket.status = toStatus  // Optimistic update
+  ticket.status = toStatus  // Update local state
 
   try {
-    const res = await authFetch(`/api/helpdesk/ticket/${ticketId}`, {
+    const res = await authFetch(`/api/helpdesk/ticket/${ticket.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: toStatus })
@@ -169,9 +171,11 @@ async function onDragEnd(event, toStatus) {
 
     if (!res.ok) {
       ticket.status = oldStatus  // Rollback on failure
+      await fetchProject()  // Re-fetch to restore correct state
     }
   } catch (err) {
     ticket.status = oldStatus  // Rollback on failure
+    await fetchProject()
     console.error('Error updating ticket status:', err)
   }
 }
@@ -351,7 +355,7 @@ onMounted(() => {
           item-key="id"
           class="ticket-list"
           :data-status="status"
-          @end="(e) => onDragEnd(e, status)"
+          @change="(e) => onDragChange(e, status)"
         >
           <template #item="{ element: ticket }">
             <div
@@ -630,17 +634,17 @@ onMounted(() => {
 /* Kanban Board */
 .kanban-board {
   display: flex;
-  gap: 16px;
-  overflow-x: auto;
+  gap: 12px;
   padding-bottom: 16px;
   min-height: 500px;
 }
 
 .kanban-column {
-  flex: 0 0 260px;
-  min-width: 260px;
+  flex: 1;
+  min-width: 0;
   background: var(--color-background-soft);
   border-radius: 8px;
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 200px);
@@ -795,20 +799,15 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* Responsive: Stack columns on mobile */
-@media (max-width: 768px) {
+/* Responsive: Allow horizontal scroll on very small screens */
+@media (max-width: 900px) {
   .kanban-board {
-    flex-direction: column;
+    overflow-x: auto;
   }
 
   .kanban-column {
-    flex: 0 0 auto;
-    min-width: 100%;
-    max-height: none;
-  }
-
-  .ticket-list {
-    max-height: 300px;
+    flex: 0 0 180px;
+    min-width: 180px;
   }
 }
 </style>
