@@ -58,7 +58,7 @@ router.get('/company/:id', authenticate, async (req, res) => {
   }
 });
 
-// Get tickets for a company
+// Get tickets for a company's helpdesk (default project only)
 router.get('/tickets/:companyId', authenticate, async (req, res) => {
   const { companyId } = req.params;
   const client = await getClient();
@@ -76,6 +76,8 @@ router.get('/tickets/:companyId', authenticate, async (req, res) => {
        JOIN companies c ON t.company_id = c.id
        JOIN users creator ON t.creator_id = creator.id
        LEFT JOIN users assignee ON t.assigned_to = assignee.id
+       JOIN ticket_projects tp ON t.id = tp.ticket_id
+       JOIN projects p ON tp.project_id = p.id AND p.is_default = TRUE
        WHERE t.company_id = $1
        ORDER BY
          CASE t.status
