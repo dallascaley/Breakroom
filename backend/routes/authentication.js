@@ -11,6 +11,17 @@ require('dotenv').config();
 const SECRET_KEY = process.env.SECRET_KEY;
 const NODE_ENV = process.env.NODE_ENV;
 
+// Helper to extract JWT from cookie or Authorization header (for mobile support)
+function extractToken(req) {
+  // First check Authorization header (mobile clients)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  // Fall back to cookie (web clients)
+  return req.cookies.jwtToken;
+}
+
 // Define authentication-related routes
 router.post('/signup', async (req, res) => {
   const client = await getClient();
@@ -97,7 +108,7 @@ router.post('/signup', async (req, res) => {
     client.release();
 
     res.status(201).json({
-      message: 'User has been created'
+      message: 'User has been created', token: token
     });
   } else {
     client.release();
@@ -227,7 +238,7 @@ router.post('/login', async (req, res) => {
           maxAge: 28800000, // 8 hours
           domain: process.env.NODE_ENV === 'production' ? '.prosaurus.com' : undefined,
         });
-        res.json({ message: 'Logged in successfully' });
+        res.json({ message: 'Logged in successfully', token: token });
       } else {
         client.release();
 
@@ -251,7 +262,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/me', async (req, res) => {
-  const token = req.cookies.jwtToken;
+  const token = extractToken(req);
 
   if (!token) {
     return res.status(401).json({ message: 'Not authenticated' });
@@ -284,7 +295,7 @@ router.get('/me', async (req, res) => {
 // Check if user has a specific permission
 router.get('/can/:permission', async (req, res) => {
   console.log('Permission check for:', req.params.permission);
-  const token = req.cookies.jwtToken;
+  const token = extractToken(req);
   const { permission } = req.params;
 
   if (!token) {
