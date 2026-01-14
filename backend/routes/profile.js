@@ -5,6 +5,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const { getClient } = require('../utilities/db');
 const { uploadToS3, deleteFromS3 } = require('../utilities/aws-s3');
+const { extractToken } = require('../utilities/auth');
 
 require('dotenv').config();
 
@@ -31,7 +32,7 @@ const upload = multer({
 // Auth middleware
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.jwtToken;
+    const token = extractToken(req);
     if (!token) {
       return res.status(401).json({ message: 'Not authenticated' });
     }

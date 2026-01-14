@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { getClient } = require('../utilities/db');
+const { extractToken } = require('../utilities/auth');
 const { XMLParser } = require('fast-xml-parser');
 
 require('dotenv').config();
@@ -15,7 +16,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 // Middleware to verify JWT and get user info
 const authenticateToken = async (req, res, next) => {
-  const token = req.cookies.jwtToken;
+  const token = extractToken(req);
 
   if (!token) {
     return res.status(401).json({ message: 'Not authenticated' });

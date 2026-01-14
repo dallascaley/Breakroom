@@ -7,6 +7,7 @@ const { getClient } = require('../utilities/db');
 const { checkPermission } = require('../middleware/checkPermission');
 const { getIO } = require('../utilities/socket');
 const { uploadToS3 } = require('../utilities/aws-s3');
+const { extractToken } = require('../utilities/auth');
 
 require('dotenv').config();
 
@@ -32,7 +33,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 // Middleware to verify JWT and get user info
 const authenticateToken = async (req, res, next) => {
-  const token = req.cookies.jwtToken;
+  const token = extractToken(req);
 
   if (!token) {
     return res.status(401).json({ message: 'Not authenticated' });
