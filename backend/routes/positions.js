@@ -2,15 +2,16 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { getClient } = require('../utilities/db');
+const { extractToken } = require('../utilities/auth');
 
 require('dotenv').config();
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// Auth middleware
+// Auth middleware - supports both cookie (web) and Authorization header (mobile)
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.jwtToken;
+    const token = extractToken(req);
     if (!token) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
@@ -248,8 +249,10 @@ router.put('/:id', authenticate, async (req, res) => {
         benefits = COALESCE($13, benefits),
         status = COALESCE($14, status)
        WHERE id = $15`,
-      [title, description, department, location_type, city, state, country,
-       employment_type, pay_rate_min, pay_rate_max, pay_type, requirements, benefits, status, id]
+      [title ?? null, description ?? null, department ?? null, location_type ?? null,
+       city ?? null, state ?? null, country ?? null, employment_type ?? null,
+       pay_rate_min ?? null, pay_rate_max ?? null, pay_type ?? null,
+       requirements ?? null, benefits ?? null, status ?? null, id]
     );
 
     const updatedResult = await client.query('SELECT * FROM open_positions WHERE id = $1', [id]);
